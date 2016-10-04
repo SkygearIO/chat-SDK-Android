@@ -1,0 +1,66 @@
+<resources>
+    <string name="app_name">Chat Example</string>
+
+    <!-- sign up button -->
+    <string name="sign_up">Sign Up</string>
+
+    <!-- log in button -->
+    <string name="log_in">Log In</string>
+
+    <!-- log out button -->
+    <string name="log_out">Log Out</string>
+
+    <!-- create conversation button -->
+    <string name="create">Create</string>
+
+    <!-- ok button -->
+    <string name="ok">OK</string>
+
+    <!-- username for login -->
+    <string name="username">Username</string>
+
+    <!-- password for login -->
+    <string name="password">Password</string>
+
+    <!-- conversations activity title -->
+    <string name="conversations">Conversations</string>
+
+    <!-- loading dialog title -->
+    <string name="loading">Loading</string>
+
+    <!-- loading logging in sub-title -->
+    <string name="signing_up">Signing in&#8230;</string>
+
+    <!-- loading logging in sub-title -->
+    <string name="logging_in">Logging in&#8230;</string>
+
+    <!-- loading logging out sub-title -->
+    <string name="logging_out">Logging out&#8230;</string>
+
+    <!-- loading create a conversation -->
+    <string name="creating">Creating&#8230;</string>
+
+    <!-- confirm dialog title -->
+    <string name="confirm">Confirm</string>
+
+    <!-- confirm string for log out -->
+    <string name="are_your_sure_to_log_out">Are you sure to log out?</string>
+
+    <!-- confirm dialog positive btn -->
+    <string name="yes">Yes</string>
+
+    <!-- confirm dialog negative btn -->
+    <string name="no">NO</string>
+
+    <!-- login failed -->
+    <string name="login_failed">Login failed!</string>
+
+    <!-- signup failed -->
+    <string name="signup_failed">Signup failed!</string>
+
+    <!-- logout failed -->
+    <string name="logout_failed">Logout failed!</string>
+
+    <!-- conversation title -->
+    <string name="title">Title</string>
+</resources>

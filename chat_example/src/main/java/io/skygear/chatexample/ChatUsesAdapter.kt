@@ -1,0 +1,59 @@
+package io.skygear.chatexample
+
+import android.support.v7.widget.AppCompatCheckBox
+import android.support.v7.widget.RecyclerView
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import io.skygear.plugins.chat.ChatUser
+
+class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAdapter.ViewHolder>() {
+    private val LOG_TAG: String? = "ChatUsesAdapter"
+
+    private var mChatUsers: List<ChatUser> = listOf()
+    private var mSelectedChatUsers: MutableList<ChatUser> = mutableListOf()
+    private val mCurrentUserId = currentUserId
+
+    fun setChatUsers(chatUsers: List<ChatUser>?) {
+        if (chatUsers != null) {
+            mChatUsers = chatUsers.filter {
+                it.id != mCurrentUserId
+            }
+
+            notifyDataSetChanged()
+        }
+    }
+
+    fun getSelected(): List<ChatUser> {
+        return mSelectedChatUsers
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val layoutInflater = LayoutInflater.from(parent.context)
+        return ViewHolder(layoutInflater.inflate(R.layout.item_user_id, parent, false))
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val chatUser: ChatUser = mChatUsers[position]
+
+        holder.idTv.text = chatUser.id
+        holder.idCb.setOnCheckedChangeListener { compoundButton, b ->
+            if (b) {
+                mSelectedChatUsers.add(chatUser)
+            } else {
+                mSelectedChatUsers.remove(chatUser)
+            }
+        }
+    }
+
+    override fun getItemCount(): Int {
+        return mChatUsers.size
+    }
+
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val idCb = view.findViewById(R.id.user_id_cb) as AppCompatCheckBox
+        var idTv = view.findViewById(R.id.user_id_tv) as TextView
+    }
+}
+

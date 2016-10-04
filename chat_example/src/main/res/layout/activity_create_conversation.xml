@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/activity_create_conversation"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="io.skygear.chatexample.CreateConversationActivity">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/chat_users_rv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/create_conversation_btn"/>
+
+    <Button
+        android:id="@+id/create_conversation_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/create"
+        android:layout_alignParentBottom="true"
+        style="?android:attr/borderlessButtonStyle"/>
+
+</RelativeLayout>
