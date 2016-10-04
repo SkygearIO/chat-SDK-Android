@@ -58,7 +58,7 @@ public final class ChatContainer {
                 @Override
                 public void onSaveSuccess(Record[] records) {
                     Record record = records[0];
-                    Conversation conversation = buildConversation(record);
+                    Conversation conversation = new Conversation(record);
                     if (callback != null) {
                         callback.done(conversation, null);
                     }
@@ -94,6 +94,7 @@ public final class ChatContainer {
                 .transientInclude("user")
                 .transientInclude("conversation");
         Database publicDB = container.getPublicDatabase();
+
         publicDB.query(query, new RecordQueryResponseHandler() {
             @Override
             public void onQuerySuccess(Record[] records) {
@@ -102,10 +103,8 @@ public final class ChatContainer {
                 for (Record record : records) {
                     Map<String, Record> includeMap = record.getTransient();
                     Record conversationRecord = includeMap.get("conversation");
-                    Conversation conversation = buildConversation(conversationRecord);
-                    if (conversation != null) {
-                        conversations.add(conversation);
-                    }
+                    Conversation conversation = new Conversation(conversationRecord);
+                    conversations.add(conversation);
                 }
 
                 if (callback != null) {
@@ -120,49 +119,6 @@ public final class ChatContainer {
                 }
             }
         });
-    }
-
-    private Conversation buildConversation(final Record record) {
-        Conversation conversation = null;
-
-        try {
-            if (record != null) {
-                Conversation.Builder builder = new Conversation.Builder();
-                builder.id(record.getId());
-                builder.title((String) record.get("title"));
-                builder.directMessage((boolean) record.get("is_direct_message"));
-
-                JSONArray adminIds = (JSONArray) record.get("admin_ids");
-                if (adminIds != null) {
-                    List<String> ids = new ArrayList<>();
-                    for (int i = 0; i < adminIds.length(); i++) {
-                        String id = adminIds.optString(i);
-                        if (id != null) {
-                            ids.add(id);
-                        }
-                    }
-                    builder.adminIds(ids);
-                }
-
-                JSONArray participantIds = (JSONArray) record.get("participant_ids");
-                if (participantIds != null) {
-                    List<String> ids = new ArrayList<>();
-                    for (int i = 0; i < participantIds.length(); i++) {
-                        String id = participantIds.optString(i);
-                        if (id != null) {
-                            ids.add(id);
-                        }
-                    }
-                    builder.participantIds(ids);
-                }
-
-                conversation = builder.build();
-            }
-        } catch (Exception e) {
-            Log.w(LOG_TAG, "Failed to build conversation object: " + e.getMessage());
-        }
-
-        return conversation;
     }
 
     //----------------------------------------------------------------------------------------------
