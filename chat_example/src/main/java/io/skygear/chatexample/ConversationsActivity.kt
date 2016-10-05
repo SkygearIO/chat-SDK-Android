@@ -1,6 +1,7 @@
 package io.skygear.chatexample
 
 import android.app.ProgressDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -9,10 +10,10 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
-import io.skygear.skygear.Container
-import io.skygear.skygear.LogoutResponseHandler
 import io.skygear.plugins.chat.ChatContainer
 import io.skygear.plugins.chat.Conversation
+import io.skygear.skygear.Container
+import io.skygear.skygear.LogoutResponseHandler
 
 class ConversationsActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "ConversationsActivity"
@@ -26,12 +27,15 @@ class ConversationsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_conversations)
 
+        mSkygear = Container.defaultContainer(this)
+        mChatMgr = ChatContainer.getInstance(mSkygear)
+
         mConversationsRv = findViewById(R.id.conversations_rv) as RecyclerView
         mConversationsRv?.adapter = mAdapter
         mConversationsRv?.layoutManager = LinearLayoutManager(this)
-
-        mSkygear = Container.defaultContainer(this)
-        mChatMgr = ChatContainer.getInstance(mSkygear)
+        mAdapter.setOnClickListener {
+            c -> showOptions(c)
+        }
     }
 
     override fun onResume() {
@@ -98,5 +102,25 @@ class ConversationsActivity : AppCompatActivity() {
 
     fun logoutFail() {
         AlertDialog.Builder(this).setTitle(R.string.logout_failed).show()
+    }
+
+    fun showOptions(c: Conversation) {
+        val builder = AlertDialog.Builder(this)
+        val items = arrayOf<CharSequence>(getString(R.string.enter),
+                getString(R.string.edit), getString(R.string.delete))
+        builder.setItems(items, object : DialogInterface.OnClickListener{
+            override fun onClick(dialog: DialogInterface?, which: Int) {
+                throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+        })
+        builder.setItems(items, { d, i -> when(i) {
+            0 -> enter(c)
+        } })
+        val alert = builder.create()
+        alert.show()
+    }
+
+    fun enter(c: Conversation) {
+        startActivity(ConversationActivity.newIntent(c, this))
     }
 }

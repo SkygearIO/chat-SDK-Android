@@ -49,6 +49,7 @@ public class RecordSerializer {
 
             /* JSON types */
             JSONObject.class,
+            JSONObject.NULL.getClass(),
             JSONArray.class,
 
             /* Other types */

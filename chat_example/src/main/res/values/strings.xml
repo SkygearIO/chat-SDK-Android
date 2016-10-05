@@ -25,6 +25,9 @@
     <!-- conversations activity title -->
     <string name="conversations">Conversations</string>
 
+    <!-- conversation activity title -->
+    <string name="conversation">Conversation</string>
+
     <!-- loading dialog title -->
     <string name="loading">Loading</string>
 
@@ -63,4 +66,13 @@
 
     <!-- conversation title -->
     <string name="title">Title</string>
+
+    <!-- click on conversation option -->
+    <string name="enter">Enter</string>
+
+    <!-- click on conversation option -->
+    <string name="edit">Edit</string>
+
+    <!-- click on conversation option -->
+    <string name="delete">Delete</string>
 </resources>

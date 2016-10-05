@@ -38,8 +38,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity"/>
         </activity>
-        <activity android:name=".CreateConversationActivity"
-                  android:label="@string/create"
+        <activity
+            android:name=".CreateConversationActivity"
+            android:label="@string/create"
+            android:parentActivityName=".ConversationsActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ConversationsActivity"/>
+        </activity>
+        <activity android:name=".ConversationActivity"
+                  android:label="@string/conversation"
                   android:parentActivityName=".ConversationsActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
