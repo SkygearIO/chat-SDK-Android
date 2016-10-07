@@ -1,70 +1,55 @@
 package io.skygear.plugins.chat;
 
 
+import org.json.JSONArray;
+
+import java.util.ArrayList;
 import java.util.List;
 
+import io.skygear.skygear.Record;
+
 public class Conversation {
-    private String id;
-    private String title;
+    private static final String TITLE_KEY = "title";
+    private static final String DIRECT_MSG_KEY = "is_direct_message";
+
+    private Record record;
     private List<String> adminIds;
     private List<String> participantIds;
-    private boolean isDirectMessage;
 
-    public static class Builder {
-        private String id;
-        private String title;
-        private List<String> adminIds;
-        private List<String> participantIds;
-        private boolean isDirectMessage;
+    public Conversation(final Record record) {
+        this.record = record;
 
-        public Builder() {
-            super();
+        JSONArray adminIds = (JSONArray) record.get("admin_ids");
+        if (adminIds != null) {
+            List<String> ids = new ArrayList<>();
+            for (int i = 0; i < adminIds.length(); i++) {
+                String id = adminIds.optString(i);
+                if (id != null) {
+                    ids.add(id);
+                }
+            }
+            this.adminIds = ids;
         }
 
-        public Builder id(String id) {
-            this.id = id;
-            return this;
+        JSONArray participantIds = (JSONArray) record.get("participant_ids");
+        if (participantIds != null) {
+            List<String> ids = new ArrayList<>();
+            for (int i = 0; i < participantIds.length(); i++) {
+                String id = participantIds.optString(i);
+                if (id != null) {
+                    ids.add(id);
+                }
+            }
+            this.participantIds = ids;
         }
-
-        public Builder title(String title) {
-            this.title = title;
-            return this;
-        }
-
-        public Builder adminIds(List<String> adminIds) {
-            this.adminIds = adminIds;
-            return this;
-        }
-
-        public Builder participantIds(List<String> participantIds) {
-            this.participantIds = participantIds;
-            return this;
-        }
-
-        public Builder directMessage(boolean directMessage) {
-            isDirectMessage = directMessage;
-            return this;
-        }
-
-        public Conversation build() {
-            return new Conversation(this);
-        }
-    }
-
-    private Conversation(Builder builder) {
-        this.id = builder.id;
-        this.title = builder.title;
-        this.adminIds = builder.adminIds;
-        this.participantIds = builder.participantIds;
-        this.isDirectMessage = builder.isDirectMessage;
     }
 
     public String getId() {
-        return id;
+        return record.getId();
     }
 
     public String getTitle() {
-        return title;
+        return (String) record.get(TITLE_KEY);
     }
 
     public List<String> getAdminIds() {
@@ -76,6 +61,6 @@ public class Conversation {
     }
 
     public boolean isDirectMessage() {
-        return isDirectMessage;
+        return (boolean) record.get(DIRECT_MSG_KEY);
     }
 }

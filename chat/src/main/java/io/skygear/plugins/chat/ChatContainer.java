@@ -1,16 +1,21 @@
 package io.skygear.plugins.chat;
 
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import io.skygear.skygear.Container;
 import io.skygear.skygear.Database;
+import io.skygear.skygear.LambdaResponseHandler;
 import io.skygear.skygear.Query;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordQueryResponseHandler;
@@ -58,7 +63,7 @@ public final class ChatContainer {
                 @Override
                 public void onSaveSuccess(Record[] records) {
                     Record record = records[0];
-                    Conversation conversation = buildConversation(record);
+                    Conversation conversation = new Conversation(record);
                     if (callback != null) {
                         callback.done(conversation, null);
                     }
@@ -94,6 +99,7 @@ public final class ChatContainer {
                 .transientInclude("user")
                 .transientInclude("conversation");
         Database publicDB = container.getPublicDatabase();
+
         publicDB.query(query, new RecordQueryResponseHandler() {
             @Override
             public void onQuerySuccess(Record[] records) {
@@ -102,10 +108,8 @@ public final class ChatContainer {
                 for (Record record : records) {
                     Map<String, Record> includeMap = record.getTransient();
                     Record conversationRecord = includeMap.get("conversation");
-                    Conversation conversation = buildConversation(conversationRecord);
-                    if (conversation != null) {
-                        conversations.add(conversation);
-                    }
+                    Conversation conversation = new Conversation(conversationRecord);
+                    conversations.add(conversation);
                 }
 
                 if (callback != null) {
@@ -122,47 +126,71 @@ public final class ChatContainer {
         });
     }
 
-    private Conversation buildConversation(final Record record) {
-        Conversation conversation = null;
+    //----------------------------------------------------------------------------------------------
 
-        try {
-            if (record != null) {
-                Conversation.Builder builder = new Conversation.Builder();
-                builder.id(record.getId());
-                builder.title((String) record.get("title"));
-                builder.directMessage((boolean) record.get("is_direct_message"));
+    public void getMessages(final String conversationId,
+                            final int limit,
+                            @Nullable final Date before,
+                            final GetCallback<Message> callback) {
+        final int LIMIT = 50; // default value
 
-                JSONArray adminIds = (JSONArray) record.get("admin_ids");
-                if (adminIds != null) {
-                    List<String> ids = new ArrayList<>();
-                    for (int i = 0; i < adminIds.length(); i++) {
-                        String id = adminIds.optString(i);
-                        if (id != null) {
-                            ids.add(id);
-                        }
-                    }
-                    builder.adminIds(ids);
-                }
+        if (conversationId != null && conversationId.length() != 0) {
+            int limitCount = limit;
+            String beforeTimeISO8601 = DateUtil.toISO8601(before != null ? before : new Date());
 
-                JSONArray participantIds = (JSONArray) record.get("participant_ids");
-                if (participantIds != null) {
-                    List<String> ids = new ArrayList<>();
-                    for (int i = 0; i < participantIds.length(); i++) {
-                        String id = participantIds.optString(i);
-                        if (id != null) {
-                            ids.add(id);
-                        }
-                    }
-                    builder.participantIds(ids);
-                }
-
-                conversation = builder.build();
+            if (limitCount <= 0) {
+                limitCount = LIMIT;
             }
-        } catch (Exception e) {
-            Log.w(LOG_TAG, "Failed to build conversation object: " + e.getMessage());
+
+            Object[] args = new Object[]{conversationId, limitCount, beforeTimeISO8601};
+            container.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
+                @Override
+                public void onLambdaSuccess(JSONObject result) {
+                    List<Message> messages = buildMessages(result.optJSONArray("results"));
+                    callback.done(messages, null);
+                }
+
+                @Override
+                public void onLambdaFail(String reason) {
+                    callback.done(null, reason);
+                }
+            });
+        }
+    }
+
+    private List<Message> buildMessages(final JSONArray results) {
+        List<Message> messages = null;
+
+        if (results != null) {
+            messages = new ArrayList<>(results.length());
+
+            for (int i = 0; i < results.length(); i++) {
+                try {
+                    JSONObject object = results.getJSONObject(i);
+                    Message message = buildMessage(object);
+                    if (message != null) {
+                        messages.add(message);
+                    }
+                } catch (JSONException e) {
+                    Log.e(LOG_TAG, "buildMessages: " + e.getMessage());
+                }
+            }
         }
 
-        return conversation;
+        return messages;
+    }
+
+    private Message buildMessage(final JSONObject object) {
+        Message message = null;
+
+        try {
+            Record record = Record.fromJson(object);
+            message = new Message(record);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "buildMessage: " + e.getMessage());
+        }
+
+        return message;
     }
 
     //----------------------------------------------------------------------------------------------
