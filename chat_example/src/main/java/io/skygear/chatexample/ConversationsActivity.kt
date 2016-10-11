@@ -1,7 +1,6 @@
 package io.skygear.chatexample
 
 import android.app.ProgressDialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -10,8 +9,11 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
-import io.skygear.plugins.chat.ChatContainer
-import io.skygear.plugins.chat.Conversation
+import io.skygear.plugins.chat.callbacks.DeleteOneCallback
+import io.skygear.plugins.chat.callbacks.GetCallback
+import io.skygear.plugins.chat.callbacks.SaveCallback
+import io.skygear.plugins.chat.conversation.Conversation
+import io.skygear.plugins.chat.conversation.ConversationContainer
 import io.skygear.skygear.Container
 import io.skygear.skygear.LogoutResponseHandler
 
@@ -19,7 +21,7 @@ class ConversationsActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "ConversationsActivity"
 
     private var mSkygear: Container? = null
-    private var mChatMgr: ChatContainer? = null
+    private var mConversationContainer: ConversationContainer? = null
     private val mAdapter: ConversationsAdapter = ConversationsAdapter()
     private var mConversationsRv: RecyclerView? = null
 
@@ -28,7 +30,7 @@ class ConversationsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_conversations)
 
         mSkygear = Container.defaultContainer(this)
-        mChatMgr = ChatContainer.getInstance(mSkygear)
+        mConversationContainer = ConversationContainer.getInstance(mSkygear)
 
         mConversationsRv = findViewById(R.id.conversations_rv) as RecyclerView
         mConversationsRv?.adapter = mAdapter
@@ -41,10 +43,15 @@ class ConversationsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mChatMgr?.getConversations { list, s ->
-            val conversations = list as List<Conversation>
-            mAdapter.setConversations(conversations)
-        }
+        mConversationContainer?.getAll(object : GetCallback<List<Conversation>>{
+            override fun onSucc(list: List<Conversation>?) {
+                mAdapter.setConversations(list)
+            }
+
+            override fun onFail(failReason: String?) {
+
+            }
+        } )
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -106,15 +113,13 @@ class ConversationsActivity : AppCompatActivity() {
 
     fun showOptions(c: Conversation) {
         val builder = AlertDialog.Builder(this)
-        val items = arrayOf<CharSequence>(getString(R.string.enter),
-                getString(R.string.edit), getString(R.string.delete))
-        builder.setItems(items, object : DialogInterface.OnClickListener{
-            override fun onClick(dialog: DialogInterface?, which: Int) {
-                throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-        })
+        val items = resources.getStringArray(R.array.conversation_options)
         builder.setItems(items, { d, i -> when(i) {
             0 -> enter(c)
+            1 -> edit(c)
+            2 -> confirmDelete(c)
+            3 -> addRmAdmins(c)
+            4 -> addRmParticipants(c)
         } })
         val alert = builder.create()
         alert.show()
@@ -122,5 +127,75 @@ class ConversationsActivity : AppCompatActivity() {
 
     fun enter(c: Conversation) {
         startActivity(ConversationActivity.newIntent(c, this))
+    }
+
+    fun edit(c: Conversation) {
+        val f = TitleFragment.newInstance(c.title)
+        f.setOnOkBtnClickedListener { t -> updateTitle(c, t) }
+        f.show(supportFragmentManager, "update_conversation")
+    }
+
+    fun updateTitle(c: Conversation, t: String) {
+        mConversationContainer?.update(c.id, t, object : SaveCallback<Conversation> {
+            override fun onSucc(new: Conversation?) {
+                mAdapter.updateConversation(c, new)
+            }
+
+            override fun onFail(failReason: String?) {
+
+            }
+        })
+    }
+
+    fun confirmDelete(c: Conversation) {
+        AlertDialog.Builder(this)
+                .setTitle(R.string.confirm)
+                .setMessage(R.string.are_your_sure_to_delete_conversation)
+                .setPositiveButton(R.string.yes) { dialog, which -> delete(c) }
+                .setNegativeButton(R.string.no, null).show()
+    }
+
+    fun delete(c: Conversation) {
+        mConversationContainer?.delete(c.id, object : DeleteOneCallback{
+            override fun onSucc(deletedId: String?) {
+
+            }
+
+            override fun onFail(failReason: String?) {
+
+            }
+        } )
+    }
+
+    fun addRmAdmins(c: Conversation) {
+        val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
+        f.setOnOkBtnClickedListener { ids ->
+            mConversationContainer?.setAdminIds(c.id, ids, object : SaveCallback<Conversation> {
+                override fun onSucc(new: Conversation?) {
+                    mAdapter.updateConversation(c, new)
+                }
+
+                override fun onFail(failReason: String?) {
+
+                }
+            })
+        }
+        f.show(supportFragmentManager, "update_admins")
+    }
+
+    fun addRmParticipants(c: Conversation) {
+        val f = UserIdsFragment.newInstance(getString(R.string.add_remove_participants), c.participantIds)
+        f.setOnOkBtnClickedListener { ids ->
+            mConversationContainer?.setParticipantsIds(c.id, ids,object : SaveCallback<Conversation> {
+                override fun onSucc(new: Conversation?) {
+                    mAdapter.updateConversation(c, new)
+                }
+
+                override fun onFail(failReason: String?) {
+
+                }
+            })
+        }
+        f.show(supportFragmentManager, "update_participants")
     }
 }

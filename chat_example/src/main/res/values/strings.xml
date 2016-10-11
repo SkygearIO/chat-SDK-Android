@@ -43,6 +43,9 @@
     <!-- loading create a conversation -->
     <string name="creating">Creating&#8230;</string>
 
+    <!-- loading attachment -->
+    <string name="attaching">Attaching&#8230;</string>
+
     <!-- confirm dialog title -->
     <string name="confirm">Confirm</string>
 
@@ -67,12 +70,24 @@
     <!-- conversation title -->
     <string name="title">Title</string>
 
-    <!-- click on conversation option -->
-    <string name="enter">Enter</string>
+    <!-- click on conversation options -->
+    <string-array name="conversation_options">
+        <item>Enter</item>
+        <item>Edit</item>
+        <item>Delete</item>
+        <item>Add/Remove Admins</item>
+        <item>Add/Remove Participants</item>
+    </string-array>
 
-    <!-- click on conversation option -->
-    <string name="edit">Edit</string>
+    <!-- intent title for selecting pic -->
+    <string name="select_image">Select Image</string>
 
-    <!-- click on conversation option -->
-    <string name="delete">Delete</string>
+    <!-- confirm string for log out -->
+    <string name="are_your_sure_to_delete_conversation">Are you sure to delete conversation?</string>
+
+    <!-- Add/Remove Admin title -->
+    <string name="add_remove_admins">Add/Remove Admin</string>
+
+    <!-- Add/Remove Participants title -->
+    <string name="add_remove_participants">Add/Remove Participants</string>
 </resources>

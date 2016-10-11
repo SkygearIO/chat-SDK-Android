@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import io.skygear.plugins.chat.Conversation
+import io.skygear.plugins.chat.conversation.Conversation
 
 class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolder>() {
     private val LOG_TAG = "Adapter"
@@ -20,6 +20,29 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
     fun setConversations(conversations: List<Conversation>?) {
         if (conversations != null) {
             mConversations = conversations
+            notifyDataSetChanged()
+        }
+    }
+
+    fun updateConversation(old: Conversation, new: Conversation?) {
+        if (new != null) {
+            val conversations: MutableList<Conversation> = mConversations.toMutableList()
+            val idx = conversations.indexOf(old)
+
+            if (idx != -1) {
+                conversations[idx] = new
+                mConversations = conversations.toList()
+                notifyDataSetChanged()
+            }
+        }
+    }
+
+    fun deleteConversation(id: String?) {
+        if (id != null) {
+            val conversations: MutableList<Conversation> = mConversations.toMutableList()
+            val conversation = conversations.find { it.id.equals(id) }
+            conversations.remove(conversation)
+            mConversations = conversations.toList()
             notifyDataSetChanged()
         }
     }

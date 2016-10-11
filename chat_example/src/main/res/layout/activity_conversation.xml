@@ -13,6 +13,12 @@
         android:layout_height="match_parent"
         android:layout_above="@+id/input_region"/>
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/md_grey_100"
+        android:layout_above="@+id/input_region"/>
+
     <LinearLayout
         android:id="@+id/input_region"
         android:layout_width="match_parent"
@@ -20,21 +26,33 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:orientation="horizontal"
-        android:gravity="center"
+        android:gravity="bottom"
         android:layout_alignParentBottom="true"
-        android:background="@color/md_blue_50">
+        android:background="@color/md_grey_50">
+
+        <ImageButton
+            android:id="@+id/attachment_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:background="@null"
+            android:src="@drawable/ic_attachment_black_24dp"/>
 
         <EditText
+            android:id="@+id/input_et"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
+            android:maxLines="3"
             android:textSize="@dimen/body_text_size"/>
 
         <ImageButton
+            android:id="@+id/send_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
             android:background="@null"
-            android:src="@drawable/ic_attachment_black_24dp"/>
+            android:src="@drawable/ic_send_black_24dp"/>
 
     </LinearLayout>
 

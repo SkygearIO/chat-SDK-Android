@@ -7,16 +7,20 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.Button
 import android.widget.Toast
-import io.skygear.plugins.chat.ChatContainer
-import io.skygear.plugins.chat.ChatUser
-import io.skygear.plugins.chat.Conversation
+import io.skygear.plugins.chat.callbacks.GetCallback
+import io.skygear.plugins.chat.callbacks.SaveCallback
+import io.skygear.plugins.chat.chatUser.ChatUser
+import io.skygear.plugins.chat.chatUser.ChatUserContainer
+import io.skygear.plugins.chat.conversation.Conversation
+import io.skygear.plugins.chat.conversation.ConversationContainer
 import io.skygear.skygear.Container
 
 class CreateConversationActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "CreateConversation"
 
     private var mSkygear: Container? = null
-    private var mChatMgr: ChatContainer? = null
+    private var mConversationContainer: ConversationContainer? = null
+    private var mChatUserContainer: ChatUserContainer? = null
     private var mAdapter: ChatUsesAdapter? = null
     private var mCreateBtn: Button? = null
     private var mUserIdsRv: RecyclerView? = null
@@ -26,7 +30,8 @@ class CreateConversationActivity : AppCompatActivity() {
         setContentView(R.layout.activity_create_conversation)
 
         mSkygear = Container.defaultContainer(this)
-        mChatMgr = ChatContainer.getInstance(mSkygear)
+        mConversationContainer = ConversationContainer.getInstance(mSkygear)
+        mChatUserContainer = ChatUserContainer.getInstance(mSkygear)
 
         mUserIdsRv = findViewById(R.id.chat_users_rv) as RecyclerView
         mCreateBtn = findViewById(R.id.create_conversation_btn) as Button
@@ -45,13 +50,19 @@ class CreateConversationActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mChatMgr?.getChatUsers { list, s ->
-            mAdapter?.setChatUsers(list as List<ChatUser>)
-        }
+        mChatUserContainer?.getAll(object : GetCallback<List<ChatUser>>{
+            override fun onSucc(list: List<ChatUser>?) {
+                mAdapter?.setChatUsers(list);
+            }
+
+            override fun onFail(failReason: String?) {
+
+            }
+        })
     }
 
     fun createTitleDialog() {
-        val f = CreateConversationTitleFragment()
+        val f = TitleFragment()
         f.setOnOkBtnClickedListener { t -> createConversation(mAdapter?.getSelected(), t) }
         f.show(supportFragmentManager, "create_conversation")
     }
@@ -72,15 +83,22 @@ class CreateConversationActivity : AppCompatActivity() {
             loading.setMessage(getString(R.string.creating))
             loading.show()
 
-            mChatMgr?.createConversation(participantIds, participantIds, title, { c: Conversation?, r: String? ->
-                loading.dismiss()
+            mConversationContainer?.create(participantIds, participantIds, title,
+                    object : SaveCallback<Conversation> {
+                        override fun onSucc(`object`: Conversation?) {
+                            loading.dismiss()
 
-                if (r != null) {
-                    toast(r)
-                } else {
-                    finish()
-                }
-            })
+                            finish()
+                        }
+
+                        override fun onFail(failReason: String?) {
+                            loading.dismiss()
+
+                            if (failReason != null) {
+                                toast(failReason)
+                            }
+                        }
+                    })
         }
     }
 

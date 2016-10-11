@@ -4,22 +4,31 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
-import io.skygear.plugins.chat.Message
+import com.squareup.picasso.Picasso
+import io.skygear.plugins.chat.message.Message
 
 class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>() {
     private val LOG_TAG = "Adapter"
 
-    private var mMessages: List<Message> = listOf()
+    private var mMessages: MutableList<Message> = mutableListOf()
 
     fun setMessages(messages: List<Message>?) {
         if (messages != null) {
-            mMessages = messages
+            mMessages = messages.toMutableList()
         } else {
-            mMessages = listOf();
+            mMessages = mutableListOf();
         }
 
         notifyDataSetChanged()
+    }
+
+    fun addMessage(message: Message?) {
+        if (message != null) {
+            mMessages.add(0, message)
+            notifyDataSetChanged()
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -30,7 +39,19 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val message: Message? = mMessages[position]
 
-        holder.bodyTv.text = message?.body
+        if (!message?.body.isNullOrEmpty()) {
+            holder.bodyTv.visibility = View.VISIBLE
+            holder.bodyTv.text = message?.body
+        } else {
+            holder.bodyTv.visibility = View.GONE
+        }
+
+        if (message?.asset != null) {
+            holder.assetIv.visibility = View.VISIBLE
+            Picasso.with(holder.assetIv.context).load(message?.asset?.url).into(holder.assetIv);
+        } else {
+            holder.assetIv.visibility = View.GONE
+        }
     }
 
     override fun getItemCount(): Int {
@@ -39,5 +60,6 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view)  {
         val bodyTv = view.findViewById(R.id.message_body_tv) as TextView
+        val assetIv = view.findViewById(R.id.message_asset_iv) as ImageView
     }
 }

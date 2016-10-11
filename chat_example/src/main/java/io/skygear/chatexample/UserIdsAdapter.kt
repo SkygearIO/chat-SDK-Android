@@ -8,25 +8,28 @@ import android.view.ViewGroup
 import android.widget.TextView
 import io.skygear.plugins.chat.chatUser.ChatUser
 
-class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAdapter.ViewHolder>() {
-    private val LOG_TAG: String? = "ChatUsesAdapter"
+class UserIdsAdapter(val currentUserId: String?) : RecyclerView.Adapter<UserIdsAdapter.ViewHolder>() {
+    private val LOG_TAG: String? = "UserIdsAdapter"
 
-    private var mChatUsers: List<ChatUser> = listOf()
-    private var mSelectedChatUsers: MutableList<ChatUser> = mutableListOf()
-    private val mCurrentUserId = currentUserId
+    private var chatUsers: List<ChatUser> = listOf()
+    private var selectedIds: MutableList<String> = mutableListOf()
 
-    fun setChatUsers(chatUsers: List<ChatUser>?) {
+    fun setUserIds(chatUsers: List<ChatUser>?, selectedIds: List<String>?) {
         if (chatUsers != null) {
-            mChatUsers = chatUsers.filter {
-                it.id != mCurrentUserId
+            this.chatUsers = chatUsers.filter {
+                it.id != currentUserId
             }
-
-            notifyDataSetChanged()
         }
+
+        if (selectedIds != null) {
+            this.selectedIds = selectedIds.toMutableList()
+        }
+
+        notifyDataSetChanged()
     }
 
-    fun getSelected(): List<ChatUser> {
-        return mSelectedChatUsers
+    fun getSelectedIds(): List<String> {
+        return selectedIds
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -35,20 +38,21 @@ class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAda
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val chatUser: ChatUser = mChatUsers[position]
+        val chatUser: ChatUser = chatUsers[position]
 
         holder.idTv.text = chatUser.id
+        holder.idCb.isChecked = chatUser.id in selectedIds
         holder.idCb.setOnCheckedChangeListener { compoundButton, b ->
             if (b) {
-                mSelectedChatUsers.add(chatUser)
+                selectedIds.add(chatUser.id)
             } else {
-                mSelectedChatUsers.remove(chatUser)
+                selectedIds.remove(chatUser.id)
             }
         }
     }
 
     override fun getItemCount(): Int {
-        return mChatUsers.size
+        return chatUsers.size
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -56,4 +60,3 @@ class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAda
         var idTv = view.findViewById(R.id.user_id_tv) as TextView
     }
 }
-
