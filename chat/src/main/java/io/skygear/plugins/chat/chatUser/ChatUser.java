@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat;
+package io.skygear.plugins.chat.chatUser;
 
 
 import android.support.annotation.Nullable;
@@ -7,7 +7,7 @@ public class ChatUser {
     private String id;
     private String name;
 
-    public ChatUser(final String id, final String name) {
+    ChatUser(final String id, final String name) {
         this.id = id;
         this.name = name;
     }

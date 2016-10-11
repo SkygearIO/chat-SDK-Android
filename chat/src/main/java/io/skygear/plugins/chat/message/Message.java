@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat;
+package io.skygear.plugins.chat.message;
 
 
 import android.support.annotation.Nullable;
@@ -7,8 +7,11 @@ import org.json.JSONObject;
 
 import io.skygear.skygear.Asset;
 import io.skygear.skygear.Record;
+import io.skygear.skygear.Reference;
 
 public class Message {
+    private static final String TYPE_KEY = "message";
+
     private static final String LOG_TAG = Message.class.getSimpleName();
     private static final String BODY_KEY = "body";
     private static final String METADATA_KEY = "metadata";
@@ -22,6 +25,11 @@ public class Message {
 
     public String getId() {
         return record.getId();
+    }
+
+    public String getConversationId() {
+        Reference reference = (Reference) record.get("conversation_id");
+        return reference.getId();
     }
 
     @Nullable
@@ -41,5 +49,9 @@ public class Message {
     @Nullable
     public Asset getAsset() {
         return (Asset) record.get(ATTACHMENT_KEY);
+    }
+
+    public static Reference newReference(final String messageId) {
+        return new Reference(TYPE_KEY, messageId);
     }
 }
