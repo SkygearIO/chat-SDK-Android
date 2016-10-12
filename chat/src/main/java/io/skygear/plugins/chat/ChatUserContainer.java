@@ -41,7 +41,7 @@ public class ChatUserContainer {
     /**
      * Gets all chat users on the skygear.
      *
-     * @param callback - GetCallback<List<ChatUser>> to handle result chat users
+     * @param callback - GetCallback&lt;List&lt;ChatUser&gt;&gt; to handle result chat users
      */
     public void getAll(@Nullable final GetCallback<List<ChatUser>> callback) {
         Query query = new Query("user");

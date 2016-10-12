@@ -51,7 +51,7 @@ public final class ConversationContainer {
      * @param participantIds - the participants ids
      * @param adminIds - the admin ids
      * @param title - the title
-     * @param callback - SaveCallback<Conversation> to handle new conversation
+     * @param callback - SaveCallback&lt;Conversation&gt; to handle new conversation
      */
     public void create(@Nullable final List<String> participantIds,
                        @Nullable final List<String> adminIds,
@@ -76,7 +76,7 @@ public final class ConversationContainer {
     /**
      * Gets all conversations where the user joined.
      *
-     * @param callback - GetCallback<List<Conversation>> to handle result conversations
+     * @param callback - GetCallback&lt;List&lt;Conversation&gt;&gt; to handle result conversations
      */
     public void getAll(@Nullable final GetCallback<List<Conversation>> callback) {
         publicDB.query(UserConversation.buildQuery(userId),
@@ -98,7 +98,7 @@ public final class ConversationContainer {
      * Gets a conversation by id.
      *
      * @param conversationId - the conversation id
-     * @param callback - GetCallback<Conversation> to handle result conversation
+     * @param callback - GetCallback&lt;Conversation&gt; to handle result conversation
      */
     public void get(@NonNull final String conversationId,
                     @Nullable final GetCallback<Conversation> callback) {
@@ -116,7 +116,7 @@ public final class ConversationContainer {
      *
      * @param conversationId - the conversation id
      * @param title - the new title
-     * @param callback - SaveCallback<Conversation> to handle result conversation
+     * @param callback - SaveCallback&lt;Conversation&gt; to handle result conversation
      */
     public void update(@NonNull final String conversationId,
                        @NonNull final String title,
@@ -132,7 +132,7 @@ public final class ConversationContainer {
      *
      * @param conversationId - the conversation id
      * @param adminIds - the new admin ids
-     * @param callback - SaveCallback<Conversation> to handle result conversation
+     * @param callback - SaveCallback&lt;Conversation&gt; to handle result conversation
      */
     public void setAdminIds(@NonNull final String conversationId,
                             @NonNull final List<String> adminIds,
@@ -150,7 +150,7 @@ public final class ConversationContainer {
      *
      * @param conversationId - the conversation id
      * @param participantIds - the new participant ids
-     * @param callback - SaveCallback<Conversation> to handle result conversation
+     * @param callback - SaveCallback&lt;Conversation&gt; to handle result conversation
      */
     public void setParticipantsIds(@NonNull final String conversationId,
                                    @NonNull final List<String> participantIds,

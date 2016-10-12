@@ -55,7 +55,7 @@ public final class MessageContainer {
      * @param conversationId - the conversation id
      * @param limit - the limit of number of messages, default value is 50
      * @param before - get the messages before the Date instance
-     * @param callback - GetCallback<List<Message>> to handle messages
+     * @param callback - GetCallback&lt;List&lt;Message&gt;&gt; to handle messages
      */
     public void getAll(@NonNull final String conversationId,
                        final int limit,
@@ -94,7 +94,7 @@ public final class MessageContainer {
      * @param body - the message body
      * @param asset - the message asset
      * @param metadata - the message metadata
-     * @param callback - SaveCallback<Message> to handle send result
+     * @param callback - SaveCallback&lt;Message&gt; to handle send result
      *
      * Either body, asset or metadata can't be null
      */
