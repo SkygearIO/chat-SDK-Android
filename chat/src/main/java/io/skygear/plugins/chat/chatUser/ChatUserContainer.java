@@ -14,7 +14,7 @@ import io.skygear.skygear.Record;
 public class ChatUserContainer {
     private static ChatUserContainer sharedInstance;
 
-    private Container container;
+    private final Container container;
 
     public static ChatUserContainer getInstance(final Container container) {
         if (sharedInstance == null) {

@@ -8,7 +8,7 @@ import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordSaveResponseHandler;
 
 public abstract class SaveResp<T> extends RecordSaveResponseHandler {
-    private SaveCallback<T> callback;
+    private final SaveCallback<T> callback;
 
     public SaveResp(final SaveCallback<T> callback) {
         this.callback = callback;

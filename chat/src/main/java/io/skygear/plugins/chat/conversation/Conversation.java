@@ -17,7 +17,7 @@ public class Conversation {
     static final String ADMIN_IDS_KEY = "admin_ids";
     static final String PARTICIPANT_IDS_KEY = "participant_ids";
 
-    private Record record;
+    private final Record record;
     private List<String> adminIds;
     private List<String> participantIds;
 

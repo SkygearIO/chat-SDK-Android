@@ -7,7 +7,7 @@ import io.skygear.plugins.chat.callbacks.DeleteOneCallback;
 import io.skygear.skygear.RecordDeleteResponseHandler;
 
 public final class DeleteResp extends RecordDeleteResponseHandler {
-    private DeleteOneCallback callback;
+    private final DeleteOneCallback callback;
 
     public DeleteResp(DeleteOneCallback callback) {
         this.callback = callback;

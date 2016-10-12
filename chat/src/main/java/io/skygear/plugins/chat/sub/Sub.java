@@ -15,10 +15,10 @@ import io.skygear.skygear.Record;
 final class Sub {
     private static final String LOG_TAG = Sub.class.getSimpleName();
 
-    private String conversationId;
-    private String channel;
-    private Pubsub.Handler handler;
-    private SubCallback<Message> callback;
+    private final String conversationId;
+    private final String channel;
+    private final Pubsub.Handler handler;
+    private final SubCallback<Message> callback;
 
     Sub(final String conversationId,
         final String channel,

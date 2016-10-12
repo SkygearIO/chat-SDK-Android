@@ -6,7 +6,7 @@ import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordQueryResponseHandler;
 
 public abstract class GetResp<T> extends RecordQueryResponseHandler {
-    private GetCallback<T> callback;
+    private final GetCallback<T> callback;
 
     public GetResp(GetCallback<T> callback) {
         this.callback = callback;

@@ -20,11 +20,9 @@ import io.skygear.skygear.RecordQueryResponseHandler;
 import io.skygear.skygear.RecordSaveResponseHandler;
 
 public final class SubContainer {
-    private static final String LOG_TAG = SubContainer.class.getSimpleName();
-
     private static SubContainer sharedInstance;
-    private Container container;
-    private Map<String, Sub> subs = new HashMap<>();
+    private final Container container;
+    private final Map<String, Sub> subs = new HashMap<>();
 
     public static SubContainer getInstance(final Container container) {
         if (sharedInstance == null) {

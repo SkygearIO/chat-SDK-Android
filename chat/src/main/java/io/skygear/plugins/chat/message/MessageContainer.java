@@ -30,7 +30,7 @@ public final class MessageContainer {
     private static final int LIMIT = 50; // default value
 
     private static MessageContainer sharedInstance;
-    private Container container;
+    private final Container container;
 
     public static MessageContainer getInstance(final Container container) {
         if (sharedInstance == null) {
@@ -48,7 +48,7 @@ public final class MessageContainer {
                        final int limit,
                        @Nullable final Date before,
                        @Nullable final GetCallback<List<Message>> callback) {
-        if (StringUtils.isNotEmpty(conversationId)) {
+        if (!StringUtils.isEmpty(conversationId)) {
             int limitCount = limit;
             String beforeTimeISO8601 = DateUtils.toISO8601(before != null ? before : new Date());
 
@@ -83,7 +83,7 @@ public final class MessageContainer {
                      @Nullable final Asset asset,
                      @Nullable final JSONObject metadata,
                      @Nullable final SaveCallback<Message> callback) {
-        if (StringUtils.isNotEmpty(conversationId)
+        if (!StringUtils.isEmpty(conversationId)
                 && !(StringUtils.isEmpty(body) && asset == null && metadata == null)) {
             Record record = new Record("message");
             Reference reference = new Reference("conversation", conversationId);
@@ -157,16 +157,8 @@ public final class MessageContainer {
         return messages;
     }
 
-    private Message buildMessage(final JSONObject object) {
-        Message message = null;
-
-        try {
-            Record record = Record.fromJson(object);
-            message = new Message(record);
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "buildMessage: " + e.getMessage());
-        }
-
-        return message;
+    private Message buildMessage(final JSONObject object) throws JSONException {
+        Record record = Record.fromJson(object);
+        return new Message(record);
     }
 }

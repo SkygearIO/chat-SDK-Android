@@ -11,13 +11,11 @@ import io.skygear.skygear.Reference;
 
 public class Message {
     private static final String TYPE_KEY = "message";
-
-    private static final String LOG_TAG = Message.class.getSimpleName();
     private static final String BODY_KEY = "body";
     private static final String METADATA_KEY = "metadata";
     private static final String ATTACHMENT_KEY = "attachment";
 
-    private Record record;
+    private final Record record;
 
     public Message(final Record record) {
         this.record = record;

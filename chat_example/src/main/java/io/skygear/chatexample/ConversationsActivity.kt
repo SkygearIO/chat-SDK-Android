@@ -20,17 +20,19 @@ import io.skygear.skygear.LogoutResponseHandler
 class ConversationsActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "ConversationsActivity"
 
-    private var mSkygear: Container? = null
-    private var mConversationContainer: ConversationContainer? = null
+    private val mSkygear: Container
+    private val mConversationContainer: ConversationContainer
     private val mAdapter: ConversationsAdapter = ConversationsAdapter()
     private var mConversationsRv: RecyclerView? = null
+
+    init {
+        mSkygear = Container.defaultContainer(this)
+        mConversationContainer = ConversationContainer.getInstance(mSkygear)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_conversations)
-
-        mSkygear = Container.defaultContainer(this)
-        mConversationContainer = ConversationContainer.getInstance(mSkygear)
 
         mConversationsRv = findViewById(R.id.conversations_rv) as RecyclerView
         mConversationsRv?.adapter = mAdapter
@@ -43,7 +45,7 @@ class ConversationsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mConversationContainer?.getAll(object : GetCallback<List<Conversation>>{
+        mConversationContainer.getAll(object : GetCallback<List<Conversation>>{
             override fun onSucc(list: List<Conversation>?) {
                 mAdapter.setConversations(list)
             }
@@ -87,7 +89,7 @@ class ConversationsActivity : AppCompatActivity() {
         loading.setMessage(getString(R.string.logging_out))
         loading.show()
 
-        mSkygear?.logout(object : LogoutResponseHandler() {
+        mSkygear.logout(object : LogoutResponseHandler() {
             override fun onLogoutSuccess() {
                 loading.dismiss()
 
@@ -136,7 +138,7 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     fun updateTitle(c: Conversation, t: String) {
-        mConversationContainer?.update(c.id, t, object : SaveCallback<Conversation> {
+        mConversationContainer.update(c.id, t, object : SaveCallback<Conversation> {
             override fun onSucc(new: Conversation?) {
                 mAdapter.updateConversation(c, new)
             }
@@ -156,7 +158,7 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     fun delete(c: Conversation) {
-        mConversationContainer?.delete(c.id, object : DeleteOneCallback{
+        mConversationContainer.delete(c.id, object : DeleteOneCallback{
             override fun onSucc(deletedId: String?) {
 
             }
@@ -170,7 +172,7 @@ class ConversationsActivity : AppCompatActivity() {
     fun addRmAdmins(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
         f.setOnOkBtnClickedListener { ids ->
-            mConversationContainer?.setAdminIds(c.id, ids, object : SaveCallback<Conversation> {
+            mConversationContainer.setAdminIds(c.id, ids, object : SaveCallback<Conversation> {
                 override fun onSucc(new: Conversation?) {
                     mAdapter.updateConversation(c, new)
                 }
@@ -186,7 +188,7 @@ class ConversationsActivity : AppCompatActivity() {
     fun addRmParticipants(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_participants), c.participantIds)
         f.setOnOkBtnClickedListener { ids ->
-            mConversationContainer?.setParticipantsIds(c.id, ids,object : SaveCallback<Conversation> {
+            mConversationContainer.setParticipantsIds(c.id, ids, object : SaveCallback<Conversation> {
                 override fun onSucc(new: Conversation?) {
                     mAdapter.updateConversation(c, new)
                 }

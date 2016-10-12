@@ -4,8 +4,8 @@ package io.skygear.plugins.chat.chatUser;
 import android.support.annotation.Nullable;
 
 public class ChatUser {
-    private String id;
-    private String name;
+    private final String id;
+    private final String name;
 
     ChatUser(final String id, final String name) {
         this.id = id;

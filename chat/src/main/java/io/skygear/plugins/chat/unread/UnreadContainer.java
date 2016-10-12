@@ -10,7 +10,7 @@ import io.skygear.skygear.LambdaResponseHandler;
 
 public class UnreadContainer {
     private static UnreadContainer sharedInstance;
-    private Container container;
+    private final Container container;
 
     public static UnreadContainer getInstance(final Container container) {
         if (sharedInstance == null) {

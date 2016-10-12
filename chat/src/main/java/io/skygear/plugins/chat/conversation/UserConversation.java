@@ -13,14 +13,14 @@ final class UserConversation {
     static final String LAST_READ_MESSAGE_KEY = "last_read_message";
 
     static Conversation getConversation(Record record) {
-        Map<String, Record> includeMap = record.getTransient();
-        Record conversationRecord = includeMap.get(CONVERSATION_KEY);
+        Map<String, Object> includeMap = record.getTransient();
+        Record conversationRecord = (Record) includeMap.get(CONVERSATION_KEY);
         return new Conversation(conversationRecord);
     }
 
     static Record getConversationRecord(Record record) {
-        Map<String, Record> includeMap = record.getTransient();
-        return includeMap.get(CONVERSATION_KEY);
+        Map<String, Object> includeMap = record.getTransient();
+        return (Record) includeMap.get(CONVERSATION_KEY);
     }
 
     static Query buildQuery(final String userId) {

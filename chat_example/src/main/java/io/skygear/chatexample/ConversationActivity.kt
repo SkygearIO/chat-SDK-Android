@@ -31,10 +31,10 @@ class ConversationActivity : AppCompatActivity() {
     private val MESSAGES_LIMIT = 25
     private val SELECT_SINGLE_PICTURE = 101
 
-    private var mSkygear: Container? = null
-    private var mConversationContainer: ConversationContainer? = null
-    private var mMessageContainer: MessageContainer? = null
-    private var mSubContainer: SubContainer? = null
+    private val mSkygear: Container
+    private val mConversationContainer: ConversationContainer
+    private val mMessageContainer: MessageContainer
+    private val mSubContainer: SubContainer
     private var mConversationId: String? = null
     private val mAdapter: ConversationAdapter = ConversationAdapter()
     private var mConversationRv: RecyclerView? = null
@@ -53,14 +53,17 @@ class ConversationActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_conversation)
-
+    init {
         mSkygear = Container.defaultContainer(this)
         mConversationContainer = ConversationContainer.getInstance(mSkygear)
         mMessageContainer = MessageContainer.getInstance(mSkygear)
         mSubContainer = SubContainer.getInstance(mSkygear)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_conversation)
+
         mConversationId = intent.getStringExtra(ID_KEY)
 
         mConversationRv = findViewById(R.id.conversation_rv) as RecyclerView
@@ -82,13 +85,13 @@ class ConversationActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mMessageContainer?.getAll(mConversationId, MESSAGES_LIMIT, Date(),
+        mMessageContainer.getAll(mConversationId!!, MESSAGES_LIMIT, Date(),
                 object : GetCallback<List<Message>> {
                     override fun onSucc(list: List<Message>?) {
                         mAdapter.setMessages(list)
                         if (list != null && !list.isEmpty()) {
-                            mConversationContainer?.markLastReadMessage(
-                                    mConversationId, list.first().id)
+                            mConversationContainer.markLastReadMessage(
+                                    mConversationId!!, list.first().id)
                         }
                     }
 
@@ -97,8 +100,8 @@ class ConversationActivity : AppCompatActivity() {
                     }
                 })
 
-        mSubContainer?.sub(mConversationId, { t, m ->
-            when(t) {
+        mSubContainer.sub(mConversationId!!, { t, m ->
+            when (t) {
                 "create" -> mAdapter.addMessage(m)
             }
         })
@@ -107,7 +110,7 @@ class ConversationActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
 
-        mSubContainer?.unSub(mConversationId)
+        mSubContainer.unSub(mConversationId!!)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -121,7 +124,7 @@ class ConversationActivity : AppCompatActivity() {
 
         if ((!body.isNullOrEmpty() && !body.isNullOrBlank())
                 || mAsset != null) {
-            mMessageContainer?.send(mConversationId,
+            mMessageContainer.send(mConversationId!!,
                     body.toString().trim(),
                     mAsset,
                     null,

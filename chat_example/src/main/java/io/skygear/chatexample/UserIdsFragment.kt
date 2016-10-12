@@ -18,10 +18,10 @@ import io.skygear.skygear.Container
 import java.util.*
 
 class UserIdsFragment : DialogFragment() {
-    private var mListener: (List<String>?) -> Unit = {}
+    private var mListener: (List<String>) -> Unit = {}
 
-    private var mSkygear: Container? = null
-    private var mChatUserContainer: ChatUserContainer? = null
+    private val mSkygear: Container
+    private val mChatUserContainer: ChatUserContainer
 
     private var mAdapter: UserIdsAdapter? = null
     private var mUserIdsRv: RecyclerView? = null
@@ -41,10 +41,7 @@ class UserIdsFragment : DialogFragment() {
         }
     }
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+    init {
         mSkygear = Container.defaultContainer(activity)
         mChatUserContainer = ChatUserContainer.getInstance(mSkygear)
     }
@@ -59,7 +56,7 @@ class UserIdsFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         mUserIdsRv = view?.findViewById(R.id.user_ids_rv) as RecyclerView
-        mAdapter = UserIdsAdapter(mSkygear?.currentUser?.id)
+        mAdapter = UserIdsAdapter(mSkygear.currentUser?.id)
         mUserIdsRv?.adapter = mAdapter
         mUserIdsRv?.layoutManager = LinearLayoutManager(activity)
 
@@ -71,7 +68,7 @@ class UserIdsFragment : DialogFragment() {
 
         val okBtn: Button? = view?.findViewById(R.id.ok_btn) as Button
         okBtn?.setOnClickListener {
-            mListener(mAdapter?.getSelectedIds())
+            mListener(mAdapter!!.getSelectedIds())
             dismiss()
         }
     }
@@ -83,7 +80,7 @@ class UserIdsFragment : DialogFragment() {
 
         super.onResume()
 
-        mChatUserContainer?.getAll(object : GetCallback<List<ChatUser>>{
+        mChatUserContainer.getAll(object : GetCallback<List<ChatUser>>{
             override fun onSucc(list: List<ChatUser>?) {
                 mAdapter?.setUserIds(list, arguments.getStringArrayList(SELECT_IDS_KEY))
             }
@@ -94,7 +91,7 @@ class UserIdsFragment : DialogFragment() {
         })
     }
 
-    fun setOnOkBtnClickedListener(listener: (List<String>?) -> Unit) {
+    fun setOnOkBtnClickedListener(listener: (List<String>) -> Unit) {
         mListener = listener
     }
 }
