@@ -1,6 +1,7 @@
 package io.skygear.plugins.chat.message;
 
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -25,6 +26,9 @@ import io.skygear.skygear.LambdaResponseHandler;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.Reference;
 
+/**
+ * Message Container for Skygear Chat Plugin.
+ */
 public final class MessageContainer {
     private static final String LOG_TAG = MessageContainer.class.getSimpleName();
     private static final int LIMIT = 50; // default value
@@ -32,7 +36,13 @@ public final class MessageContainer {
     private static MessageContainer sharedInstance;
     private final Container container;
 
-    public static MessageContainer getInstance(final Container container) {
+    /**
+     * Gets the Message container of Chat Plugin shared within the application.
+     *
+     * @param container - skygear context
+     * @return a Message container
+     */
+    public static MessageContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
             sharedInstance = new MessageContainer(container);
         }
@@ -44,47 +54,61 @@ public final class MessageContainer {
         this.container = container;
     }
 
-    public void getAll(final String conversationId,
+    /**
+     * Gets all messages of a conversation.
+     *
+     * @param conversationId - the conversation id
+     * @param limit - the limit of number of messages, default value is 50
+     * @param before - get the messages before the Date instance
+     * @param callback - GetCallback<List<Message>> to handle messages
+     */
+    public void getAll(@NonNull final String conversationId,
                        final int limit,
                        @Nullable final Date before,
                        @Nullable final GetCallback<List<Message>> callback) {
-        if (!StringUtils.isEmpty(conversationId)) {
-            int limitCount = limit;
-            String beforeTimeISO8601 = DateUtils.toISO8601(before != null ? before : new Date());
+        int limitCount = limit;
+        String beforeTimeISO8601 = DateUtils.toISO8601(before != null ? before : new Date());
 
-            if (limitCount <= 0) {
-                limitCount = LIMIT;
+        if (limitCount <= 0) {
+            limitCount = LIMIT;
+        }
+
+        Object[] args = new Object[]{conversationId, limitCount, beforeTimeISO8601};
+        container.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
+            @Override
+            public void onLambdaSuccess(JSONObject result) {
+                List<Message> messages = buildMessages(result.optJSONArray("results"));
+                if (callback != null) {
+                    callback.onSucc(messages);
+                }
             }
 
-            Object[] args = new Object[]{conversationId, limitCount, beforeTimeISO8601};
-            container.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
-                @Override
-                public void onLambdaSuccess(JSONObject result) {
-                    List<Message> messages = buildMessages(result.optJSONArray("results"));
-                    if (callback != null) {
-                        callback.onSucc(messages);
-                    }
+            @Override
+            public void onLambdaFail(String reason) {
+                if (callback != null) {
+                    callback.onFail(reason);
                 }
-
-                @Override
-                public void onLambdaFail(String reason) {
-                    if (callback != null) {
-                        callback.onFail(reason);
-                    }
-                }
-            });
-        } else if (callback != null) {
-            callback.onFail("Conversation ID can't be null or empty");
-        }
+            }
+        });
     }
 
-    public void send(final String conversationId,
+    /**
+     * Send a message to a conversation.
+     *
+     * @param conversationId - the conversation id
+     * @param body - the message body
+     * @param asset - the message asset
+     * @param metadata - the message metadata
+     * @param callback - SaveCallback<Message> to handle send result
+     *
+     * Either body, asset or metadata can't be null
+     */
+    public void send(@NonNull final String conversationId,
                      @Nullable final String body,
                      @Nullable final Asset asset,
                      @Nullable final JSONObject metadata,
                      @Nullable final SaveCallback<Message> callback) {
-        if (!StringUtils.isEmpty(conversationId)
-                && !(StringUtils.isEmpty(body) && asset == null && metadata == null)) {
+        if (!StringUtils.isEmpty(body) || asset != null || metadata != null) {
             Record record = new Record("message");
             Reference reference = new Reference("conversation", conversationId);
             record.set("conversation_id", reference);

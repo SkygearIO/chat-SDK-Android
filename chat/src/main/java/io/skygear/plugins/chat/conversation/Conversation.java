@@ -1,6 +1,7 @@
 package io.skygear.plugins.chat.conversation;
 
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.json.JSONArray;
@@ -10,6 +11,9 @@ import java.util.List;
 
 import io.skygear.skygear.Record;
 
+/**
+ * The Skygear Chat Plugin - Conversation.
+ */
 public class Conversation {
     private static final String TYPE_KEY = "conversation";
     static final String TITLE_KEY = "title";
@@ -75,22 +79,51 @@ public class Conversation {
         }
     }
 
+    /**
+     * Gets the conversation id.
+     *
+     * @return the id
+     */
+    @NonNull
     public String getId() {
         return record.getId();
     }
 
+    /**
+     * Gets the conversation title.
+     *
+     * @return the title
+     */
+    @Nullable
     public String getTitle() {
         return (String) record.get(TITLE_KEY);
     }
 
+    /**
+     * Gets the conversation admin ids.
+     *
+     * @return the admin ids
+     */
+    @Nullable
     public List<String> getAdminIds() {
         return adminIds;
     }
 
+    /**
+     * Gets the conversation participant ids.
+     *
+     * @return the participant ids
+     */
+    @Nullable
     public List<String> getParticipantIds() {
         return participantIds;
     }
 
+    /**
+     * Weather the conversion is 1-1 direct conversation of not
+     *
+     * @return is direct message of not
+     */
     public boolean isDirectMessage() {
         return (boolean) record.get(DIRECT_MSG_KEY);
     }

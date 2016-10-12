@@ -1,6 +1,8 @@
 package io.skygear.plugins.chat.sub;
 
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -20,9 +22,9 @@ final class Sub {
     private final Pubsub.Handler handler;
     private final SubCallback<Message> callback;
 
-    Sub(final String conversationId,
-        final String channel,
-        final SubCallback<Message> callback) {
+    Sub(@NonNull final String conversationId,
+        @NonNull final String channel,
+        @Nullable final SubCallback<Message> callback) {
         this.conversationId = conversationId;
         this.channel = channel;
         this.callback = callback;
@@ -60,7 +62,7 @@ final class Sub {
 
                     if (conversationId != null
                             && conversationId.equals(this.conversationId)) {
-                        callback.done(evtType, new Message(messageRecord));
+                        callback.notify(evtType, new Message(messageRecord));
                     }
                 }
             }

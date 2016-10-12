@@ -1,6 +1,7 @@
 package io.skygear.plugins.chat.conversation;
 
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -19,14 +20,22 @@ import io.skygear.skygear.Container;
 import io.skygear.skygear.Database;
 import io.skygear.skygear.Record;
 
-
+/**
+ * Conversation Container for Skygear Chat Plugin.
+ */
 public final class ConversationContainer {
     private static ConversationContainer sharedInstance;
 
     private Database publicDB;
     private String userId;
 
-    public static ConversationContainer getInstance(final Container container) {
+    /**
+     * Gets the Conversation container of Chat Plugin shared within the application.
+     *
+     * @param container - skygear context
+     * @return a Conversation container
+     */
+    public static ConversationContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
             sharedInstance = new ConversationContainer(container);
         }
@@ -43,6 +52,14 @@ public final class ConversationContainer {
         }
     }
 
+    /**
+     * Create a new conversation.
+     *
+     * @param participantIds - the participants ids
+     * @param adminIds - the admin ids
+     * @param title - the title
+     * @param callback - SaveCallback<Conversation> to handle new conversation
+     */
     public void create(@Nullable final List<String> participantIds,
                        @Nullable final List<String> adminIds,
                        @Nullable final String title,
@@ -63,6 +80,11 @@ public final class ConversationContainer {
         }
     }
 
+    /**
+     * Gets all conversations where the user joined.
+     *
+     * @param callback - GetCallback<List<Conversation>> to handle result conversations
+     */
     public void getAll(@Nullable final GetCallback<List<Conversation>> callback) {
         publicDB.query(UserConversation.buildQuery(userId),
                 new GetResp<List<Conversation>>(callback) {
@@ -79,7 +101,13 @@ public final class ConversationContainer {
                 });
     }
 
-    public void get(final String conversationId,
+    /**
+     * Gets a conversation by id.
+     *
+     * @param conversationId - the conversation id
+     * @param callback - GetCallback<Conversation> to handle result conversation
+     */
+    public void get(@NonNull final String conversationId,
                     @Nullable final GetCallback<Conversation> callback) {
         publicDB.query(UserConversation.buildQuery(conversationId, userId),
                 new GetResp<Conversation>(callback) {
@@ -90,8 +118,15 @@ public final class ConversationContainer {
                 });
     }
 
-    public void update(final String conversationId,
-                       final String title,
+    /**
+     * Update a conversation title by conversation id.
+     *
+     * @param conversationId - the conversation id
+     * @param title - the new title
+     * @param callback - SaveCallback<Conversation> to handle result conversation
+     */
+    public void update(@NonNull final String conversationId,
+                       @NonNull final String title,
                        @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
         map.put(Conversation.TITLE_KEY, title);
@@ -99,8 +134,15 @@ public final class ConversationContainer {
         update(conversationId, map, callback);
     }
 
-    public void setAdminIds(final String conversationId,
-                            final List<String> adminIds,
+    /**
+     * Update a conversation admin ids by conversation id.
+     *
+     * @param conversationId - the conversation id
+     * @param adminIds - the new admin ids
+     * @param callback - SaveCallback<Conversation> to handle result conversation
+     */
+    public void setAdminIds(@NonNull final String conversationId,
+                            @NonNull final List<String> adminIds,
                             @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
         String[] ids = new String[adminIds.size()];
@@ -110,8 +152,15 @@ public final class ConversationContainer {
         update(conversationId, map, callback);
     }
 
-    public void setParticipantsIds(final String conversationId,
-                                   final List<String> participantIds,
+    /**
+     * Update a conversation participant ids by conversation id.
+     *
+     * @param conversationId - the conversation id
+     * @param participantIds - the new participant ids
+     * @param callback - SaveCallback<Conversation> to handle result conversation
+     */
+    public void setParticipantsIds(@NonNull final String conversationId,
+                                   @NonNull final List<String> participantIds,
                                    @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
         String[] ids = new String[participantIds.size()];
@@ -124,7 +173,7 @@ public final class ConversationContainer {
 
     private void update(final String conversationId,
                         final Map<String, Object> map,
-                        @Nullable final SaveCallback<Conversation> callback) {
+                        final SaveCallback<Conversation> callback) {
         GetCallback<Record> getCallback = new GetCallback<Record>() {
             @Override
             public void onSucc(@Nullable Record record) {
@@ -158,7 +207,13 @@ public final class ConversationContainer {
                 });
     }
 
-    public void delete(final String conversationId,
+    /**
+     * Delete a conversation by id.
+     *
+     * @param conversationId - the conversation id
+     * @param callback - DeleteOneCallback to handle delete result
+     */
+    public void delete(@NonNull final String conversationId,
                        @Nullable final DeleteOneCallback callback) {
         GetCallback<Record> getCallback = new GetCallback<Record>() {
             @Override
@@ -185,8 +240,14 @@ public final class ConversationContainer {
                 });
     }
 
-    public void markLastReadMessage(final String conversationId,
-                                    final String messageId) {
+    /**
+     * Mark the last read message of a conversation.
+     *
+     * @param conversationId - the conversation id
+     * @param messageId - the last read message id
+     */
+    public void markLastReadMessage(@NonNull final String conversationId,
+                                    @NonNull final String messageId) {
         GetCallback<Record> getCallback = new GetCallback<Record>() {
             @Override
             public void onSucc(@Nullable Record record) {

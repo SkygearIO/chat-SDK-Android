@@ -1,6 +1,7 @@
 package io.skygear.plugins.chat.sub;
 
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.security.InvalidParameterException;
@@ -19,12 +20,21 @@ import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordQueryResponseHandler;
 import io.skygear.skygear.RecordSaveResponseHandler;
 
+/**
+ * The Skygear Chat Plugin - Subscription.
+ */
 public final class SubContainer {
     private static SubContainer sharedInstance;
     private final Container container;
     private final Map<String, Sub> subs = new HashMap<>();
 
-    public static SubContainer getInstance(final Container container) {
+    /**
+     * Gets the Subscription container of Chat Plugin shared within the application.
+     *
+     * @param container skygear context
+     * @return a Subscription container
+     */
+    public static SubContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
             sharedInstance = new SubContainer(container);
         }
@@ -36,8 +46,14 @@ public final class SubContainer {
         this.container = container;
     }
 
-    public void sub(final String conversationId,
-                    final SubCallback<Message> callback) {
+    /**
+     * Subscribe a conversation.
+     *
+     * @param conversationId - Conversation Id
+     * @param callback - SubCallback instance to handle Message subscription
+     */
+    public void sub(@NonNull final String conversationId,
+                    @Nullable final SubCallback<Message> callback) {
         Sub sub = subs.get(conversationId);
 
         if (sub == null) {
@@ -45,8 +61,7 @@ public final class SubContainer {
                 @Override
                 public void onSucc(@Nullable Record record) {
                     if (record != null) {
-                        Sub sub = new Sub(conversationId, (String) record.get("name"),
-                                        callback);
+                        Sub sub = new Sub(conversationId, (String) record.get("name"), callback);
                         sub.sub(container);
                         subs.put(conversationId, sub);
                     }
@@ -62,7 +77,12 @@ public final class SubContainer {
         }
     }
 
-    public void unSub(final String conversationId) {
+    /**
+     * Un-Subscribe a conversation.
+     *
+     * @param conversationId - Conversation Id
+     */
+    public void unSub(@NonNull final String conversationId) {
         Sub sub = subs.get(conversationId);
 
         if (sub != null) {

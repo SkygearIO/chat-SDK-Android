@@ -1,8 +1,12 @@
 package io.skygear.plugins.chat.chatUser;
 
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+/**
+ * The Skygear Chat Plugin - ChatUser.
+ */
 public class ChatUser {
     private final String id;
     private final String name;
@@ -12,10 +16,21 @@ public class ChatUser {
         this.name = name;
     }
 
+    /**
+     * Gets the chat user id.
+     *
+     * @return the id
+     */
+    @NonNull
     public String getId() {
         return id;
     }
 
+    /**
+     * Gets the chat user name.
+     *
+     * @return the name
+     */
     @Nullable
     public String getName() {
         return name;
