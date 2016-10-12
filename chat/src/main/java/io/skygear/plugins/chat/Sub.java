@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.sub;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.NonNull;
@@ -8,8 +8,6 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.skygear.plugins.chat.message.Message;
-import io.skygear.plugins.chat.callbacks.SubCallback;
 import io.skygear.skygear.Container;
 import io.skygear.skygear.Pubsub;
 import io.skygear.skygear.Record;

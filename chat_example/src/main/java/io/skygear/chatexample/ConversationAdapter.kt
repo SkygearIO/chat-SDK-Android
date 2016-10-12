@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.squareup.picasso.Picasso
-import io.skygear.plugins.chat.message.Message
+import io.skygear.plugins.chat.Message
 
 class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>() {
     private val LOG_TAG = "Adapter"

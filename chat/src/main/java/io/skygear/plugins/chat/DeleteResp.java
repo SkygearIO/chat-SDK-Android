@@ -1,17 +1,16 @@
-package io.skygear.plugins.chat.resps;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.Nullable;
 
 import java.util.Map;
 
-import io.skygear.plugins.chat.callbacks.DeleteOneCallback;
 import io.skygear.skygear.RecordDeleteResponseHandler;
 
 /**
  * The Record <b>Delete</b> Response Handler.
  */
-public final class DeleteResp extends RecordDeleteResponseHandler {
+final class DeleteResp extends RecordDeleteResponseHandler {
     private final DeleteOneCallback callback;
 
     /**
@@ -19,7 +18,7 @@ public final class DeleteResp extends RecordDeleteResponseHandler {
      *
      * @param callback - the DeleteOneCallback callback
      */
-    public DeleteResp(@Nullable DeleteOneCallback callback) {
+    DeleteResp(@Nullable DeleteOneCallback callback) {
         this.callback = callback;
     }
 

@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.conversation;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.NonNull;
@@ -9,13 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.skygear.plugins.chat.resps.DeleteResp;
-import io.skygear.plugins.chat.resps.GetResp;
-import io.skygear.plugins.chat.resps.SaveResp;
-import io.skygear.plugins.chat.callbacks.DeleteOneCallback;
-import io.skygear.plugins.chat.callbacks.GetCallback;
-import io.skygear.plugins.chat.callbacks.SaveCallback;
-import io.skygear.plugins.chat.message.Message;
 import io.skygear.skygear.Container;
 import io.skygear.skygear.Database;
 import io.skygear.skygear.Record;

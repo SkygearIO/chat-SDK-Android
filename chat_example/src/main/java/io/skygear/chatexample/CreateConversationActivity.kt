@@ -7,12 +7,12 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.Button
 import android.widget.Toast
-import io.skygear.plugins.chat.callbacks.GetCallback
-import io.skygear.plugins.chat.callbacks.SaveCallback
-import io.skygear.plugins.chat.chatUser.ChatUser
-import io.skygear.plugins.chat.chatUser.ChatUserContainer
-import io.skygear.plugins.chat.conversation.Conversation
-import io.skygear.plugins.chat.conversation.ConversationContainer
+import io.skygear.plugins.chat.GetCallback
+import io.skygear.plugins.chat.SaveCallback
+import io.skygear.plugins.chat.ChatUser
+import io.skygear.plugins.chat.ChatUserContainer
+import io.skygear.plugins.chat.Conversation
+import io.skygear.plugins.chat.ConversationContainer
 import io.skygear.skygear.Container
 
 class CreateConversationActivity : AppCompatActivity() {
@@ -52,7 +52,7 @@ class CreateConversationActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mChatUserContainer.getAll(object : GetCallback<List<ChatUser>>{
+        mChatUserContainer.getAll(object : GetCallback<List<ChatUser>> {
             override fun onSucc(list: List<ChatUser>?) {
                 mAdapter.setChatUsers(list);
             }

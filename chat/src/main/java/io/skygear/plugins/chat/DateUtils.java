@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.utils;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.NonNull;
@@ -11,7 +11,7 @@ import java.util.Date;
 /**
  * The Skygear Chat Plugin - Utils for Date class.
  */
-public final class DateUtils {
+final class DateUtils {
     private DateUtils() {
 
     }
@@ -22,7 +22,7 @@ public final class DateUtils {
      * @param date - input Date instance
      * @return ISO 8601 String of the Date instance
      */
-    public static String toISO8601(@NonNull final Date date) {
+    static String toISO8601(@NonNull final Date date) {
         return new DateTime(date, DateTimeZone.UTC).toString();
     }
 }

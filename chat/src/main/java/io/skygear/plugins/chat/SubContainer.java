@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.sub;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.NonNull;
@@ -9,9 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import io.skygear.plugins.chat.callbacks.GetCallback;
-import io.skygear.plugins.chat.callbacks.SubCallback;
-import io.skygear.plugins.chat.message.Message;
 import io.skygear.skygear.AuthenticationException;
 import io.skygear.skygear.Container;
 import io.skygear.skygear.Database;

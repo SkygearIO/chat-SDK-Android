@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.message;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.NonNull;
@@ -26,7 +26,7 @@ public class Message {
      *
      * @param record - skygear Message record
      */
-    public Message(@NonNull final Record record) {
+    Message(@NonNull final Record record) {
         this.record = record;
     }
 

@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import io.skygear.plugins.chat.chatUser.ChatUser
+import io.skygear.plugins.chat.ChatUser
 
 class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAdapter.ViewHolder>() {
     private val LOG_TAG: String? = "ChatUsesAdapter"

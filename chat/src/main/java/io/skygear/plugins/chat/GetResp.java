@@ -1,16 +1,15 @@
-package io.skygear.plugins.chat.resps;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.Nullable;
 
-import io.skygear.plugins.chat.callbacks.GetCallback;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordQueryResponseHandler;
 
 /**
  * The Skygear Chat Plugin Object <b>Query</b> Response Handler.
  */
-public abstract class GetResp<T> extends RecordQueryResponseHandler {
+abstract class GetResp<T> extends RecordQueryResponseHandler {
     private final GetCallback<T> callback;
 
     /**
@@ -18,7 +17,7 @@ public abstract class GetResp<T> extends RecordQueryResponseHandler {
      *
      * @param callback - the GetCallback<T> callback
      */
-    public GetResp(@Nullable GetCallback<T> callback) {
+    GetResp(@Nullable GetCallback<T> callback) {
         this.callback = callback;
     }
 

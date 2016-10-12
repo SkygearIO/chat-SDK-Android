@@ -11,9 +11,9 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
-import io.skygear.plugins.chat.callbacks.GetCallback
-import io.skygear.plugins.chat.chatUser.ChatUser
-import io.skygear.plugins.chat.chatUser.ChatUserContainer
+import io.skygear.plugins.chat.GetCallback
+import io.skygear.plugins.chat.ChatUser
+import io.skygear.plugins.chat.ChatUserContainer
 import io.skygear.skygear.Container
 import java.util.*
 
@@ -80,7 +80,7 @@ class UserIdsFragment : DialogFragment() {
 
         super.onResume()
 
-        mChatUserContainer.getAll(object : GetCallback<List<ChatUser>>{
+        mChatUserContainer.getAll(object : GetCallback<List<ChatUser>> {
             override fun onSucc(list: List<ChatUser>?) {
                 mAdapter?.setUserIds(list, arguments.getStringArrayList(SELECT_IDS_KEY))
             }

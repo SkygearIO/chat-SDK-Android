@@ -1,18 +1,17 @@
-package io.skygear.plugins.chat.resps;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.Nullable;
 
 import java.util.Map;
 
-import io.skygear.plugins.chat.callbacks.SaveCallback;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordSaveResponseHandler;
 
 /**
  * The Skygear Chat Plugin Object <b>Save</b> Response Handler.
  */
-public abstract class SaveResp<T> extends RecordSaveResponseHandler {
+abstract class SaveResp<T> extends RecordSaveResponseHandler {
     private final SaveCallback<T> callback;
 
     /**
@@ -20,7 +19,7 @@ public abstract class SaveResp<T> extends RecordSaveResponseHandler {
      *
      * @param callback - the SaveCallback<T> callback
      */
-    public SaveResp(@Nullable final SaveCallback<T> callback) {
+    SaveResp(@Nullable final SaveCallback<T> callback) {
         this.callback = callback;
     }
 

@@ -9,11 +9,11 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
-import io.skygear.plugins.chat.callbacks.DeleteOneCallback
-import io.skygear.plugins.chat.callbacks.GetCallback
-import io.skygear.plugins.chat.callbacks.SaveCallback
-import io.skygear.plugins.chat.conversation.Conversation
-import io.skygear.plugins.chat.conversation.ConversationContainer
+import io.skygear.plugins.chat.DeleteOneCallback
+import io.skygear.plugins.chat.GetCallback
+import io.skygear.plugins.chat.SaveCallback
+import io.skygear.plugins.chat.Conversation
+import io.skygear.plugins.chat.ConversationContainer
 import io.skygear.skygear.Container
 import io.skygear.skygear.LogoutResponseHandler
 
@@ -45,7 +45,7 @@ class ConversationsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mConversationContainer.getAll(object : GetCallback<List<Conversation>>{
+        mConversationContainer.getAll(object : GetCallback<List<Conversation>> {
             override fun onSucc(list: List<Conversation>?) {
                 mAdapter.setConversations(list)
             }
@@ -158,7 +158,7 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     fun delete(c: Conversation) {
-        mConversationContainer.delete(c.id, object : DeleteOneCallback{
+        mConversationContainer.delete(c.id, object : DeleteOneCallback {
             override fun onSucc(deletedId: String?) {
 
             }

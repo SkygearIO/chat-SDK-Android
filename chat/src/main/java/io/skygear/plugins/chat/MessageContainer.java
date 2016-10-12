@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.message;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.NonNull;
@@ -13,11 +13,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import io.skygear.plugins.chat.resps.SaveResp;
-import io.skygear.plugins.chat.callbacks.GetCallback;
-import io.skygear.plugins.chat.callbacks.SaveCallback;
-import io.skygear.plugins.chat.utils.DateUtils;
-import io.skygear.plugins.chat.utils.StringUtils;
 import io.skygear.skygear.Asset;
 import io.skygear.skygear.AssetPostRequest;
 import io.skygear.skygear.Container;

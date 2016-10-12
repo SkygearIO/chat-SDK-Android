@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import io.skygear.plugins.chat.conversation.Conversation
+import io.skygear.plugins.chat.Conversation
 
 class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolder>() {
     private val LOG_TAG = "Adapter"

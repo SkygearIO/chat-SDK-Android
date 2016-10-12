@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.unread;
+package io.skygear.plugins.chat;
 
 /**
  * The Skygear Chat Plugin - Unread.

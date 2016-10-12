@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.chatUser;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.NonNull;

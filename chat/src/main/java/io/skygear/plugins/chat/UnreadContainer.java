@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.unread;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.NonNull;
@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.skygear.plugins.chat.callbacks.GetCallback;
 import io.skygear.skygear.Container;
 import io.skygear.skygear.LambdaResponseHandler;
 

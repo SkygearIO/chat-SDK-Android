@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.chatUser;
+package io.skygear.plugins.chat;
 
 
 import android.support.annotation.NonNull;
@@ -7,8 +7,6 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.skygear.plugins.chat.callbacks.GetCallback;
-import io.skygear.plugins.chat.resps.GetResp;
 import io.skygear.skygear.Container;
 import io.skygear.skygear.Database;
 import io.skygear.skygear.Query;
