@@ -10,7 +10,6 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/chat" />
             <option value="$PROJECT_DIR$/chat_example" />
-            <option value="$PROJECT_DIR$/skygear" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

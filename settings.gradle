@@ -1,1 +1,1 @@
-include ':chat_example', ':chat', ':skygear'
+include ':chat_example', ':chat'

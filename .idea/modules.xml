@@ -5,7 +5,6 @@
       <module fileurl="file://$PROJECT_DIR$/chat/chat.iml" filepath="$PROJECT_DIR$/chat/chat.iml" />
       <module fileurl="file://$PROJECT_DIR$/chat-SDK-Android.iml" filepath="$PROJECT_DIR$/chat-SDK-Android.iml" />
       <module fileurl="file://$PROJECT_DIR$/chat_example/chat_example.iml" filepath="$PROJECT_DIR$/chat_example/chat_example.iml" />
-      <module fileurl="file://$PROJECT_DIR$/skygear/skygear.iml" filepath="$PROJECT_DIR$/skygear/skygear.iml" />
     </modules>
   </component>
 </project>

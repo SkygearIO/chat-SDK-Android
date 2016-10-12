@@ -20,6 +20,7 @@ android {
 
 dependencies {
     compile 'com.android.support:support-annotations:24.2.1'
-    compile project(path: ':skygear')
     compile 'joda-time:joda-time:2.9.4'
+
+    compile 'io.skygear:skygear:0.17.2'
 }
