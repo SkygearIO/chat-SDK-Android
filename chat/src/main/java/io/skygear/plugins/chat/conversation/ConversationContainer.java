@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.skygear.plugins.chat.DeleteResp;
-import io.skygear.plugins.chat.GetResp;
-import io.skygear.plugins.chat.SaveResp;
+import io.skygear.plugins.chat.resps.DeleteResp;
+import io.skygear.plugins.chat.resps.GetResp;
+import io.skygear.plugins.chat.resps.SaveResp;
 import io.skygear.plugins.chat.callbacks.DeleteOneCallback;
 import io.skygear.plugins.chat.callbacks.GetCallback;
 import io.skygear.plugins.chat.callbacks.SaveCallback;

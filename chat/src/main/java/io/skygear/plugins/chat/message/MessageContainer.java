@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import io.skygear.plugins.chat.SaveResp;
+import io.skygear.plugins.chat.resps.SaveResp;
 import io.skygear.plugins.chat.callbacks.GetCallback;
 import io.skygear.plugins.chat.callbacks.SaveCallback;
 import io.skygear.plugins.chat.utils.DateUtils;

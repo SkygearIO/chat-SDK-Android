@@ -4,7 +4,7 @@ package io.skygear.plugins.chat.chatUser;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.skygear.plugins.chat.GetResp;
+import io.skygear.plugins.chat.resps.GetResp;
 import io.skygear.plugins.chat.callbacks.GetCallback;
 import io.skygear.skygear.Container;
 import io.skygear.skygear.Database;

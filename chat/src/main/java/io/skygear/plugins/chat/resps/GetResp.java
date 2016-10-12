@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat;
+package io.skygear.plugins.chat.resps;
 
 
 import io.skygear.plugins.chat.callbacks.GetCallback;
