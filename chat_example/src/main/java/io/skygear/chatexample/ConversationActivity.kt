@@ -12,13 +12,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.EditText
-import io.skygear.plugins.chat.GetCallback
-import io.skygear.plugins.chat.SaveCallback
-import io.skygear.plugins.chat.Conversation
-import io.skygear.plugins.chat.ConversationContainer
-import io.skygear.plugins.chat.Message
-import io.skygear.plugins.chat.MessageContainer
-import io.skygear.plugins.chat.SubContainer
+import io.skygear.plugins.chat.*
 import io.skygear.skygear.Asset
 import io.skygear.skygear.Container
 import java.io.ByteArrayInputStream
@@ -32,9 +26,7 @@ class ConversationActivity : AppCompatActivity() {
     private val SELECT_SINGLE_PICTURE = 101
 
     private val mSkygear: Container
-    private val mConversationContainer: ConversationContainer
-    private val mMessageContainer: MessageContainer
-    private val mSubContainer: SubContainer
+    private val mChatContainer: ChatContainer
     private var mConversationId: String? = null
     private val mAdapter: ConversationAdapter = ConversationAdapter()
     private var mConversationRv: RecyclerView? = null
@@ -55,9 +47,7 @@ class ConversationActivity : AppCompatActivity() {
 
     init {
         mSkygear = Container.defaultContainer(this)
-        mConversationContainer = ConversationContainer.getInstance(mSkygear)
-        mMessageContainer = MessageContainer.getInstance(mSkygear)
-        mSubContainer = SubContainer.getInstance(mSkygear)
+        mChatContainer = ChatContainer.getInstance(mSkygear)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,12 +75,12 @@ class ConversationActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mMessageContainer.getAll(mConversationId!!, MESSAGES_LIMIT, Date(),
+        mChatContainer.getAllMessages(mConversationId!!, MESSAGES_LIMIT, Date(),
                 object : GetCallback<List<Message>> {
                     override fun onSucc(list: List<Message>?) {
                         mAdapter.setMessages(list)
                         if (list != null && !list.isEmpty()) {
-                            mConversationContainer.markLastReadMessage(
+                            mChatContainer.markConversationLastReadMessage(
                                     mConversationId!!, list.first().id)
                         }
                     }
@@ -100,7 +90,7 @@ class ConversationActivity : AppCompatActivity() {
                     }
                 })
 
-        mSubContainer.sub(mConversationId!!, { t, m ->
+        mChatContainer.subConversationMessage(mConversationId!!, { t, m ->
             when (t) {
                 "create" -> mAdapter.addMessage(m)
             }
@@ -110,7 +100,7 @@ class ConversationActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
 
-        mSubContainer.unSub(mConversationId!!)
+        mChatContainer.unSubConversationMessage(mConversationId!!)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -124,7 +114,7 @@ class ConversationActivity : AppCompatActivity() {
 
         if ((!body.isNullOrEmpty() && !body.isNullOrBlank())
                 || mAsset != null) {
-            mMessageContainer.send(mConversationId!!,
+            mChatContainer.sendMessage(mConversationId!!,
                     body.toString().trim(),
                     mAsset,
                     null,

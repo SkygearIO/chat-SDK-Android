@@ -15,7 +15,7 @@ import io.skygear.skygear.Record;
 /**
  * ChatUser Container for Skygear Chat Plugin.
  */
-public class ChatUserContainer {
+final class ChatUserContainer {
     private static ChatUserContainer sharedInstance;
 
     private final Container container;
@@ -26,7 +26,7 @@ public class ChatUserContainer {
      * @param container - skygear context
      * @return a Conversation container
      */
-    public static ChatUserContainer getInstance(@NonNull final Container container) {
+    static ChatUserContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
             sharedInstance = new ChatUserContainer(container);
         }
@@ -43,7 +43,7 @@ public class ChatUserContainer {
      *
      * @param callback - GetCallback&lt;List&lt;ChatUser&gt;&gt; to handle result chat users
      */
-    public void getAll(@Nullable final GetCallback<List<ChatUser>> callback) {
+    void getAll(@Nullable final GetCallback<List<ChatUser>> callback) {
         Query query = new Query("user");
         Database publicDB = container.getPublicDatabase();
         publicDB.query(query, new GetResp<List<ChatUser>>(callback) {

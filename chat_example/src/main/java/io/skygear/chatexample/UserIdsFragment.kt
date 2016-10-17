@@ -11,9 +11,9 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
-import io.skygear.plugins.chat.GetCallback
+import io.skygear.plugins.chat.ChatContainer
 import io.skygear.plugins.chat.ChatUser
-import io.skygear.plugins.chat.ChatUserContainer
+import io.skygear.plugins.chat.GetCallback
 import io.skygear.skygear.Container
 import java.util.*
 
@@ -21,7 +21,7 @@ class UserIdsFragment : DialogFragment() {
     private var mListener: (List<String>) -> Unit = {}
 
     private val mSkygear: Container
-    private val mChatUserContainer: ChatUserContainer
+    private val mChatContainer: ChatContainer
 
     private var mAdapter: UserIdsAdapter? = null
     private var mUserIdsRv: RecyclerView? = null
@@ -43,7 +43,7 @@ class UserIdsFragment : DialogFragment() {
 
     init {
         mSkygear = Container.defaultContainer(activity)
-        mChatUserContainer = ChatUserContainer.getInstance(mSkygear)
+        mChatContainer = ChatContainer.getInstance(mSkygear)
     }
 
     override fun onCreateView(inflater: LayoutInflater?,
@@ -80,7 +80,7 @@ class UserIdsFragment : DialogFragment() {
 
         super.onResume()
 
-        mChatUserContainer.getAll(object : GetCallback<List<ChatUser>> {
+        mChatContainer.getAllChatUsers(object : GetCallback<List<ChatUser>> {
             override fun onSucc(list: List<ChatUser>?) {
                 mAdapter?.setUserIds(list, arguments.getStringArrayList(SELECT_IDS_KEY))
             }

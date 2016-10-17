@@ -16,11 +16,11 @@ import io.skygear.skygear.Record;
 /**
  * Conversation Container for Skygear Chat Plugin.
  */
-public final class ConversationContainer {
+final class ConversationContainer {
     private static ConversationContainer sharedInstance;
 
-    private Database publicDB;
-    private String userId;
+    private final Database publicDB;
+    private final String userId;
 
     /**
      * Gets the Conversation container of Chat Plugin shared within the application.
@@ -28,7 +28,7 @@ public final class ConversationContainer {
      * @param container - skygear context
      * @return a Conversation container
      */
-    public static ConversationContainer getInstance(@NonNull final Container container) {
+    static ConversationContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
             sharedInstance = new ConversationContainer(container);
         }
@@ -53,10 +53,10 @@ public final class ConversationContainer {
      * @param title - the title
      * @param callback - SaveCallback&lt;Conversation&gt; to handle new conversation
      */
-    public void create(@Nullable final List<String> participantIds,
-                       @Nullable final List<String> adminIds,
-                       @Nullable final String title,
-                       @Nullable final SaveCallback<Conversation> callback) {
+    void create(@Nullable final List<String> participantIds,
+                @Nullable final List<String> adminIds,
+                @Nullable final String title,
+                @Nullable final SaveCallback<Conversation> callback) {
         if (participantIds != null
                 && adminIds != null
                 && participantIds.size() != 0
@@ -78,7 +78,7 @@ public final class ConversationContainer {
      *
      * @param callback - GetCallback&lt;List&lt;Conversation&gt;&gt; to handle result conversations
      */
-    public void getAll(@Nullable final GetCallback<List<Conversation>> callback) {
+    void getAll(@Nullable final GetCallback<List<Conversation>> callback) {
         publicDB.query(UserConversation.buildQuery(userId),
                 new GetResp<List<Conversation>>(callback) {
                     @Override
@@ -100,8 +100,8 @@ public final class ConversationContainer {
      * @param conversationId - the conversation id
      * @param callback - GetCallback&lt;Conversation&gt; to handle result conversation
      */
-    public void get(@NonNull final String conversationId,
-                    @Nullable final GetCallback<Conversation> callback) {
+    void get(@NonNull final String conversationId,
+             @Nullable final GetCallback<Conversation> callback) {
         publicDB.query(UserConversation.buildQuery(conversationId, userId),
                 new GetResp<Conversation>(callback) {
                     @Override
@@ -118,9 +118,9 @@ public final class ConversationContainer {
      * @param title - the new title
      * @param callback - SaveCallback&lt;Conversation&gt; to handle result conversation
      */
-    public void update(@NonNull final String conversationId,
-                       @NonNull final String title,
-                       @Nullable final SaveCallback<Conversation> callback) {
+    void setTitle(@NonNull final String conversationId,
+                  @NonNull final String title,
+                  @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
         map.put(Conversation.TITLE_KEY, title);
 
@@ -134,7 +134,7 @@ public final class ConversationContainer {
      * @param adminIds - the new admin ids
      * @param callback - SaveCallback&lt;Conversation&gt; to handle result conversation
      */
-    public void setAdminIds(@NonNull final String conversationId,
+    void setAdminIds(@NonNull final String conversationId,
                             @NonNull final List<String> adminIds,
                             @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
@@ -152,7 +152,7 @@ public final class ConversationContainer {
      * @param participantIds - the new participant ids
      * @param callback - SaveCallback&lt;Conversation&gt; to handle result conversation
      */
-    public void setParticipantsIds(@NonNull final String conversationId,
+    void setParticipantsIds(@NonNull final String conversationId,
                                    @NonNull final List<String> participantIds,
                                    @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
@@ -206,8 +206,8 @@ public final class ConversationContainer {
      * @param conversationId - the conversation id
      * @param callback - DeleteOneCallback to handle delete result
      */
-    public void delete(@NonNull final String conversationId,
-                       @Nullable final DeleteOneCallback callback) {
+    void delete(@NonNull final String conversationId,
+                @Nullable final DeleteOneCallback callback) {
         GetCallback<Record> getCallback = new GetCallback<Record>() {
             @Override
             public void onSucc(@Nullable Record record) {
@@ -239,8 +239,8 @@ public final class ConversationContainer {
      * @param conversationId - the conversation id
      * @param messageId - the last read message id
      */
-    public void markLastReadMessage(@NonNull final String conversationId,
-                                    @NonNull final String messageId) {
+    void markLastReadMessage(@NonNull final String conversationId,
+                             @NonNull final String messageId) {
         GetCallback<Record> getCallback = new GetCallback<Record>() {
             @Override
             public void onSucc(@Nullable Record record) {

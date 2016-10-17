@@ -20,8 +20,9 @@ import io.skygear.skygear.RecordSaveResponseHandler;
 /**
  * The Skygear Chat Plugin - Subscription.
  */
-public final class SubContainer {
+final class SubContainer {
     private static SubContainer sharedInstance;
+
     private final Container container;
     private final Map<String, Sub> subs = new HashMap<>();
 
@@ -31,7 +32,7 @@ public final class SubContainer {
      * @param container skygear context
      * @return a Subscription container
      */
-    public static SubContainer getInstance(@NonNull final Container container) {
+    static SubContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
             sharedInstance = new SubContainer(container);
         }
@@ -49,7 +50,7 @@ public final class SubContainer {
      * @param conversationId - Conversation Id
      * @param callback - SubCallback instance to handle Message subscription
      */
-    public void sub(@NonNull final String conversationId,
+    void sub(@NonNull final String conversationId,
                     @Nullable final SubCallback<Message> callback) {
         Sub sub = subs.get(conversationId);
 
@@ -79,7 +80,7 @@ public final class SubContainer {
      *
      * @param conversationId - Conversation Id
      */
-    public void unSub(@NonNull final String conversationId) {
+    void unSub(@NonNull final String conversationId) {
         Sub sub = subs.get(conversationId);
 
         if (sub != null) {
