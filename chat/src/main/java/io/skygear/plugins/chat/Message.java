@@ -4,6 +4,7 @@ package io.skygear.plugins.chat;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import io.skygear.skygear.Asset;
@@ -92,7 +93,28 @@ public class Message {
      * @return the message reference
      */
     @NonNull
-    public static Reference newReference(@NonNull final String messageId) {
+    static Reference newReference(@NonNull final String messageId) {
         return new Reference(TYPE_KEY, messageId);
+    }
+
+    /**
+     * Serializes the message.
+     *
+     * @return the JSON object
+     */
+    @Nullable
+    public JSONObject toJson() {
+        return record.toJson();
+    }
+
+    /**
+     * Deserializes the message.
+     *
+     * @param jsonObject the json object
+     * @return the message
+     * @throws JSONException the json exception
+     */
+    public static Message fromJson(JSONObject jsonObject) throws JSONException {
+        return new Message(Record.fromJson(jsonObject));
     }
 }
