@@ -1,5 +1,10 @@
 package io.skygear.plugins.chat;
 
+import android.support.annotation.Nullable;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * The Skygear Chat Plugin - Unread.
  */
@@ -22,5 +27,26 @@ public class Unread {
      */
     public int getCount() {
         return count;
+    }
+
+    /**
+     * Serializes the message.
+     *
+     * @return the JSON object
+     */
+    @Nullable
+    public JSONObject toJson() {
+        return UnreadSerializer.serialize(this);
+    }
+
+    /**
+     * Deserializes the message.
+     *
+     * @param jsonObject the json object
+     * @return the message
+     * @throws JSONException the json exception
+     */
+    public static Unread fromJson(JSONObject jsonObject) throws JSONException {
+        return UnreadSerializer.deserialize(jsonObject);
     }
 }

@@ -52,11 +52,7 @@ public class ChatUserContainer {
                 List<ChatUser> users = new ArrayList<>(records.length);
 
                 for (Record record : records) {
-                    String id = record.getId();
-                    String name = (String) record.get("name");
-                    if (id != null) {
-                        users.add(new ChatUser(id, name));
-                    }
+                    users.add(new ChatUser(record));
                 }
 
                 return users;

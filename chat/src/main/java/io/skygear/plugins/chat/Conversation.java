@@ -5,6 +5,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,5 +128,26 @@ public class Conversation {
      */
     public boolean isDirectMessage() {
         return (boolean) record.get(DIRECT_MSG_KEY);
+    }
+
+    /**
+     * Serializes the conversation.
+     *
+     * @return the JSON object
+     */
+    @Nullable
+    public JSONObject toJson() {
+        return record.toJson();
+    }
+
+    /**
+     * Deserializes the message.
+     *
+     * @param jsonObject the json object
+     * @return the message
+     * @throws JSONException the json exception
+     */
+    public static Conversation fromJson(JSONObject jsonObject) throws JSONException {
+        return new Conversation(Record.fromJson(jsonObject));
     }
 }
