@@ -9,11 +9,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
-import io.skygear.plugins.chat.DeleteOneCallback
-import io.skygear.plugins.chat.GetCallback
-import io.skygear.plugins.chat.SaveCallback
-import io.skygear.plugins.chat.Conversation
-import io.skygear.plugins.chat.ConversationContainer
+import io.skygear.plugins.chat.*
 import io.skygear.skygear.Container
 import io.skygear.skygear.LogoutResponseHandler
 
@@ -21,13 +17,13 @@ class ConversationsActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "ConversationsActivity"
 
     private val mSkygear: Container
-    private val mConversationContainer: ConversationContainer
+    private val mChatContainer: ChatContainer
     private val mAdapter: ConversationsAdapter = ConversationsAdapter()
     private var mConversationsRv: RecyclerView? = null
 
     init {
         mSkygear = Container.defaultContainer(this)
-        mConversationContainer = ConversationContainer.getInstance(mSkygear)
+        mChatContainer = ChatContainer.getInstance(mSkygear)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +41,7 @@ class ConversationsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mConversationContainer.getAll(object : GetCallback<List<Conversation>> {
+        mChatContainer.getAllConversations(object : GetCallback<List<Conversation>> {
             override fun onSucc(list: List<Conversation>?) {
                 mAdapter.setConversations(list)
             }
@@ -138,7 +134,7 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     fun updateTitle(c: Conversation, t: String) {
-        mConversationContainer.update(c.id, t, object : SaveCallback<Conversation> {
+        mChatContainer.setConversationTitle(c.id, t, object : SaveCallback<Conversation> {
             override fun onSucc(new: Conversation?) {
                 mAdapter.updateConversation(c, new)
             }
@@ -158,7 +154,7 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     fun delete(c: Conversation) {
-        mConversationContainer.delete(c.id, object : DeleteOneCallback {
+        mChatContainer.deleteConversation(c.id, object : DeleteOneCallback {
             override fun onSucc(deletedId: String?) {
 
             }
@@ -172,7 +168,7 @@ class ConversationsActivity : AppCompatActivity() {
     fun addRmAdmins(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
         f.setOnOkBtnClickedListener { ids ->
-            mConversationContainer.setAdminIds(c.id, ids, object : SaveCallback<Conversation> {
+            mChatContainer.setConversationAdminIds(c.id, ids, object : SaveCallback<Conversation> {
                 override fun onSucc(new: Conversation?) {
                     mAdapter.updateConversation(c, new)
                 }
@@ -188,7 +184,7 @@ class ConversationsActivity : AppCompatActivity() {
     fun addRmParticipants(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_participants), c.participantIds)
         f.setOnOkBtnClickedListener { ids ->
-            mConversationContainer.setParticipantsIds(c.id, ids, object : SaveCallback<Conversation> {
+            mChatContainer.setConversationParticipantsIds(c.id, ids, object : SaveCallback<Conversation> {
                 override fun onSucc(new: Conversation?) {
                     mAdapter.updateConversation(c, new)
                 }

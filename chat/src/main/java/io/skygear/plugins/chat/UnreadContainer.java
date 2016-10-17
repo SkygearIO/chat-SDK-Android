@@ -13,8 +13,9 @@ import io.skygear.skygear.LambdaResponseHandler;
 /**
  * Unread Container for Skygear Chat Plugin.
  */
-public class UnreadContainer {
+final class UnreadContainer {
     private static UnreadContainer sharedInstance;
+
     private final Container container;
 
     /**
@@ -23,7 +24,7 @@ public class UnreadContainer {
      * @param container - skygear context
      * @return a Unread container
      */
-    public static UnreadContainer getInstance(@NonNull final Container container) {
+    static UnreadContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
             sharedInstance = new UnreadContainer(container);
         }

@@ -24,11 +24,11 @@ import io.skygear.skygear.Reference;
 /**
  * Message Container for Skygear Chat Plugin.
  */
-public final class MessageContainer {
+final class MessageContainer {
     private static final String LOG_TAG = MessageContainer.class.getSimpleName();
     private static final int LIMIT = 50; // default value
-
     private static MessageContainer sharedInstance;
+
     private final Container container;
 
     /**
@@ -37,7 +37,7 @@ public final class MessageContainer {
      * @param container - skygear context
      * @return a Message container
      */
-    public static MessageContainer getInstance(@NonNull final Container container) {
+    static MessageContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
             sharedInstance = new MessageContainer(container);
         }
@@ -57,10 +57,10 @@ public final class MessageContainer {
      * @param before - get the messages before the Date instance
      * @param callback - GetCallback&lt;List&lt;Message&gt;&gt; to handle messages
      */
-    public void getAll(@NonNull final String conversationId,
-                       final int limit,
-                       @Nullable final Date before,
-                       @Nullable final GetCallback<List<Message>> callback) {
+    void getAll(@NonNull final String conversationId,
+                final int limit,
+                @Nullable final Date before,
+                @Nullable final GetCallback<List<Message>> callback) {
         int limitCount = limit;
         String beforeTimeISO8601 = DateUtils.toISO8601(before != null ? before : new Date());
 
@@ -98,11 +98,11 @@ public final class MessageContainer {
      *
      * Either body, asset or metadata can't be null
      */
-    public void send(@NonNull final String conversationId,
-                     @Nullable final String body,
-                     @Nullable final Asset asset,
-                     @Nullable final JSONObject metadata,
-                     @Nullable final SaveCallback<Message> callback) {
+    void send(@NonNull final String conversationId,
+              @Nullable final String body,
+              @Nullable final Asset asset,
+              @Nullable final JSONObject metadata,
+              @Nullable final SaveCallback<Message> callback) {
         if (!StringUtils.isEmpty(body) || asset != null || metadata != null) {
             Record record = new Record("message");
             Reference reference = new Reference("conversation", conversationId);

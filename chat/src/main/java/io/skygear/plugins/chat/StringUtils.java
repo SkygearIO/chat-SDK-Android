@@ -6,6 +6,9 @@ import android.support.annotation.Nullable;
  * The Skygear Chat Plugin - Utils for String class.
  */
 final class StringUtils {
+    private StringUtils() {
+
+    }
     /**
      * Check if input String instance is empty.
      *
