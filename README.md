@@ -22,15 +22,11 @@ The sample app needs some modification before it works, update the `endpoint` an
 
 The sampe app now is ready, try to sign up some users, make them chat in a conversation group.
 
-## Chat Plugin for Android
+## Documentation
 
-Chat plugin is located at [https://github.com/SkygearIO/chat-SDK-Android/tree/master/chat/src/main/java/io/skygear/plugins/chat](https://github.com/SkygearIO/chat-SDK-Android/tree/master/chat/src/main/java/io/skygear/plugins/chat), there are 5 containers in it:
+The full documentation for Skygear is available on our [docs](https://docs.skygear.io/) site. The Android SDK get started guide is a good place to get started [https://docs.skygear.io/android/guide](https://docs.skygear.io/android/guide).
 
-1. chatUserContainer - on behalf of retrieveing Chat Plugin users on Skygear cloud
-2. conversationContainer - on behalf of creating, querying, modifying, and delete a conversation
-3. messageContainer - on behalf of querying and sending message
-4. subContainer - on behalf of subscribing conversation changing
-5. unreadContainer - on behalf of retrieveing total unread message count
+The Chat Plugin doc is at [https://docs.skygear.io/android/plugins/chat/reference/](https://docs.skygear.io/android/plugins/chat/reference/). Check `ChatContainer` to get the full view of the plugin.
 
 ## Support
 
