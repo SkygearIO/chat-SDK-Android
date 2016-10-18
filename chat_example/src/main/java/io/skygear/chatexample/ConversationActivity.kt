@@ -64,8 +64,8 @@ class ConversationActivity : AppCompatActivity() {
         val sendBtn = findViewById(R.id.send_btn)
         val attachmentBtn = findViewById(R.id.attachment_btn)
 
-        sendBtn.setOnClickListener { send() }
-        attachmentBtn.setOnClickListener { findAttachment() }
+        sendBtn?.setOnClickListener { send() }
+        attachmentBtn?.setOnClickListener { findAttachment() }
 
         mLoading = ProgressDialog(this)
         mLoading?.setTitle(R.string.loading)
