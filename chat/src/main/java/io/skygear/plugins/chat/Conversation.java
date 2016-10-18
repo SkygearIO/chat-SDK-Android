@@ -19,7 +19,6 @@ import io.skygear.skygear.Record;
 public class Conversation {
     private static final String TYPE_KEY = "conversation";
     static final String TITLE_KEY = "title";
-    static final String DIRECT_MSG_KEY = "is_direct_message";
     static final String ADMIN_IDS_KEY = "admin_ids";
     static final String PARTICIPANT_IDS_KEY = "participant_ids";
 
@@ -46,9 +45,6 @@ public class Conversation {
         if (title != null && title.trim().length() != 0) {
             record.set(TITLE_KEY, title.trim());
         }
-
-        // is_direct_message
-        record.set(DIRECT_MSG_KEY, participantIds.size() < 3);
 
         return record;
     }
@@ -119,15 +115,6 @@ public class Conversation {
     @Nullable
     public List<String> getParticipantIds() {
         return participantIds;
-    }
-
-    /**
-     * Weather the conversion is 1-1 direct conversation of not
-     *
-     * @return is direct message of not
-     */
-    public boolean isDirectMessage() {
-        return (boolean) record.get(DIRECT_MSG_KEY);
     }
 
     /**

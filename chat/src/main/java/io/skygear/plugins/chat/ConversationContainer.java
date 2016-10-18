@@ -159,7 +159,6 @@ final class ConversationContainer {
         String[] ids = new String[participantIds.size()];
         participantIds.toArray(ids);
         map.put(Conversation.PARTICIPANT_IDS_KEY, ids);
-        map.put(Conversation.DIRECT_MSG_KEY, participantIds.size() < 3);
 
         update(conversationId, map, callback);
     }
