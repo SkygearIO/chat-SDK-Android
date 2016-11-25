@@ -9,11 +9,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IllegalFormatException;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.skygear.skygear.Record;
 
@@ -26,10 +31,10 @@ public class Conversation {
     static final String METADATA_KEY = "metadata";
 
     private final Record record;
-    private List<String> adminIds;
-    private List<String> participantIds;
+    private Set<String> adminIds;
+    private Set<String> participantIds;
 
-    static Record newRecord(final List<String> participantIds,
+    static Record newRecord(final Set<String> participantIds,
                             @Nullable final String title,
                             @Nullable final Map<String, Object> metadata,
                             @Nullable final Map<OptionKey, Object> options) {
@@ -53,10 +58,10 @@ public class Conversation {
             Object adminIds = options.get(OptionKey.ADMIN_IDS);
             if (adminIds != null) {
                 // set admin ids
-                List<String> adminIdList = (List<String>) adminIds;
+                Collection<String> adminIdCollection = (Collection<String>) adminIds;
 
-                ids = new String[adminIdList.size()];
-                adminIdList.toArray(ids);
+                ids = new String[adminIdCollection.size()];
+                adminIdCollection.toArray(ids);
                 record.set(ADMIN_IDS_KEY, ids);
             }
 
@@ -75,7 +80,7 @@ public class Conversation {
 
         JSONArray adminIds = (JSONArray) record.get(ADMIN_IDS_KEY);
         if (adminIds != null) {
-            List<String> ids = new ArrayList<>();
+            Set<String> ids = new HashSet<>();
             for (int i = 0; i < adminIds.length(); i++) {
                 String id = adminIds.optString(i);
                 if (id != null) {
@@ -87,7 +92,7 @@ public class Conversation {
 
         JSONArray participantIds = (JSONArray) record.get(PARTICIPANT_IDS_KEY);
         if (participantIds != null) {
-            List<String> ids = new ArrayList<>();
+            Set<String> ids = new HashSet<>();
             for (int i = 0; i < participantIds.length(); i++) {
                 String id = participantIds.optString(i);
                 if (id != null) {
@@ -109,12 +114,12 @@ public class Conversation {
     }
 
     @Nullable
-    public List<String> getAdminIds() {
+    public Set<String> getAdminIds() {
         return adminIds;
     }
 
     @Nullable
-    public List<String> getParticipantIds() {
+    public Set<String> getParticipantIds() {
         return participantIds;
     }
 

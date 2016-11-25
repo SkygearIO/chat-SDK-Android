@@ -13,9 +13,11 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import io.skygear.skygear.Asset;
@@ -60,7 +62,7 @@ public final class ChatContainer {
 
     /* --- Conversation --- */
 
-    public void createConversation(@NonNull final List<String> participantIds,
+    public void createConversation(@NonNull final Set<String> participantIds,
                                    @Nullable final String title,
                                    @Nullable final Map<String, Object> metadata,
                                    @Nullable final Map<Conversation.OptionKey, Object> options,
@@ -79,7 +81,7 @@ public final class ChatContainer {
                                          @Nullable final String title,
                                          @Nullable final Map<String, Object> metadata,
                                          @Nullable final SaveCallback<Conversation> callback) {
-        List<String> participantIds = new LinkedList<>();
+        Set<String> participantIds = new HashSet<>();
         participantIds.add(this.skygear.getCurrentUser().getId());
         participantIds.add(participantId);
 
@@ -96,7 +98,7 @@ public final class ChatContainer {
         });
     }
 
-    public void getAllConversations(@Nullable final GetCallback<List<Conversation>> callback) {
+    public void getConversations(@Nullable final GetCallback<List<Conversation>> callback) {
         String userId = this.skygear.getCurrentUser().getId();
         this.skygear.getPublicDatabase().query(UserConversation.buildQuery(userId),
                 new QueryResponseAdapter<List<Conversation>>(callback) {
@@ -125,57 +127,105 @@ public final class ChatContainer {
                 });
     }
 
-    public void setConversationTitle(@NonNull final String conversationId,
+    public void setConversationTitle(@NonNull final Conversation conversation,
                                      @NonNull final String title,
                                      @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
         map.put(Conversation.TITLE_KEY, title);
 
-        this.updateConversation(conversationId, map, callback);
+        this.updateConversation(conversation, map, callback);
     }
 
-    public void setConversationAdminIds(@NonNull final String conversationId,
-                                        @NonNull final List<String> adminIds,
+    public void setConversationAdminIds(@NonNull final Conversation conversation,
+                                        @NonNull final Set<String> adminIds,
                                         @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
         String[] ids = new String[adminIds.size()];
         adminIds.toArray(ids);
         map.put(Conversation.ADMIN_IDS_KEY, ids);
 
-        this.updateConversation(conversationId, map, callback);
+        this.updateConversation(conversation, map, callback);
     }
 
-    public void setConversationParticipantsIds(@NonNull final String conversationId,
-                                               @NonNull final List<String> participantIds,
+    public void addConversationAdminId(@NonNull final Conversation conversation,
+                                       @NonNull final String adminId,
+                                       @Nullable final SaveCallback<Conversation> callback) {
+        Set<String> adminIds = conversation.getAdminIds();
+        if (adminIds == null) {
+            adminIds = new HashSet<>();
+        }
+        adminIds.add(adminId);
+
+        this.setConversationAdminIds(conversation, adminIds, callback);
+    }
+
+    public void removeConversationAdminId(@NonNull final Conversation conversation,
+                                          @NonNull final String adminId,
+                                          @Nullable final SaveCallback<Conversation> callback) {
+        Set<String> adminIds = conversation.getAdminIds();
+        if (adminIds == null) {
+            adminIds = new HashSet<>();
+        }
+        adminIds.remove(adminId);
+
+        this.setConversationAdminIds(conversation, adminIds, callback);
+    }
+
+    public void setConversationParticipantsIds(@NonNull final Conversation conversation,
+                                               @NonNull final Set<String> participantIds,
                                                @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
         String[] ids = new String[participantIds.size()];
         participantIds.toArray(ids);
         map.put(Conversation.PARTICIPANT_IDS_KEY, ids);
 
-        this.updateConversation(conversationId, map, callback);
+        this.updateConversation(conversation, map, callback);
     }
 
-    public void setConversationDistinctByParticipants(@NonNull final String conversationId,
+    public void addConversationParticipantId(@NonNull final Conversation conversation,
+                                             @NonNull final String participantId,
+                                             @Nullable final SaveCallback<Conversation> callback) {
+        Set<String> participantIds = conversation.getParticipantIds();
+        if (participantIds == null) {
+            participantIds = new HashSet<>();
+        }
+        participantIds.add(participantId);
+
+        this.setConversationParticipantsIds(conversation, participantIds, callback);
+    }
+
+    public void removeConversationParticipantId(@NonNull final Conversation conversation,
+                                                @NonNull final String participantId,
+                                                @Nullable final SaveCallback<Conversation> callback) {
+        Set<String> participantIds = conversation.getParticipantIds();
+        if (participantIds == null) {
+            participantIds = new HashSet<>();
+        }
+        participantIds.remove(participantId);
+
+        this.setConversationParticipantsIds(conversation, participantIds, callback);
+    }
+
+    public void setConversationDistinctByParticipants(@NonNull final Conversation conversation,
                                                       @NonNull final boolean isDistinctByParticipants,
                                                       @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
         map.put(Conversation.DISTINCT_BY_PARTICIPANTS_KEY, isDistinctByParticipants);
 
-        this.updateConversation(conversationId, map, callback);
+        this.updateConversation(conversation, map, callback);
     }
 
-    public void setConversationMetadata(@NonNull final String conversationId,
+    public void setConversationMetadata(@NonNull final Conversation conversation,
                                         @NonNull final Map<String, Object> metadata,
                                         @Nullable final SaveCallback<Conversation> callback) {
         JSONObject metadataJSON = new JSONObject(metadata);
         Map<String, Object> map = new HashMap<>();
         map.put(Conversation.METADATA_KEY, metadataJSON);
 
-        this.updateConversation(conversationId, map, callback);
+        this.updateConversation(conversation, map, callback);
     }
 
-    public void deleteConversation(@NonNull final String conversationId,
+    public void deleteConversation(@NonNull final Conversation conversation,
                                    @Nullable final DeleteOneCallback callback) {
         final Database publicDB = this.skygear.getPublicDatabase();
         String userId = this.skygear.getCurrentUser().getId();
@@ -196,7 +246,7 @@ public final class ChatContainer {
             }
         };
 
-        publicDB.query(UserConversation.buildQuery(conversationId, userId),
+        publicDB.query(UserConversation.buildQuery(conversation.getId(), userId),
                 new QueryResponseAdapter<Record>(getCallback) {
                     @Override
                     public Record convert(Record[] records) {
@@ -205,7 +255,7 @@ public final class ChatContainer {
                 });
     }
 
-    public void markConversationLastReadMessage(@NonNull final String conversationId,
+    public void markConversationLastReadMessage(@NonNull final Conversation conversation,
                                                 @NonNull final String messageId) {
         final Database publicDB = this.skygear.getPublicDatabase();
         String userId = this.skygear.getCurrentUser().getId();
@@ -226,7 +276,7 @@ public final class ChatContainer {
             }
         };
 
-        publicDB.query(UserConversation.buildQuery(conversationId, userId),
+        publicDB.query(UserConversation.buildQuery(conversation.getId(), userId),
                 new QueryResponseAdapter<Record>(getCallback) {
                     @Override
                     public Record convert(Record[] records) {
@@ -235,8 +285,8 @@ public final class ChatContainer {
                 });
     }
 
-    public void updateConversation(final String conversationId,
-                                   final Map<String, Object> map,
+    public void updateConversation(final Conversation conversation,
+                                   final Map<String, Object> updates,
                                    final SaveCallback<Conversation> callback) {
         final Database publicDB = this.skygear.getPublicDatabase();
         String userId = this.skygear.getCurrentUser().getId();
@@ -245,7 +295,7 @@ public final class ChatContainer {
             @Override
             public void onSucc(@Nullable Record record) {
                 if (record != null) {
-                    for (Map.Entry<String, Object> entry : map.entrySet()) {
+                    for (Map.Entry<String, Object> entry : updates.entrySet()) {
                         record.set(entry.getKey(), entry.getValue());
                     }
                     publicDB.save(record, new SaveResponseAdapter<Conversation>(callback) {
@@ -265,7 +315,7 @@ public final class ChatContainer {
             }
         };
 
-        publicDB.query(UserConversation.buildQuery(conversationId, userId),
+        publicDB.query(UserConversation.buildQuery(conversation.getId(), userId),
                 new QueryResponseAdapter<Record>(getCallback) {
                     @Override
                     public Record convert(Record[] records) {
@@ -276,7 +326,7 @@ public final class ChatContainer {
 
     /* --- Message --- */
 
-    public void getAllMessages(@NonNull final String conversationId,
+    public void getAllMessages(@NonNull final Conversation conversation,
                                final int limit,
                                @Nullable final Date before,
                                @Nullable final GetCallback<List<Message>> callback) {
@@ -287,7 +337,7 @@ public final class ChatContainer {
             limitCount = GET_MESSAGES_DEFAULT_LIMIT;
         }
 
-        Object[] args = new Object[]{conversationId, limitCount, beforeTimeISO8601};
+        Object[] args = new Object[]{conversation.getId(), limitCount, beforeTimeISO8601};
         this.skygear.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {
@@ -322,14 +372,14 @@ public final class ChatContainer {
         });
     }
 
-    public void sendMessage(@NonNull final String conversationId,
+    public void sendMessage(@NonNull final Conversation conversation,
                             @Nullable final String body,
                             @Nullable final Asset asset,
                             @Nullable final JSONObject metadata,
                             @Nullable final SaveCallback<Message> callback) {
         if (!StringUtils.isEmpty(body) || asset != null || metadata != null) {
             Record record = new Record("message");
-            Reference reference = new Reference("conversation", conversationId);
+            Reference reference = new Reference("conversation", conversation.getId());
             record.set("conversation_id", reference);
             if (body != null) {
                 record.set("body", body);
@@ -399,9 +449,10 @@ public final class ChatContainer {
 
     /* --- Subscription--- */
 
-    public void subConversationMessage(@NonNull final String conversationId,
+    public void subscribeConversationMessage(@NonNull final Conversation conversation,
                                        @Nullable final SubCallback<Message> callback) {
         final Pubsub pubsub = this.skygear.getPubsub();
+        final String conversationId = conversation.getId();
         Sub sub = subs.get(conversationId);
 
         if (sub == null) {
@@ -425,8 +476,9 @@ public final class ChatContainer {
         }
     }
 
-    public void unSubConversationMessage(@NonNull final String conversationId) {
+    public void unsubscribeConversationMessage(@NonNull final Conversation conversation) {
         final Pubsub pubsub = this.skygear.getPubsub();
+        String conversationId = conversation.getId();
         Sub sub = subs.get(conversationId);
 
         if (sub != null) {
