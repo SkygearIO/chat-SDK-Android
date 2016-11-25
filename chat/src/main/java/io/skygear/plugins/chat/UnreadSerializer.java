@@ -11,12 +11,6 @@ final class UnreadSerializer {
     private static final String TYPE_VAL = "unread";
     private static final String COUNT_KEY = "count";
 
-    /**
-     * Serializes a Unread instance
-     *
-     * @param unread - the Unread
-     * @return the json object
-     */
     @Nullable
     static JSONObject serialize(Unread unread) {
         try {
@@ -30,13 +24,6 @@ final class UnreadSerializer {
         }
     }
 
-    /**
-     * Deserialize a Unread instance from JSON object.
-     *
-     * @param jsonObject the JSON object
-     * @return the Unread instance
-     * @throws JSONException the json exception
-     */
     static Unread deserialize(JSONObject jsonObject) throws JSONException {
         String typeValue = jsonObject.getString(TYPE_KEY);
         if (typeValue.equals(TYPE_VAL)) {

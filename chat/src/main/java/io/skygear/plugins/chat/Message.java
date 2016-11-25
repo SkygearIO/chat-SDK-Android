@@ -11,9 +11,6 @@ import io.skygear.skygear.Asset;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.Reference;
 
-/**
- * The Skygear Chat Plugin - Message.
- */
 public class Message {
     private static final String TYPE_KEY = "message";
     private static final String BODY_KEY = "body";
@@ -22,51 +19,26 @@ public class Message {
 
     private final Record record;
 
-    /**
-     * Default constructor of Message
-     *
-     * @param record - skygear Message record
-     */
     Message(@NonNull final Record record) {
         this.record = record;
     }
 
-    /**
-     * Gets the message id.
-     *
-     * @return the id
-     */
     @NonNull
     public String getId() {
         return record.getId();
     }
 
-    /**
-     * Gets the conversation id where the message belongs to.
-     *
-     * @return the id
-     */
     @NonNull
     public String getConversationId() {
         Reference reference = (Reference) record.get("conversation_id");
         return reference.getId();
     }
 
-    /**
-     * Gets the message body.
-     *
-     * @return the body
-     */
     @Nullable
     public String getBody() {
         return (String)record.get(BODY_KEY);
     }
 
-    /**
-     * Gets the message meta-data.
-     *
-     * @return the meta-data
-     */
     @Nullable
     public JSONObject getMetaData() {
         if (!record.get(METADATA_KEY).equals(JSONObject.NULL)) {
@@ -76,44 +48,21 @@ public class Message {
         }
     }
 
-    /**
-     * Gets the message asset.
-     *
-     * @return the asset
-     */
     @Nullable
     public Asset getAsset() {
         return (Asset) record.get(ATTACHMENT_KEY);
     }
 
-    /**
-     * Create the message reference.
-     *
-     * @param messageId - the id of the reference message
-     * @return the message reference
-     */
     @NonNull
     static Reference newReference(@NonNull final String messageId) {
         return new Reference(TYPE_KEY, messageId);
     }
 
-    /**
-     * Serializes the message.
-     *
-     * @return the JSON object
-     */
     @Nullable
     public JSONObject toJson() {
         return record.toJson();
     }
 
-    /**
-     * Deserializes the message.
-     *
-     * @param jsonObject the json object
-     * @return the message
-     * @throws JSONException the json exception
-     */
     public static Message fromJson(JSONObject jsonObject) throws JSONException {
         return new Message(Record.fromJson(jsonObject));
     }

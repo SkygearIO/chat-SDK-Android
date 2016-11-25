@@ -8,40 +8,21 @@ import java.util.Map;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordSaveResponseHandler;
 
-/**
- * The Skygear Chat Plugin Object <b>Save</b> Response Handler.
- */
-abstract class SaveResp<T> extends RecordSaveResponseHandler {
+abstract class SaveResponseAdapter<T> extends RecordSaveResponseHandler {
     private final SaveCallback<T> callback;
 
-    /**
-     * Default constructor of SaveResp
-     *
-     * @param callback - the SaveCallback<T> callback
-     */
-    SaveResp(@Nullable final SaveCallback<T> callback) {
+    SaveResponseAdapter(@Nullable final SaveCallback<T> callback) {
         this.callback = callback;
     }
 
-    /**
-     * Convert Record to abstract type T
-     *
-     * @param record - save result record
-     * @return the instance of abstract type T
-     */
     @Nullable
-    public abstract T onSuccess(Record record);
+    public abstract T convert(Record record);
 
-    /**
-     * Save success callback.
-     *
-     * @param records - save result records
-     */
     @Override
     public void onSaveSuccess(Record[] records) {
         Record record = records[0];
         if (callback != null) {
-            callback.onSucc(onSuccess(record));
+            callback.onSucc(convert(record));
         }
     }
 
@@ -51,11 +32,6 @@ abstract class SaveResp<T> extends RecordSaveResponseHandler {
 
     }
 
-    /**
-     * Save fail callback.
-     *
-     * @param reason the reason
-     */
     @Override
     public void onSaveFail(String reason) {
         if (callback != null) {

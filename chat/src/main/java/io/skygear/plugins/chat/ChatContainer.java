@@ -3,30 +3,45 @@ package io.skygear.plugins.chat;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import io.skygear.skygear.Asset;
+import io.skygear.skygear.AssetPostRequest;
+import io.skygear.skygear.AuthenticationException;
 import io.skygear.skygear.Container;
+import io.skygear.skygear.Database;
+import io.skygear.skygear.LambdaResponseHandler;
+import io.skygear.skygear.Pubsub;
+import io.skygear.skygear.Query;
+import io.skygear.skygear.Record;
+import io.skygear.skygear.RecordQueryResponseHandler;
+import io.skygear.skygear.RecordSaveResponseHandler;
+import io.skygear.skygear.Reference;
 
 public final class ChatContainer {
+    private static final int GET_MESSAGES_DEFAULT_LIMIT = 50; // default value
+    private static final String TAG = "SkygearChatContainer";
+
     private static ChatContainer sharedInstance;
 
-    private final ConversationContainer conversationContainer;
-    private final MessageContainer messageContainer;
-    private final ChatUserContainer chatUserContainer;
-    private final SubContainer subContainer;
-    private final UnreadContainer unreadContainer;
+    private final Container skygear;
+    private final Map<String, Sub> subs = new HashMap<>();
 
-    /**
-     * Gets the ChatUser container of Chat Plugin shared within the application.
-     *
-     * @param container - skygear context
-     * @return a Conversation container
-     */
+    /* --- Constructor --- */
+
     public static ChatContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
             sharedInstance = new ChatContainer(container);
@@ -37,182 +52,481 @@ public final class ChatContainer {
 
     private ChatContainer(final Container container) {
         if (container != null) {
-            this.conversationContainer = ConversationContainer.getInstance(container);
-            this.messageContainer = MessageContainer.getInstance(container);
-            this.chatUserContainer = ChatUserContainer.getInstance(container);
-            this.subContainer = SubContainer.getInstance(container);
-            this.unreadContainer = UnreadContainer.getInstance(container);
+            this.skygear = container;
         } else {
             throw new NullPointerException("Container can't be null");
         }
     }
 
+    /* --- Conversation --- */
 
-    /**
-     * Create a new conversation.
-     *
-     * @param participantIds - the participants ids
-     * @param adminIds - the admin ids
-     * @param title - the title
-     * @param callback - SaveCallback&lt;Conversation&gt; to handle new conversation
-     */
-    public void createConversation(@Nullable final List<String> participantIds,
-                                   @Nullable final List<String> adminIds,
+    public void createConversation(@NonNull final List<String> participantIds,
                                    @Nullable final String title,
+                                   @Nullable final Map<String, Object> metadata,
+                                   @Nullable final Map<Conversation.OptionKey, Object> options,
                                    @Nullable final SaveCallback<Conversation> callback) {
-        conversationContainer.create(participantIds, adminIds, title, callback);
+        Record record = Conversation.newRecord(participantIds, title, metadata, options);
+        skygear.getPublicDatabase().save(record, new SaveResponseAdapter<Conversation>(callback) {
+            @Nullable
+            @Override
+            public Conversation convert(Record record) {
+                return new Conversation(record);
+            }
+        });
     }
 
-    /**
-     * Gets all conversations where the user joined.
-     *
-     * @param callback - GetCallback&lt;List&lt;Conversation&gt;&gt; to handle result conversations
-     */
+    public void createDirectConversation(@NonNull final String participantId,
+                                         @Nullable final String title,
+                                         @Nullable final Map<String, Object> metadata,
+                                         @Nullable final SaveCallback<Conversation> callback) {
+        List<String> participantIds = new LinkedList<>();
+        participantIds.add(this.skygear.getCurrentUser().getId());
+        participantIds.add(participantId);
+
+        Map<Conversation.OptionKey, Object> options = new HashMap<>();
+        options.put(Conversation.OptionKey.DISTINCT_BY_PARTICIPANTS, true);
+
+        Record record = Conversation.newRecord(participantIds, title, metadata, options);
+        this.skygear.getPublicDatabase().save(record, new SaveResponseAdapter<Conversation>(callback) {
+            @Nullable
+            @Override
+            public Conversation convert(Record record) {
+                return new Conversation(record);
+            }
+        });
+    }
+
     public void getAllConversations(@Nullable final GetCallback<List<Conversation>> callback) {
-        conversationContainer.getAll(callback);
+        String userId = this.skygear.getCurrentUser().getId();
+        this.skygear.getPublicDatabase().query(UserConversation.buildQuery(userId),
+                new QueryResponseAdapter<List<Conversation>>(callback) {
+                    @Override
+                    public List<Conversation> convert(Record[] records) {
+                        List<Conversation> conversations = new ArrayList<>(records.length);
+
+                        for (Record record : records) {
+                            conversations.add(UserConversation.getConversation(record));
+                        }
+
+                        return conversations;
+                    }
+                });
     }
 
-    /**
-     * Gets a conversation by id.
-     *
-     * @param conversationId - the conversation id
-     * @param callback - GetCallback&lt;Conversation&gt; to handle result conversation
-     */
     public void getConversation(@NonNull final String conversationId,
                                 @Nullable final GetCallback<Conversation> callback) {
-        conversationContainer.get(conversationId, callback);
+        String userId = this.skygear.getCurrentUser().getId();
+        this.skygear.getPublicDatabase().query(UserConversation.buildQuery(conversationId, userId),
+                new QueryResponseAdapter<Conversation>(callback) {
+                    @Override
+                    public Conversation convert(Record[] records) {
+                        return UserConversation.getConversation(records[0]);
+                    }
+                });
     }
 
-    /**
-     * Update a conversation title by conversation id.
-     *
-     * @param conversationId - the conversation id
-     * @param title - the new title
-     * @param callback - SaveCallback&lt;Conversation&gt; to handle result conversation
-     */
     public void setConversationTitle(@NonNull final String conversationId,
                                      @NonNull final String title,
                                      @Nullable final SaveCallback<Conversation> callback) {
-        conversationContainer.setTitle(conversationId, title, callback);
+        Map<String, Object> map = new HashMap<>();
+        map.put(Conversation.TITLE_KEY, title);
+
+        this.updateConversation(conversationId, map, callback);
     }
 
-    /**
-     * Update a conversation admin ids by conversation id.
-     *
-     * @param conversationId - the conversation id
-     * @param adminIds - the new admin ids
-     * @param callback - SaveCallback&lt;Conversation&gt; to handle result conversation
-     */
     public void setConversationAdminIds(@NonNull final String conversationId,
                                         @NonNull final List<String> adminIds,
                                         @Nullable final SaveCallback<Conversation> callback) {
-        conversationContainer.setAdminIds(conversationId, adminIds, callback);
+        Map<String, Object> map = new HashMap<>();
+        String[] ids = new String[adminIds.size()];
+        adminIds.toArray(ids);
+        map.put(Conversation.ADMIN_IDS_KEY, ids);
+
+        this.updateConversation(conversationId, map, callback);
     }
 
-    /**
-     * Update a conversation participant ids by conversation id.
-     *
-     * @param conversationId - the conversation id
-     * @param participantIds - the new participant ids
-     * @param callback - SaveCallback&lt;Conversation&gt; to handle result conversation
-     */
     public void setConversationParticipantsIds(@NonNull final String conversationId,
                                                @NonNull final List<String> participantIds,
                                                @Nullable final SaveCallback<Conversation> callback) {
-        conversationContainer.setParticipantsIds(conversationId, participantIds, callback);
+        Map<String, Object> map = new HashMap<>();
+        String[] ids = new String[participantIds.size()];
+        participantIds.toArray(ids);
+        map.put(Conversation.PARTICIPANT_IDS_KEY, ids);
+
+        this.updateConversation(conversationId, map, callback);
     }
 
-    /**
-     * Delete a conversation by id.
-     *
-     * @param conversationId - the conversation id
-     * @param callback - DeleteOneCallback to handle delete result
-     */
+    public void setConversationDistinctByParticipants(@NonNull final String conversationId,
+                                                      @NonNull final boolean isDistinctByParticipants,
+                                                      @Nullable final SaveCallback<Conversation> callback) {
+        Map<String, Object> map = new HashMap<>();
+        map.put(Conversation.DISTINCT_BY_PARTICIPANTS_KEY, isDistinctByParticipants);
+
+        this.updateConversation(conversationId, map, callback);
+    }
+
+    public void setConversationMetadata(@NonNull final String conversationId,
+                                        @NonNull final Map<String, Object> metadata,
+                                        @Nullable final SaveCallback<Conversation> callback) {
+        JSONObject metadataJSON = new JSONObject(metadata);
+        Map<String, Object> map = new HashMap<>();
+        map.put(Conversation.METADATA_KEY, metadataJSON);
+
+        this.updateConversation(conversationId, map, callback);
+    }
+
     public void deleteConversation(@NonNull final String conversationId,
                                    @Nullable final DeleteOneCallback callback) {
-        conversationContainer.delete(conversationId, callback);
+        final Database publicDB = this.skygear.getPublicDatabase();
+        String userId = this.skygear.getCurrentUser().getId();
+
+        GetCallback<Record> getCallback = new GetCallback<Record>() {
+            @Override
+            public void onSucc(@Nullable Record record) {
+                if (record != null) {
+                    publicDB.delete(record, new DeleteResponseAdapter(callback));
+                }
+            }
+
+            @Override
+            public void onFail(@Nullable String failReason) {
+                if (callback != null) {
+                    callback.onFail(failReason);
+                }
+            }
+        };
+
+        publicDB.query(UserConversation.buildQuery(conversationId, userId),
+                new QueryResponseAdapter<Record>(getCallback) {
+                    @Override
+                    public Record convert(Record[] records) {
+                        return UserConversation.getConversationRecord(records[0]);
+                    }
+                });
     }
 
-    /**
-     * Mark the last read message of a conversation.
-     *
-     * @param conversationId - the conversation id
-     * @param messageId - the last read message id
-     */
     public void markConversationLastReadMessage(@NonNull final String conversationId,
                                                 @NonNull final String messageId) {
-        conversationContainer.markLastReadMessage(conversationId, messageId);
+        final Database publicDB = this.skygear.getPublicDatabase();
+        String userId = this.skygear.getCurrentUser().getId();
+
+        GetCallback<Record> getCallback = new GetCallback<Record>() {
+            @Override
+            public void onSucc(@Nullable Record record) {
+                if (record != null) {
+                    record.set(UserConversation.LAST_READ_MESSAGE_KEY,
+                            Message.newReference(messageId));
+                    publicDB.save(record, null);
+                }
+            }
+
+            @Override
+            public void onFail(@Nullable String failReason) {
+
+            }
+        };
+
+        publicDB.query(UserConversation.buildQuery(conversationId, userId),
+                new QueryResponseAdapter<Record>(getCallback) {
+                    @Override
+                    public Record convert(Record[] records) {
+                        return records[0];
+                    }
+                });
     }
 
-    /**
-     * Gets all messages of a conversation.
-     *
-     * @param conversationId - the conversation id
-     * @param limit - the limit of number of messages, default value is 50
-     * @param before - get the messages before the Date instance
-     * @param callback - GetCallback&lt;List&lt;Message&gt;&gt; to handle messages
-     */
+    public void updateConversation(final String conversationId,
+                                   final Map<String, Object> map,
+                                   final SaveCallback<Conversation> callback) {
+        final Database publicDB = this.skygear.getPublicDatabase();
+        String userId = this.skygear.getCurrentUser().getId();
+
+        GetCallback<Record> getCallback = new GetCallback<Record>() {
+            @Override
+            public void onSucc(@Nullable Record record) {
+                if (record != null) {
+                    for (Map.Entry<String, Object> entry : map.entrySet()) {
+                        record.set(entry.getKey(), entry.getValue());
+                    }
+                    publicDB.save(record, new SaveResponseAdapter<Conversation>(callback) {
+                        @Override
+                        public Conversation convert(Record record) {
+                            return new Conversation(record);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFail(@Nullable String failReason) {
+                if (callback != null) {
+                    callback.onFail(failReason);
+                }
+            }
+        };
+
+        publicDB.query(UserConversation.buildQuery(conversationId, userId),
+                new QueryResponseAdapter<Record>(getCallback) {
+                    @Override
+                    public Record convert(Record[] records) {
+                        return UserConversation.getConversationRecord(records[0]);
+                    }
+                });
+    }
+
+    /* --- Message --- */
+
     public void getAllMessages(@NonNull final String conversationId,
                                final int limit,
                                @Nullable final Date before,
                                @Nullable final GetCallback<List<Message>> callback) {
-        messageContainer.getAll(conversationId, limit, before, callback);
+        int limitCount = limit;
+        String beforeTimeISO8601 = DateUtils.toISO8601(before != null ? before : new Date());
+
+        if (limitCount <= 0) {
+            limitCount = GET_MESSAGES_DEFAULT_LIMIT;
+        }
+
+        Object[] args = new Object[]{conversationId, limitCount, beforeTimeISO8601};
+        this.skygear.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
+            @Override
+            public void onLambdaSuccess(JSONObject result) {
+                List<Message> messages = null;
+                JSONArray results = result.optJSONArray("results");
+
+                if (results != null) {
+                    messages = new ArrayList<>(results.length());
+
+                    for (int i = 0; i < results.length(); i++) {
+                        try {
+                            JSONObject object = results.getJSONObject(i);
+                            Record record = Record.fromJson(object);
+                            Message message = new Message(record);
+                            messages.add(message);
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Fail to get message: " + e.getMessage());
+                        }
+                    }
+                }
+                if (callback != null) {
+                    callback.onSucc(messages);
+                }
+            }
+
+            @Override
+            public void onLambdaFail(String reason) {
+                if (callback != null) {
+                    callback.onFail(reason);
+                }
+            }
+        });
     }
 
-    /**
-     * Send a message to a conversation.
-     *
-     * @param conversationId - the conversation id
-     * @param body - the message body
-     * @param asset - the message asset
-     * @param metadata - the message metadata
-     * @param callback - SaveCallback&lt;Message&gt; to handle send result
-     *
-     * Either body, asset or metadata can't be null
-     */
     public void sendMessage(@NonNull final String conversationId,
                             @Nullable final String body,
                             @Nullable final Asset asset,
                             @Nullable final JSONObject metadata,
                             @Nullable final SaveCallback<Message> callback) {
-        messageContainer.send(conversationId, body, asset, metadata, callback);
+        if (!StringUtils.isEmpty(body) || asset != null || metadata != null) {
+            Record record = new Record("message");
+            Reference reference = new Reference("conversation", conversationId);
+            record.set("conversation_id", reference);
+            if (body != null) {
+                record.set("body", body);
+            }
+            if (metadata != null) {
+                record.set("metadata", metadata);
+            }
+
+            if (asset == null) {
+                this.saveMessageRecord(record, callback);
+            } else {
+                this.saveMessageRecord(record, asset, callback);
+            }
+        } else {
+            if (callback != null) {
+                callback.onFail("Please provide either body, asset or metadata");
+            }
+        }
     }
 
-    /**
-     * Gets all chat users on the skygear.
-     *
-     * @param callback - GetCallback&lt;List&lt;ChatUser&gt;&gt; to handle result chat users
-     */
+    private void saveMessageRecord(final Record message,
+                                   @Nullable final SaveCallback<Message> callback) {
+        Database publicDB = this.skygear.getPublicDatabase();
+        publicDB.save(message, new SaveResponseAdapter<Message>(callback) {
+            @Override
+            public Message convert(Record record) {
+                return new Message(record);
+            }
+        });
+    }
+
+    private void saveMessageRecord(final Record message,
+                                   final Asset asset,
+                                   @Nullable final SaveCallback<Message> callback) {
+        this.skygear.uploadAsset(asset, new AssetPostRequest.ResponseHandler() {
+            @Override
+            public void onPostSuccess(Asset asset, String response) {
+                message.set("attachment", asset);
+                ChatContainer.this.saveMessageRecord(message, callback);
+            }
+
+            @Override
+            public void onPostFail(Asset asset, String reason) {
+                ChatContainer.this.saveMessageRecord(message, callback);
+            }
+        });
+    }
+
+    /* --- Chat User --- */
+
     public void getAllChatUsers(@Nullable final GetCallback<List<ChatUser>> callback) {
-        chatUserContainer.getAll(callback);
+        Query query = new Query("user");
+        Database publicDB = this.skygear.getPublicDatabase();
+        publicDB.query(query, new QueryResponseAdapter<List<ChatUser>>(callback) {
+            @Override
+            public List<ChatUser> convert(Record[] records) {
+                List<ChatUser> users = new ArrayList<>(records.length);
+
+                for (Record record : records) {
+                    users.add(new ChatUser(record));
+                }
+
+                return users;
+            }
+        });
     }
 
-    /**
-     * Subscribe message changing of a conversation.
-     *
-     * @param conversationId - Conversation Id
-     * @param callback - SubCallback instance to handle Message subscription
-     */
+    /* --- Subscription--- */
+
     public void subConversationMessage(@NonNull final String conversationId,
                                        @Nullable final SubCallback<Message> callback) {
-        subContainer.sub(conversationId, callback);
+        final Pubsub pubsub = this.skygear.getPubsub();
+        Sub sub = subs.get(conversationId);
+
+        if (sub == null) {
+            getOrCreateUserChannel(new GetCallback<Record>() {
+                @Override
+                public void onSucc(@Nullable Record record) {
+                    if (record != null) {
+                        Sub sub = new Sub(conversationId, (String) record.get("name"), callback);
+                        sub.attach(pubsub);
+                        subs.put(conversationId, sub);
+                    }
+                }
+
+                @Override
+                public void onFail(@Nullable String failReason) {
+
+                }
+            });
+        } else {
+            throw new InvalidParameterException("Don't subscribe a conversation more than once");
+        }
     }
 
-    /**
-     * Un-Subscribe message changing of a conversation.
-     *
-     * @param conversationId - Conversation Id
-     */
     public void unSubConversationMessage(@NonNull final String conversationId) {
-        subContainer.unSub(conversationId);
+        final Pubsub pubsub = this.skygear.getPubsub();
+        Sub sub = subs.get(conversationId);
+
+        if (sub != null) {
+            sub.detach(pubsub);
+            subs.remove(conversationId);
+        } else {
+            throw new InvalidParameterException("Don't un-subscribe a conversation more than once");
+        }
     }
 
-    /**
-     * Gets the total unread count.
-     *
-     * @param callback - GetCallback instance to handle Unread instance
-     */
+    private void getOrCreateUserChannel(@Nullable final GetCallback<Record> callback) {
+        try {
+            Query query = new Query("user_channel");
+            Database privateDatabase = this.skygear.getPrivateDatabase();
+            privateDatabase.query(query, new RecordQueryResponseHandler() {
+                @Override
+                public void onQuerySuccess(Record[] records) {
+                    if (records.length != 0) {
+                        if (callback != null) {
+                            callback.onSucc(records[0]);
+                        }
+                    } else {
+                        createUserChannel(callback);
+                    }
+                }
+
+                @Override
+                public void onQueryError(String reason) {
+                    if (callback != null) {
+                        callback.onFail(reason);
+                    }
+                }
+            });
+        } catch (AuthenticationException e) {
+            if (callback != null) {
+                callback.onFail(e.getMessage());
+            }
+        }
+    }
+
+    private void createUserChannel(final GetCallback<Record> callback) {
+        try {
+            Record conversation = new Record("user_channel");
+            conversation.set("name", UUID.randomUUID().toString());
+
+            RecordSaveResponseHandler handler = new RecordSaveResponseHandler() {
+                @Override
+                public void onSaveSuccess(Record[] records) {
+                    Record record = records[0];
+                    if (callback != null) {
+                        callback.onSucc(record);
+                    }
+                }
+
+                @Override
+                public void onPartiallySaveSuccess(
+                        Map<String, Record> successRecords,
+                        Map<String, String> reasons) {
+
+                }
+
+                @Override
+                public void onSaveFail(String reason) {
+                    if (callback != null) {
+                        callback.onFail(reason);
+                    }
+                }
+            };
+
+            Database db = this.skygear.getPrivateDatabase();
+            db.save(conversation, handler);
+        } catch (AuthenticationException e) {
+            callback.onFail(e.getMessage());
+        }
+    }
+
+    /* --- Unread --- */
+
     public void getTotalUnread(@Nullable final GetCallback<Unread> callback) {
-        unreadContainer.get(callback);
+        this.skygear.callLambdaFunction("chat:total_unread", null, new LambdaResponseHandler() {
+            @Override
+            public void onLambdaSuccess(JSONObject result) {
+                try {
+                    int count = result.getInt("message");
+                    if (callback != null) {
+                        callback.onSucc(new Unread(count));
+                    }
+                } catch (JSONException e) {
+                    if (callback != null) {
+                        callback.onFail(e.getMessage());
+                    }
+                }
+            }
+
+            @Override
+            public void onLambdaFail(String reason) {
+                if (callback != null) {
+                    callback.onFail(reason);
+                }
+            }
+        });
     }
 }

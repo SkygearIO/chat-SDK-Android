@@ -36,17 +36,15 @@ final class Sub {
         };
     }
 
-    void sub(final Container container) {
-        Pubsub pubsub = container.getPubsub();
+    void attach(final Pubsub pubsub) {
         pubsub.subscribe(channel, this.handler);
     }
 
-    void unSub(final Container container) {
-        Pubsub pubsub = container.getPubsub();
+    void detach(final Pubsub pubsub) {
         pubsub.unsubscribe(channel, this.handler);
     }
 
-    private void handleEvent(final JSONObject data) {
+    void handleEvent(final JSONObject data) {
         try {
             String recordType = data.optString("record_type");
             String evtType = data.optString("event_type");
@@ -58,8 +56,7 @@ final class Sub {
                     Message message = new Message(messageRecord);
                     String conversationId = message.getConversationId();
 
-                    if (conversationId != null
-                            && conversationId.equals(this.conversationId)) {
+                    if (conversationId.equals(this.conversationId)) {
                         callback.notify(evtType, new Message(messageRecord));
                     }
                 }
