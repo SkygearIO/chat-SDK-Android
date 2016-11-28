@@ -16,8 +16,23 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/md_grey_100"
+        android:background="@color/md_grey_700"
         android:layout_above="@+id/input_region"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/input_region">
+
+        <TextView
+            android:id="@+id/typing_indicator_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_alignParentEnd="true"
+            android:textColor="@android:color/darker_gray" />
+
+    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/input_region"

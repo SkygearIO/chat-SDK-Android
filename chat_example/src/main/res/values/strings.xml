@@ -55,6 +55,8 @@
     <!-- confirm dialog positive btn -->
     <string name="yes">Yes</string>
 
+    <string name="dismiss">Dismiss</string>
+
     <!-- confirm dialog negative btn -->
     <string name="no">NO</string>
 
@@ -74,16 +76,16 @@
     <string-array name="conversation_options">
         <item>Enter</item>
         <item>Edit</item>
-        <item>Delete</item>
-        <item>Add/Remove Admins</item>
-        <item>Add/Remove Participants</item>
+        <item>Leave</item>
+        <item>Update Admins</item>
+        <item>Update Participants</item>
     </string-array>
 
     <!-- intent title for selecting pic -->
     <string name="select_image">Select Image</string>
 
     <!-- confirm string for log out -->
-    <string name="are_your_sure_to_delete_conversation">Are you sure to delete conversation?</string>
+    <string name="are_your_sure_to_leave_conversation">Are you sure to leave the conversation?</string>
 
     <!-- Add/Remove Admin title -->
     <string name="add_remove_admins">Add/Remove Admin</string>

@@ -30,7 +30,7 @@ class UserIdsFragment : DialogFragment() {
         private val TITLE_KEY = "title_key"
         private val SELECT_IDS_KEY = "selected_ids_key"
 
-        fun newInstance(title: String, selected: List<String>?): UserIdsFragment {
+        fun newInstance(title: String, selected: Set<String>?): UserIdsFragment {
             val f = UserIdsFragment()
             val args = Bundle()
             args.putString(TITLE_KEY, title)
@@ -80,7 +80,7 @@ class UserIdsFragment : DialogFragment() {
 
         super.onResume()
 
-        mChatContainer.getAllChatUsers(object : GetCallback<List<ChatUser>> {
+        mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
             override fun onSucc(list: List<ChatUser>?) {
                 mAdapter?.setUserIds(list, arguments.getStringArrayList(SELECT_IDS_KEY))
             }

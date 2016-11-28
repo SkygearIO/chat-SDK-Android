@@ -8,38 +8,56 @@ import android.content.Intent
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
+import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.widget.EditText
+import android.widget.TextView
 import io.skygear.plugins.chat.*
 import io.skygear.skygear.Asset
 import io.skygear.skygear.Container
-import java.io.ByteArrayInputStream
+import org.json.JSONObject
 import java.lang.ref.WeakReference
-import java.net.URLConnection
 import java.util.*
 
 class ConversationActivity : AppCompatActivity() {
-    private val LOG_TAG = "ConversationActivity"
+    private val TAG = "ConversationActivity"
     private val MESSAGES_LIMIT = 25
+    private val TYPING_CHECKER_INTERVAL = 1000L
     private val SELECT_SINGLE_PICTURE = 101
+    private val MESSAGE_SUBSCRIPTION_MAX_RETRY = 10
+    private val TYPING_SUBSCRIPTION_MAX_RETRY = 10
 
     private val mSkygear: Container
     private val mChatContainer: ChatContainer
-    private var mConversationId: String? = null
+    private var mConversation: Conversation? = null
     private val mAdapter: ConversationAdapter = ConversationAdapter()
+    private var mAsset: Asset? = null
+
+    private val mTypingStates = HashMap<String, Typing.State>()
+    private var mMessageSubscriptionRetryCount = 0
+    private var mTypingSubscriptionRetryCount = 0
+
     private var mConversationRv: RecyclerView? = null
     private var mInputEt: EditText? = null
     private var mLoading: ProgressDialog? = null
-    private var mAsset: Asset? = null
+    private var mTypingIndicatorTextView: TextView? = null
+
+    private var mInputChanged = false
+    private var mTypingCheckerHandler = Handler()
+    private var mTypingCheckerTask : Runnable? = null
 
     companion object {
-        private val ID_KEY = "id_key"
+        private val CONVERSATION_KEY = "conversation_key"
 
         fun newIntent(conversation: Conversation, context: Context): Intent {
             val i = Intent(context, ConversationActivity::class.java)
-            i.putExtra(ID_KEY, conversation.id)
+            val serializedConversation = conversation.toJson().toString()
+            i.putExtra(CONVERSATION_KEY, serializedConversation)
 
             return i
         }
@@ -54,13 +72,16 @@ class ConversationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_conversation)
 
-        mConversationId = intent.getStringExtra(ID_KEY)
+        val serializedConversation = intent.getStringExtra(CONVERSATION_KEY)
+        mConversation = Conversation.fromJson(JSONObject(serializedConversation))
 
         mConversationRv = findViewById(R.id.conversation_rv) as RecyclerView
         mConversationRv?.adapter = mAdapter
         mConversationRv?.layoutManager = LinearLayoutManager(this)
 
         mInputEt = findViewById(R.id.input_et) as EditText
+        setupTypingChecker()
+
         val sendBtn = findViewById(R.id.send_btn)
         val attachmentBtn = findViewById(R.id.attachment_btn)
 
@@ -70,38 +91,158 @@ class ConversationActivity : AppCompatActivity() {
         mLoading = ProgressDialog(this)
         mLoading?.setTitle(R.string.loading)
         mLoading?.setMessage(getString(R.string.attaching))
+
+        mTypingIndicatorTextView = findViewById(R.id.typing_indicator_tv) as TextView
+        mTypingIndicatorTextView?.text = ""
     }
 
     override fun onResume() {
         super.onResume()
 
-        mChatContainer.getAllMessages(mConversationId!!, MESSAGES_LIMIT, Date(),
-                object : GetCallback<List<Message>> {
-                    override fun onSucc(list: List<Message>?) {
-                        mAdapter.setMessages(list)
-                        if (list != null && !list.isEmpty()) {
-                            mChatContainer.markConversationLastReadMessage(
-                                    mConversationId!!, list.first().id)
-                        }
-                    }
+        mMessageSubscriptionRetryCount = 0
+        mTypingSubscriptionRetryCount = 0
 
-                    override fun onFail(failReason: String?) {
+        startTypingChecker()
+        getAllMessages()
+        subscribeMessage()
+        subscribeTypingIndicator()
 
-                    }
-                })
-
-        mChatContainer.subConversationMessage(mConversationId!!, { t, m ->
-            when (t) {
-                "create" -> mAdapter.addMessage(m)
-            }
-        })
     }
 
     override fun onPause() {
         super.onPause()
 
-        mChatContainer.unSubConversationMessage(mConversationId!!)
+        stopTypingChecker()
+        sendTypingState(Typing.State.FINISHED)
+
+        mChatContainer.unsubscribeConversationMessage(mConversation!!)
+        mChatContainer.unsubscribeTypingIndicator(mConversation!!)
     }
+
+    fun onReceiveInitialMessages(messages: List<Message>?) {
+        mAdapter.setMessages(messages)
+        if (messages != null && !messages.isEmpty()) {
+            mChatContainer.markConversationLastReadMessage(mConversation!!, messages.first())
+            mChatContainer.markMessagesAsRead(messages)
+        }
+    }
+
+    fun onReceiveMessage(message: Message) {
+        mAdapter.addMessage(message)
+        mChatContainer.markMessageAsRead(message)
+    }
+
+    fun onUpdateMessage(message: Message) {
+        mAdapter.updateMessage(message)
+    }
+
+    fun updateTypingIndicatorTextView() {
+        val currentUserId = mSkygear.currentUser.id
+        val typingUserCount = mTypingStates
+                .filter { it.key != currentUserId && it.value == Typing.State.BEGIN }
+                .size
+        mTypingIndicatorTextView?.text =
+                when (typingUserCount) {
+                    0 -> ""
+                    1 -> "Someone is typing..."
+                    else -> "$typingUserCount users is typing..."
+                }
+    }
+
+
+    private fun setupTypingChecker() {
+        mTypingCheckerTask = Runnable {
+            if (mInputChanged) {
+                mInputChanged = false
+                sendTypingState(Typing.State.BEGIN)
+            } else {
+                sendTypingState(Typing.State.FINISHED)
+            }
+            mTypingCheckerHandler.postDelayed(mTypingCheckerTask, TYPING_CHECKER_INTERVAL)
+        }
+        mInputEt?.addTextChangedListener( object : TextEditWatcher() {
+            override fun afterTextChanged(s: Editable?) {
+                mInputChanged = true
+            }
+        })
+    }
+
+    private fun startTypingChecker() {
+        mTypingCheckerTask?.run()
+    }
+
+    private fun stopTypingChecker() {
+        mTypingCheckerHandler.removeCallbacks(mTypingCheckerTask)
+    }
+
+    private fun sendTypingState(state : Typing.State) {
+        val currentUserId = mSkygear.currentUser.id
+        val currentUserState = mTypingStates[currentUserId] ?: Typing.State.FINISHED
+        if (currentUserState != state) {
+            mChatContainer.sendTypingIndicator(mConversation!!, state)
+        }
+    }
+
+    private fun getAllMessages() {
+        mChatContainer.getMessages(mConversation!!, MESSAGES_LIMIT, Date(),
+                object : GetCallback<List<Message>> {
+                    override fun onSucc(list: List<Message>?) {
+                        onReceiveInitialMessages(list)
+                    }
+
+                    override fun onFail(failReason: String?) {
+                        Log.w(TAG, "Fail to get message: " + failReason)
+                    }
+                })
+    }
+
+    private fun subscribeMessage() {
+        if (mMessageSubscriptionRetryCount >= MESSAGE_SUBSCRIPTION_MAX_RETRY) {
+            Log.i(TAG, "Message subscription retry has reach the maximum, abort.")
+            return
+        }
+        mMessageSubscriptionRetryCount++
+        mChatContainer.subscribeConversationMessage(
+                mConversation!!,
+                object : MessageSubscriptionCallback(mConversation!!) {
+                    override fun notify(eventType: String, message: Message) {
+                        when (eventType) {
+                            "create" -> onReceiveMessage(message)
+                            "update" -> onUpdateMessage(message)
+                        }
+                    }
+
+                    override fun onSubscriptionFail(reason: String?) {
+                        subscribeMessage()
+                    }
+                }
+        )
+    }
+
+    private fun subscribeTypingIndicator() {
+        if (mTypingSubscriptionRetryCount >= TYPING_SUBSCRIPTION_MAX_RETRY) {
+            Log.i(TAG, "Typing subscription retry has reach the maximum, abort.")
+            return
+        }
+        mTypingSubscriptionRetryCount++
+        mChatContainer.subscribeTypingIndicator(
+                mConversation!!,
+                object : TypingSubscriptionCallback(mConversation!!) {
+                    override fun notify(typingList: List<Typing>) {
+                        for (eachTyping in typingList) {
+                            mTypingStates.put(eachTyping.userId, eachTyping.state)
+                        }
+
+                        updateTypingIndicatorTextView()
+                    }
+
+                    override fun onSubscriptionFail(reason: String?) {
+                        subscribeTypingIndicator()
+                    }
+                }
+        )
+    }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when(requestCode) {
@@ -114,20 +255,9 @@ class ConversationActivity : AppCompatActivity() {
 
         if ((!body.isNullOrEmpty() && !body.isNullOrBlank())
                 || mAsset != null) {
-            mChatContainer.sendMessage(mConversationId!!,
-                    body.toString().trim(),
-                    mAsset,
-                    null,
-                    object : SaveCallback<Message> {
-                        override fun onSucc(m: Message?) {
-
-                        }
-
-                        override fun onFail(failReason: String?) {
-
-                        }
-                    }
-            )
+            val asset = mAsset
+            mAsset = null
+            mChatContainer.sendMessage(mConversation!!, body.toString().trim(), asset, null, null)
             mInputEt?.text?.clear()
         }
     }
@@ -156,13 +286,23 @@ class ConversationActivity : AppCompatActivity() {
         mLoading?.dismiss()
     }
 
+    abstract class TextEditWatcher : TextWatcher {
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            // do nothing
+        }
+
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            // do nothing
+        }
+    }
+
     class AssetWorker(val uri: Uri, val contentResolver: ContentResolver, val weakRef: WeakReference<ConversationActivity>) : AsyncTask<Void, Void, Asset>() {
         val LOG_TAG = "AssetWorker"
 
         override fun doInBackground(vararg params: Void?): Asset? {
             val inputStream = contentResolver.openInputStream(uri)
             val bytes = getBytes()
-            val mime = URLConnection.guessContentTypeFromStream(ByteArrayInputStream(bytes))
+            val mime = contentResolver.getType(uri)
 
             if (inputStream != null && bytes != null) {
                 return Asset(UUID.randomUUID().toString(), mime, bytes)

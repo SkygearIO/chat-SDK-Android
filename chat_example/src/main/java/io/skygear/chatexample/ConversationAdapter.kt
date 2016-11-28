@@ -1,6 +1,7 @@
 package io.skygear.chatexample
 
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,6 +32,14 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
         }
     }
 
+    fun updateMessage(message: Message) {
+        val idx = mMessages.indexOfFirst { it.id == message.id }
+        if (idx != -1) {
+            mMessages[idx] = message
+            notifyDataSetChanged()
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         return ViewHolder(layoutInflater.inflate(R.layout.item_message, parent, false))
@@ -48,9 +57,21 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
 
         if (message?.asset != null) {
             holder.assetIv.visibility = View.VISIBLE
-            Picasso.with(holder.assetIv.context).load(message?.asset?.url).into(holder.assetIv);
+            Picasso.with(holder.assetIv.context).load(message?.asset?.url).into(holder.assetIv)
         } else {
             holder.assetIv.visibility = View.GONE
+        }
+
+        when (message?.status) {
+            Message.Status.ALL_READ -> {
+                holder.statusIv.setImageResource(R.drawable.ic_blue_tick)
+            }
+            Message.Status.SOME_READ -> {
+                holder.statusIv.setImageResource(R.drawable.ic_green_tick)
+            }
+            else -> {
+                holder.statusIv.setImageResource(android.R.color.transparent)
+            }
         }
     }
 
@@ -60,6 +81,7 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view)  {
         val bodyTv = view.findViewById(R.id.message_body_tv) as TextView
+        val statusIv = view.findViewById(R.id.message_status_iv) as ImageView
         val assetIv = view.findViewById(R.id.message_asset_iv) as ImageView
     }
 }

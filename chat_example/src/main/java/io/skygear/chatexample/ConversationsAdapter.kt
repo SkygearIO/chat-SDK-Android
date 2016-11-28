@@ -18,10 +18,8 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
     }
 
     fun setConversations(conversations: List<Conversation>?) {
-        if (conversations != null) {
-            mConversations = conversations
-            notifyDataSetChanged()
-        }
+        mConversations = conversations ?: listOf()
+        notifyDataSetChanged()
     }
 
     fun updateConversation(old: Conversation, new: Conversation?) {

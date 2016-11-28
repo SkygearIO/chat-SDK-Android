@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.Toast
 import io.skygear.plugins.chat.*
 import io.skygear.skygear.Container
+import java.util.*
 
 class CreateConversationActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "CreateConversation"
@@ -36,7 +37,7 @@ class CreateConversationActivity : AppCompatActivity() {
 
         mCreateBtn?.setOnClickListener {
             val selectedUsers = mAdapter.getSelected()
-            if (selectedUsers.size != 0) {
+            if (selectedUsers.isNotEmpty()) {
                 createTitleDialog()
             }
         }
@@ -45,7 +46,7 @@ class CreateConversationActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mChatContainer.getAllChatUsers(object : GetCallback<List<ChatUser>> {
+        mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
             override fun onSucc(list: List<ChatUser>?) {
                 mAdapter.setChatUsers(list);
             }
@@ -63,11 +64,8 @@ class CreateConversationActivity : AppCompatActivity() {
     }
 
     fun createConversation(users: List<ChatUser>?, title: String?) {
-        if (users != null && users.size > 0) {
-            val participantIds: MutableList<String> = mutableListOf()
-            for (user in users) {
-                participantIds.add(user.id)
-            }
+        if (users != null && users.isNotEmpty()) {
+            val participantIds = users.map { it.id }.toMutableSet()
             val currentUser = mSkygear.currentUser
             if (currentUser != null) {
                 participantIds.add(currentUser.id)
@@ -78,22 +76,19 @@ class CreateConversationActivity : AppCompatActivity() {
             loading.setMessage(getString(R.string.creating))
             loading.show()
 
-            mChatContainer.createConversation(participantIds, participantIds, title,
-                    object : SaveCallback<Conversation> {
-                        override fun onSucc(`object`: Conversation?) {
-                            loading.dismiss()
+            mChatContainer.createConversation(participantIds, title, null, null, object : SaveCallback<Conversation> {
+                override fun onSucc(`object`: Conversation?) {
+                    loading.dismiss()
+                    finish()
+                }
 
-                            finish()
-                        }
-
-                        override fun onFail(failReason: String?) {
-                            loading.dismiss()
-
-                            if (failReason != null) {
-                                toast(failReason)
-                            }
-                        }
-                    })
+                override fun onFail(failReason: String?) {
+                    loading.dismiss()
+                    if (failReason != null) {
+                        toast(failReason)
+                    }
+                }
+            })
         }
     }
 
