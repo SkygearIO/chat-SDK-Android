@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,7 +39,7 @@ public final class ChatContainer {
     private static ChatContainer sharedInstance;
 
     private final Container skygear;
-    private final Map<String, Sub> subs = new HashMap<>();
+    private final Map<String, Subscription> messageSubscription = new HashMap<>();
 
     /* --- Constructor --- */
 
@@ -326,10 +325,10 @@ public final class ChatContainer {
 
     /* --- Message --- */
 
-    public void getAllMessages(@NonNull final Conversation conversation,
-                               final int limit,
-                               @Nullable final Date before,
-                               @Nullable final GetCallback<List<Message>> callback) {
+    public void getMessages(@NonNull final Conversation conversation,
+                            final int limit,
+                            @Nullable final Date before,
+                            @Nullable final GetCallback<List<Message>> callback) {
         int limitCount = limit;
         String beforeTimeISO8601 = DateUtils.toISO8601(before != null ? before : new Date());
 
@@ -430,7 +429,7 @@ public final class ChatContainer {
 
     /* --- Chat User --- */
 
-    public void getAllChatUsers(@Nullable final GetCallback<List<ChatUser>> callback) {
+    public void getChatUsers(@Nullable final GetCallback<List<ChatUser>> callback) {
         Query query = new Query("user");
         Database publicDB = this.skygear.getPublicDatabase();
         publicDB.query(query, new QueryResponseAdapter<List<ChatUser>>(callback) {
@@ -450,19 +449,22 @@ public final class ChatContainer {
     /* --- Subscription--- */
 
     public void subscribeConversationMessage(@NonNull final Conversation conversation,
-                                       @Nullable final SubCallback<Message> callback) {
+                                             @Nullable final MessageSubscriptionCallback callback) {
         final Pubsub pubsub = this.skygear.getPubsub();
         final String conversationId = conversation.getId();
-        Sub sub = subs.get(conversationId);
 
-        if (sub == null) {
+        if (messageSubscription.get(conversationId) == null) {
             getOrCreateUserChannel(new GetCallback<Record>() {
                 @Override
-                public void onSucc(@Nullable Record record) {
-                    if (record != null) {
-                        Sub sub = new Sub(conversationId, (String) record.get("name"), callback);
-                        sub.attach(pubsub);
-                        subs.put(conversationId, sub);
+                public void onSucc(@Nullable Record userChannelRecord) {
+                    if (userChannelRecord != null) {
+                        Subscription subscription = new Subscription(
+                                conversationId,
+                                (String) userChannelRecord.get("name"),
+                                callback
+                        );
+                        subscription.attach(pubsub);
+                        messageSubscription.put(conversationId, subscription);
                     }
                 }
 
@@ -472,20 +474,20 @@ public final class ChatContainer {
                 }
             });
         } else {
-            throw new InvalidParameterException("Don't subscribe a conversation more than once");
+            throw new InvalidParameterException("Don't subscribe messages for a conversation more than once");
         }
     }
 
     public void unsubscribeConversationMessage(@NonNull final Conversation conversation) {
         final Pubsub pubsub = this.skygear.getPubsub();
         String conversationId = conversation.getId();
-        Sub sub = subs.get(conversationId);
+        Subscription subscription = messageSubscription.get(conversationId);
 
-        if (sub != null) {
-            sub.detach(pubsub);
-            subs.remove(conversationId);
+        if (subscription != null) {
+            subscription.detach(pubsub);
+            messageSubscription.remove(conversationId);
         } else {
-            throw new InvalidParameterException("Don't un-subscribe a conversation more than once");
+            throw new InvalidParameterException("Don't unsubscribe messages for a conversation more than once");
         }
     }
 
