@@ -5,6 +5,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,6 +43,7 @@ public final class ChatContainer {
 
     private final Container skygear;
     private final Map<String, Subscription> messageSubscription = new HashMap<>();
+    private final Map<String, Subscription> typingSubscription = new HashMap<>();
 
     /* --- Constructor --- */
 
@@ -425,6 +429,69 @@ public final class ChatContainer {
                 ChatContainer.this.saveMessageRecord(message, callback);
             }
         });
+    }
+
+    /* --- Typing --- */
+
+    public void sendTypingIndicator(@NonNull Conversation conversation,
+                                    @NonNull Typing.State state) {
+        DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime().withZoneUTC();
+        String timestamp = dateTimeFormatter.print(new DateTime());
+        Object[] args = {conversation.getId(), state.getName(), timestamp};
+        this.skygear.callLambdaFunction("chat:typing", args, new LambdaResponseHandler(){
+            @Override
+            public void onLambdaSuccess(JSONObject result) {
+                Log.i(TAG, "Successfully send typing indicator");
+            }
+
+            @Override
+            public void onLambdaFail(String reason) {
+                Log.i(TAG, "Fail to send typing indicator: " + reason);
+            }
+        });
+    }
+
+    public void subscribeTypingIndicator(@NonNull Conversation conversation,
+                                         @Nullable final TypingSubscriptionCallback callback) {
+        final Pubsub pubsub = this.skygear.getPubsub();
+        final String conversationId = conversation.getId();
+
+        if (typingSubscription.get(conversationId) == null) {
+            getOrCreateUserChannel(new GetCallback<Record>() {
+                @Override
+                public void onSucc(@Nullable Record userChannelRecord) {
+                    if (userChannelRecord != null) {
+                        Subscription subscription = new Subscription(
+                                conversationId,
+                                (String) userChannelRecord.get("name"),
+                                callback
+                        );
+                        subscription.attach(pubsub);
+                        typingSubscription.put(conversationId, subscription);
+                    }
+                }
+
+                @Override
+                public void onFail(@Nullable String failReason) {
+
+                }
+            });
+        } else {
+            throw new InvalidParameterException("Don't subscribe typing indicator for a conversation more than once");
+        }
+    }
+
+    public void unsubscribeTypingIndicator(@NonNull Conversation conversation) {
+        final Pubsub pubsub = this.skygear.getPubsub();
+        String conversationId = conversation.getId();
+        Subscription subscription = typingSubscription.get(conversationId);
+
+        if (subscription != null) {
+            subscription.detach(pubsub);
+            typingSubscription.remove(conversationId);
+        } else {
+            throw new InvalidParameterException("Don't unsubscribe typing indicator for a conversation more than once");
+        }
     }
 
     /* --- Chat User --- */
