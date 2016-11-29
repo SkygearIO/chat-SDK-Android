@@ -14,9 +14,11 @@ import org.json.JSONObject;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -102,30 +104,56 @@ public final class ChatContainer {
     }
 
     public void getConversations(@Nullable final GetCallback<List<Conversation>> callback) {
-        String userId = this.skygear.getCurrentUser().getId();
-        this.skygear.getPublicDatabase().query(UserConversation.buildQuery(userId),
-                new QueryResponseAdapter<List<Conversation>>(callback) {
-                    @Override
-                    public List<Conversation> convert(Record[] records) {
-                        List<Conversation> conversations = new ArrayList<>(records.length);
+        this.getUserConversation(new GetCallback<List<UserConversation>>() {
+            @Override
+            public void onSucc(@Nullable List<UserConversation> userConversations) {
+                if (callback == null) {
+                    // nothing to do
+                    return;
+                }
 
-                        for (Record record : records) {
-                            conversations.add(UserConversation.getConversation(record));
-                        }
-
-                        return conversations;
+                List<Conversation> conversations = null;
+                if (userConversations != null) {
+                    conversations = new LinkedList<>();
+                    for (UserConversation eachUserConversations : userConversations) {
+                        conversations.add(eachUserConversations.getConversation());
                     }
-                });
+                }
+                callback.onSucc(conversations);
+            }
+
+            @Override
+            public void onFail(@Nullable String failReason) {
+                if (callback != null) {
+                    callback.onFail(failReason);
+                }
+            }
+        });
     }
 
     public void getConversation(@NonNull final String conversationId,
                                 @Nullable final GetCallback<Conversation> callback) {
-        String userId = this.skygear.getCurrentUser().getId();
-        this.skygear.getPublicDatabase().query(UserConversation.buildQuery(conversationId, userId),
-                new QueryResponseAdapter<Conversation>(callback) {
+        this.getUserConversation(
+                conversationId,
+                this.skygear.getCurrentUser().getId(),
+                new GetCallback<UserConversation>() {
                     @Override
-                    public Conversation convert(Record[] records) {
-                        return UserConversation.getConversation(records[0]);
+                    public void onSucc(@Nullable UserConversation userConversation) {
+                        if (callback != null) {
+                            Conversation conversation = null;
+                            if (userConversation != null) {
+                                conversation = userConversation.getConversation();
+                            }
+
+                            callback.onSucc(conversation);
+                        }
+                    }
+
+                    @Override
+                    public void onFail(@Nullable String failReason) {
+                        if (callback != null) {
+                            callback.onFail(failReason);
+                        }
                     }
                 });
     }
@@ -230,15 +258,37 @@ public final class ChatContainer {
 
     public void deleteConversation(@NonNull final Conversation conversation,
                                    @Nullable final DeleteOneCallback callback) {
-        final Database publicDB = this.skygear.getPublicDatabase();
-        String userId = this.skygear.getCurrentUser().getId();
+        // TODO: 29/11/2016 delete conversation
+    }
 
-        GetCallback<Record> getCallback = new GetCallback<Record>() {
+    public void updateConversation(@NonNull final Conversation conversation,
+                                   @NonNull final Map<String, Object> updates,
+                                   @Nullable final SaveCallback<Conversation> callback) {
+        final Database publicDB = this.skygear.getPublicDatabase();
+
+        this.getUserConversation(conversation, new GetCallback<UserConversation>() {
             @Override
-            public void onSucc(@Nullable Record record) {
-                if (record != null) {
-                    publicDB.delete(record, new DeleteResponseAdapter(callback));
+            public void onSucc(@Nullable UserConversation userConversation) {
+                if (callback == null) {
+                    // nothing to do
+                    return;
                 }
+
+                if (userConversation == null) {
+                    callback.onFail("Cannot find the conversation");
+                    return;
+                }
+
+                Record conversationRecord = userConversation.getConversation().record;
+                for (Map.Entry<String, Object> entry : updates.entrySet()) {
+                    conversationRecord.set(entry.getKey(), entry.getValue());
+                }
+                publicDB.save(conversationRecord, new SaveResponseAdapter<Conversation>(callback) {
+                    @Override
+                    public Conversation convert(Record record) {
+                        return new Conversation(record);
+                    }
+                });
             }
 
             @Override
@@ -247,66 +297,48 @@ public final class ChatContainer {
                     callback.onFail(failReason);
                 }
             }
-        };
-
-        publicDB.query(UserConversation.buildQuery(conversation.getId(), userId),
-                new QueryResponseAdapter<Record>(getCallback) {
-                    @Override
-                    public Record convert(Record[] records) {
-                        return UserConversation.getConversationRecord(records[0]);
-                    }
-                });
+        });
     }
 
     public void markConversationLastReadMessage(@NonNull final Conversation conversation,
-                                                @NonNull final String messageId) {
+                                                @NonNull final Message message) {
         final Database publicDB = this.skygear.getPublicDatabase();
-        String userId = this.skygear.getCurrentUser().getId();
-
-        GetCallback<Record> getCallback = new GetCallback<Record>() {
+        this.getUserConversation(conversation, new GetCallback<UserConversation>() {
             @Override
-            public void onSucc(@Nullable Record record) {
-                if (record != null) {
-                    record.set(UserConversation.LAST_READ_MESSAGE_KEY,
-                            Message.newReference(messageId));
-                    publicDB.save(record, null);
+            public void onSucc(@Nullable UserConversation userConversation) {
+                if (userConversation == null) {
+                    Log.w(TAG, "Cannot find the conversation");
+                    return;
                 }
+
+                Record userConversationRecord = userConversation.record;
+                userConversationRecord.set(
+                        UserConversation.LAST_READ_MESSAGE_KEY,
+                        Message.newReference(message)
+                );
+
+                publicDB.save(userConversationRecord, null);
             }
 
             @Override
             public void onFail(@Nullable String failReason) {
-
+                Log.i(TAG, "Fail to mark conversation last read message: " + failReason);
             }
-        };
-
-        publicDB.query(UserConversation.buildQuery(conversation.getId(), userId),
-                new QueryResponseAdapter<Record>(getCallback) {
-                    @Override
-                    public Record convert(Record[] records) {
-                        return records[0];
-                    }
-                });
+        });
     }
 
-    public void updateConversation(final Conversation conversation,
-                                   final Map<String, Object> updates,
-                                   final SaveCallback<Conversation> callback) {
-        final Database publicDB = this.skygear.getPublicDatabase();
-        String userId = this.skygear.getCurrentUser().getId();
-
-        GetCallback<Record> getCallback = new GetCallback<Record>() {
+    public void getConversationUnreadMessageCount(@NonNull Conversation conversation,
+                                                  @Nullable final GetCallback<Integer> callback) {
+        this.getUserConversation(conversation, new GetCallback<UserConversation>() {
             @Override
-            public void onSucc(@Nullable Record record) {
-                if (record != null) {
-                    for (Map.Entry<String, Object> entry : updates.entrySet()) {
-                        record.set(entry.getKey(), entry.getValue());
+            public void onSucc(@Nullable UserConversation userConversation) {
+                if (callback != null) {
+                    if (userConversation == null) {
+                        callback.onFail("Cannot find the conversation");
+                        return;
                     }
-                    publicDB.save(record, new SaveResponseAdapter<Conversation>(callback) {
-                        @Override
-                        public Conversation convert(Record record) {
-                            return new Conversation(record);
-                        }
-                    });
+
+                    callback.onSucc(userConversation.getUnreadCount());
                 }
             }
 
@@ -316,15 +348,121 @@ public final class ChatContainer {
                     callback.onFail(failReason);
                 }
             }
-        };
+        });
+    }
 
-        publicDB.query(UserConversation.buildQuery(conversation.getId(), userId),
-                new QueryResponseAdapter<Record>(getCallback) {
-                    @Override
-                    public Record convert(Record[] records) {
-                        return UserConversation.getConversationRecord(records[0]);
+    public void getTotalUnreadMessageCount(@Nullable final GetCallback<Integer> callback) {
+        this.skygear.callLambdaFunction("chat:total_unread", null, new LambdaResponseHandler() {
+            @Override
+            public void onLambdaSuccess(JSONObject result) {
+                try {
+                    int count = result.getInt("message");
+                    if (callback != null) {
+                        callback.onSucc(count);
                     }
-                });
+                } catch (JSONException e) {
+                    if (callback != null) {
+                        callback.onFail(e.getMessage());
+                    }
+                }
+            }
+
+            @Override
+            public void onLambdaFail(String reason) {
+                if (callback != null) {
+                    callback.onFail(reason);
+                }
+            }
+        });
+    }
+
+    /* --- User Conversation --- */
+
+    public void getUserConversation(@Nullable final GetCallback<List<UserConversation>> callback) {
+        this.getUserConversation(this.skygear.getCurrentUser().getId(), callback);
+    }
+
+    public void getUserConversation(@NonNull final Conversation conversation,
+                                    @Nullable final GetCallback<UserConversation> callback) {
+        this.getUserConversation(conversation.getId(), this.skygear.getCurrentUser().getId(), callback);
+    }
+
+    public void getUserConversation(@NonNull final Conversation conversation,
+                                    @NonNull final ChatUser user,
+                                    @Nullable final GetCallback<UserConversation> callback) {
+        this.getUserConversation(conversation.getId(), user.getId(), callback);
+    }
+
+    private void getUserConversation(@NonNull final String conversationId,
+                                     @NonNull final String userId,
+                                     @Nullable final GetCallback<UserConversation> callback) {
+        Query query = new Query(UserConversation.TYPE_KEY)
+                .equalTo(UserConversation.USER_KEY, userId)
+                .equalTo(UserConversation.CONVERSATION_KEY, conversationId)
+                .transientInclude(UserConversation.USER_KEY)
+                .transientInclude(UserConversation.CONVERSATION_KEY);
+
+        this.skygear.getPublicDatabase().query(query, new RecordQueryResponseHandler() {
+            @Override
+            public void onQuerySuccess(Record[] records) {
+                if (callback == null) {
+                    // nothing to do
+                    return;
+                }
+
+                UserConversation userConversation = null;
+                if (records != null && records.length > 0) {
+                    userConversation = new UserConversation(records[0]);
+                }
+                callback.onSucc(userConversation);
+            }
+
+            @Override
+            public void onQueryError(String reason) {
+                if (callback != null) {
+                    callback.onFail(reason);
+                }
+            }
+        });
+    }
+
+    public void getUserConversation(@NonNull final ChatUser user,
+                                    @Nullable final GetCallback<List<UserConversation>> callback) {
+        this.getUserConversation(user.getId(), callback);
+    }
+
+    private void getUserConversation(@NonNull final String userId,
+                                     @Nullable final GetCallback<List<UserConversation>> callback) {
+        Query query = new Query(UserConversation.TYPE_KEY)
+                .equalTo(UserConversation.USER_KEY, userId)
+                .transientInclude(UserConversation.USER_KEY)
+                .transientInclude(UserConversation.CONVERSATION_KEY);
+
+        this.skygear.getPublicDatabase().query(query, new RecordQueryResponseHandler() {
+            @Override
+            public void onQuerySuccess(Record[] records) {
+                if (callback == null) {
+                    // nothing to do
+                    return;
+                }
+
+                List<UserConversation> userConversations = null;
+                if (records != null && records.length > 0) {
+                    userConversations = new LinkedList<>();
+                    for (Record eachRecord : records) {
+                        userConversations.add(new UserConversation(eachRecord));
+                    }
+                }
+                callback.onSucc(userConversations);
+            }
+
+            @Override
+            public void onQueryError(String reason) {
+                if (callback != null) {
+                    callback.onFail(reason);
+                }
+            }
+        });
     }
 
     /* --- Message --- */
@@ -360,6 +498,8 @@ public final class ChatContainer {
                             Log.e(TAG, "Fail to get message: " + e.getMessage());
                         }
                     }
+
+                    ChatContainer.this.markMessagesAsDelivered(messages);
                 }
                 if (callback != null) {
                     callback.onSucc(messages);
@@ -401,6 +541,66 @@ public final class ChatContainer {
                 callback.onFail("Please provide either body, asset or metadata");
             }
         }
+    }
+
+    public void markMessageAsRead(@NonNull Message message) {
+        List<Message> messages = new LinkedList<>();
+        messages.add(message);
+
+        this.markMessagesAsRead(messages);
+    }
+
+    public void markMessagesAsRead(@NonNull List<Message> messages) {
+        String[] messageIds = new String[messages.size()];
+        for (int idx = 0; idx < messages.size(); idx++) {
+            Message eachMessage = messages.get(idx);
+            messageIds[idx] = eachMessage.getId();
+        }
+
+        this.skygear.callLambdaFunction(
+                "chat:mark_as_read",
+                new Object[]{messageIds},
+                new LambdaResponseHandler() {
+                    @Override
+                    public void onLambdaSuccess(JSONObject result) {
+                        Log.i(TAG, "Successfully mark messages as read");
+                    }
+
+                    @Override
+                    public void onLambdaFail(String reason) {
+                        Log.w(TAG, "Fail to mark messages as read: " + reason);
+                    }
+                });
+    }
+
+    public void markMessageAsDelivered(@NonNull Message message) {
+        List<Message> messages = new LinkedList<>();
+        messages.add(message);
+
+        this.markMessagesAsDelivered(messages);
+    }
+
+    public void markMessagesAsDelivered(@NonNull List<Message> messages) {
+        String[] messageIds = new String[messages.size()];
+        for (int idx = 0; idx < messages.size(); idx++) {
+            Message eachMessage = messages.get(idx);
+            messageIds[idx] = eachMessage.getId();
+        }
+
+        this.skygear.callLambdaFunction(
+                "chat:mark_as_delivered",
+                new Object[]{messageIds},
+                new LambdaResponseHandler() {
+                    @Override
+                    public void onLambdaSuccess(JSONObject result) {
+                        Log.i(TAG, "Successfully mark messages as delivered");
+                    }
+
+                    @Override
+                    public void onLambdaFail(String reason) {
+                        Log.w(TAG, "Fail to mark messages as delivered: " + reason);
+                    }
+                });
     }
 
     private void saveMessageRecord(final Record message,
@@ -624,30 +824,4 @@ public final class ChatContainer {
         }
     }
 
-    /* --- Unread --- */
-
-    public void getTotalUnread(@Nullable final GetCallback<Unread> callback) {
-        this.skygear.callLambdaFunction("chat:total_unread", null, new LambdaResponseHandler() {
-            @Override
-            public void onLambdaSuccess(JSONObject result) {
-                try {
-                    int count = result.getInt("message");
-                    if (callback != null) {
-                        callback.onSucc(new Unread(count));
-                    }
-                } catch (JSONException e) {
-                    if (callback != null) {
-                        callback.onFail(e.getMessage());
-                    }
-                }
-            }
-
-            @Override
-            public void onLambdaFail(String reason) {
-                if (callback != null) {
-                    callback.onFail(reason);
-                }
-            }
-        });
-    }
 }

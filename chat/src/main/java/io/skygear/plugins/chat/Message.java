@@ -12,12 +12,12 @@ import io.skygear.skygear.Record;
 import io.skygear.skygear.Reference;
 
 public class Message {
-    private static final String TYPE_KEY = "message";
-    private static final String BODY_KEY = "body";
-    private static final String METADATA_KEY = "metadata";
-    private static final String ATTACHMENT_KEY = "attachment";
+    static final String TYPE_KEY = "message";
+    static final String BODY_KEY = "body";
+    static final String METADATA_KEY = "metadata";
+    static final String ATTACHMENT_KEY = "attachment";
 
-    private final Record record;
+    final Record record;
 
     Message(@NonNull final Record record) {
         this.record = record;
@@ -56,6 +56,11 @@ public class Message {
     @NonNull
     static Reference newReference(@NonNull final String messageId) {
         return new Reference(TYPE_KEY, messageId);
+    }
+
+    @NonNull
+    static Reference newReference(@NonNull final Message message) {
+        return Message.newReference(message.getId());
     }
 
     @Nullable

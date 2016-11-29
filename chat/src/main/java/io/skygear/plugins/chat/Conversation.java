@@ -23,14 +23,15 @@ import java.util.Set;
 import io.skygear.skygear.Record;
 
 public class Conversation {
-    private static final String TYPE_KEY = "conversation";
+    static final String TYPE_KEY = "conversation";
     static final String TITLE_KEY = "title";
     static final String ADMIN_IDS_KEY = "admin_ids";
     static final String PARTICIPANT_IDS_KEY = "participant_ids";
     static final String DISTINCT_BY_PARTICIPANTS_KEY = "distinct_by_participant";
     static final String METADATA_KEY = "metadata";
 
-    private final Record record;
+    final Record record;
+
     private Set<String> adminIds;
     private Set<String> participantIds;
 

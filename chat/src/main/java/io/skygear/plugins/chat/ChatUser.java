@@ -10,7 +10,7 @@ import org.json.JSONObject;
 import io.skygear.skygear.Record;
 
 public class ChatUser {
-    private static final String NAME_KEY = "name";
+    static final String NAME_KEY = "name";
 
     private final Record record;
 

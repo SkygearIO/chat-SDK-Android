@@ -35,7 +35,7 @@ public class Typing {
         return time;
     }
 
-    public static enum State {
+    public enum State {
         BEGIN("begin"), PAUSE("pause"), FINISHED("finished");
 
         private final String name;
