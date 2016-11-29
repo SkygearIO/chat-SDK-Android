@@ -551,10 +551,9 @@ public final class ChatContainer {
     }
 
     public void markMessagesAsRead(@NonNull List<Message> messages) {
-        String[] messageIds = new String[messages.size()];
-        for (int idx = 0; idx < messages.size(); idx++) {
-            Message eachMessage = messages.get(idx);
-            messageIds[idx] = eachMessage.getId();
+        JSONArray messageIds = new JSONArray();
+        for (Message eachMessage : messages) {
+            messageIds.put(eachMessage.getId());
         }
 
         this.skygear.callLambdaFunction(
@@ -581,10 +580,9 @@ public final class ChatContainer {
     }
 
     public void markMessagesAsDelivered(@NonNull List<Message> messages) {
-        String[] messageIds = new String[messages.size()];
-        for (int idx = 0; idx < messages.size(); idx++) {
-            Message eachMessage = messages.get(idx);
-            messageIds[idx] = eachMessage.getId();
+        JSONArray messageIds = new JSONArray();
+        for (Message eachMessage : messages) {
+            messageIds.put(eachMessage.getId());
         }
 
         this.skygear.callLambdaFunction(
@@ -626,9 +624,49 @@ public final class ChatContainer {
 
             @Override
             public void onPostFail(Asset asset, String reason) {
+                Log.w(TAG, "Fail to upload asset: " + reason);
                 ChatContainer.this.saveMessageRecord(message, callback);
             }
         });
+    }
+
+    /* --- Message Receipt --- */
+
+    public void getMessageReceipt(@NonNull final Message message,
+                                  @Nullable final GetCallback<List<MessageReceipt>> callback) {
+        this.skygear.callLambdaFunction(
+                "chat:get_receipt",
+                new Object[]{ message.getId() },
+                new LambdaResponseHandler() {
+                    @Override
+                    public void onLambdaSuccess(JSONObject result) {
+                        if (callback == null) {
+                            // nothing to do
+                            return;
+                        }
+
+                        try {
+                            List<MessageReceipt> receiptList = new LinkedList<>();
+                            JSONArray receipts = result.getJSONArray("receipts");
+                            for (int idx = 0; idx < receipts.length(); idx++) {
+                                JSONObject eachReceiptJSON = receipts.getJSONObject(idx);
+                                receiptList.add(MessageReceipt.fromJSON(eachReceiptJSON));
+                            }
+
+                            callback.onSucc(receiptList);
+                        } catch (JSONException e) {
+                            callback.onFail("Fail to parse the result: " + e.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onLambdaFail(String reason) {
+                        if (callback != null) {
+                            callback.onFail(reason);
+                        }
+                    }
+                }
+        );
     }
 
     /* --- Typing --- */
@@ -673,11 +711,12 @@ public final class ChatContainer {
 
                 @Override
                 public void onFail(@Nullable String failReason) {
-
+                    Log.w(TAG, "Fail to subscribe typing indicator: " + failReason);
+                    if (callback != null) {
+                        callback.onSubscriptionFail(failReason);
+                    }
                 }
             });
-        } else {
-            throw new InvalidParameterException("Don't subscribe typing indicator for a conversation more than once");
         }
     }
 
@@ -689,8 +728,6 @@ public final class ChatContainer {
         if (subscription != null) {
             subscription.detach(pubsub);
             typingSubscription.remove(conversationId);
-        } else {
-            throw new InvalidParameterException("Don't unsubscribe typing indicator for a conversation more than once");
         }
     }
 
@@ -737,11 +774,12 @@ public final class ChatContainer {
 
                 @Override
                 public void onFail(@Nullable String failReason) {
-
+                    Log.w(TAG, "Fail to subscribe conversation message: " + failReason);
+                    if (callback != null) {
+                        callback.onSubscriptionFail(failReason);
+                    }
                 }
             });
-        } else {
-            throw new InvalidParameterException("Don't subscribe messages for a conversation more than once");
         }
     }
 
@@ -753,8 +791,6 @@ public final class ChatContainer {
         if (subscription != null) {
             subscription.detach(pubsub);
             messageSubscription.remove(conversationId);
-        } else {
-            throw new InvalidParameterException("Don't unsubscribe messages for a conversation more than once");
         }
     }
 

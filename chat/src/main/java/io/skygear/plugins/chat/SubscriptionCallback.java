@@ -11,4 +11,6 @@ public interface SubscriptionCallback {
     String[] supportingEventTypes();
 
     void notify(final String eventType, @Nullable JSONObject data);
+
+    void onSubscriptionFail(@Nullable String reason);
 }

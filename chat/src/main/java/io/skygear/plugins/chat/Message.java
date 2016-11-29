@@ -7,6 +7,8 @@ import android.support.annotation.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
+
 import io.skygear.skygear.Asset;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.Reference;
@@ -16,6 +18,7 @@ public class Message {
     static final String BODY_KEY = "body";
     static final String METADATA_KEY = "metadata";
     static final String ATTACHMENT_KEY = "attachment";
+    static final String CONVERSATION_STATUS_KEY = "conversation_status";
 
     final Record record;
 
@@ -49,6 +52,21 @@ public class Message {
     }
 
     @Nullable
+    public Status getStatus() {
+        return Status.fromName((String) this.record.get(CONVERSATION_STATUS_KEY));
+    }
+
+    @NonNull
+    public Date getCreatedTime() {
+        return this.record.getCreatedAt();
+    }
+
+    @NonNull
+    public Date getUpdatedTime() {
+        return this.record.getUpdatedAt();
+    }
+
+    @Nullable
     public Asset getAsset() {
         return (Asset) record.get(ATTACHMENT_KEY);
     }
@@ -70,5 +88,31 @@ public class Message {
 
     public static Message fromJson(JSONObject jsonObject) throws JSONException {
         return new Message(Record.fromJson(jsonObject));
+    }
+
+    public enum Status {
+        DELIVERED("delivered"), SOME_READ("some_read"), ALL_READ("all_read");
+
+        private final String name;
+
+        public String getName() {
+            return name;
+        }
+
+        Status(String name) {
+            this.name = name;
+        }
+
+        @Nullable
+        static Status fromName(String name) {
+            Status status = null;
+            for (Status eachStatus : Status.values()) {
+                if (eachStatus.getName().equals(name)) {
+                    status = eachStatus;
+                    break;
+                }
+            }
+            return status;
+        }
     }
 }
