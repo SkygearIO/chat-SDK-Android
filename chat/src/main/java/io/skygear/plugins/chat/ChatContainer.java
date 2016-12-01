@@ -605,13 +605,21 @@ public final class ChatContainer {
 
     private void saveMessageRecord(final Record message,
                                    @Nullable final SaveCallback<Message> callback) {
-        Database publicDB = this.skygear.getPublicDatabase();
-        publicDB.save(message, new SaveResponseAdapter<Message>(callback) {
-            @Override
-            public Message convert(Record record) {
-                return new Message(record);
+        try {
+            this.skygear.getPrivateDatabase().save(
+                    message,
+                    new SaveResponseAdapter<Message>(callback) {
+                        @Override
+                        public Message convert(Record record) {
+                            return new Message(record);
+                        }
+                    }
+            );
+        } catch (AuthenticationException e) {
+            if (callback != null) {
+                callback.onFail(e.getMessage());
             }
-        });
+        }
     }
 
     private void saveMessageRecord(final Record message,
