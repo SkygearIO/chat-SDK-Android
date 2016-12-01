@@ -256,9 +256,11 @@ public final class ChatContainer {
         this.updateConversation(conversation, map, callback);
     }
 
-    public void deleteConversation(@NonNull final Conversation conversation,
-                                   @Nullable final DeleteOneCallback callback) {
-        // TODO: 29/11/2016 delete conversation
+    public void leaveConversation(@NonNull final Conversation conversation,
+                                  @Nullable final LambdaResponseHandler callback) {
+        this.skygear.callLambdaFunction("chat:leave_conversation",
+                                        new Object[]{conversation.getId()},
+                                        callback);
     }
 
     public void updateConversation(@NonNull final Conversation conversation,
