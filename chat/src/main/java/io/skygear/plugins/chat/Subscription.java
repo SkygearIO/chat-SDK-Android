@@ -11,6 +11,9 @@ import java.util.Map;
 
 import io.skygear.skygear.Pubsub;
 
+/**
+ * The Conversation Subscription.
+ */
 final class Subscription {
     private static final String TAG = "SkygearChatSubscription";
 
@@ -19,6 +22,13 @@ final class Subscription {
     private final Pubsub.Handler handler;
     private final Map<String, SubscriptionCallback> callbackMap;
 
+    /**
+     * Instantiates a new Conversation Subscription.
+     *
+     * @param conversationId the conversation id
+     * @param channel        the channel
+     * @param callback       the callback
+     */
     Subscription(@NonNull final String conversationId,
                  @NonNull final String channel,
                  @Nullable final SubscriptionCallback callback) {
@@ -37,6 +47,11 @@ final class Subscription {
         };
     }
 
+    /**
+     * Add callback.
+     *
+     * @param callback the callback
+     */
     void addCallBack(@Nullable SubscriptionCallback callback) {
         if (callback == null) {
             // nothing to do
@@ -49,14 +64,29 @@ final class Subscription {
         }
     }
 
+    /**
+     * Attach to a Skygear Pubsub.
+     *
+     * @param pubsub the pubsub
+     */
     void attach(final Pubsub pubsub) {
         pubsub.subscribe(channel, this.handler);
     }
 
+    /**
+     * Detach from a Skygear Pubsub.
+     *
+     * @param pubsub the pubsub
+     */
     void detach(final Pubsub pubsub) {
         pubsub.unsubscribe(channel, this.handler);
     }
 
+    /**
+     * Handle event.
+     *
+     * @param data the data
+     */
     void handleEvent(final JSONObject data) {
         String eventName = data.optString("event");
         if (eventName != null) {

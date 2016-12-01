@@ -7,9 +7,17 @@ import java.util.Map;
 
 import io.skygear.skygear.RecordDeleteResponseHandler;
 
+/**
+ * An adapter converting record delete response to delete object callback
+ */
 final class DeleteResponseAdapter extends RecordDeleteResponseHandler {
     private final DeleteOneCallback callback;
 
+    /**
+     * Instantiates a new delete response adapter.
+     *
+     * @param callback the callback
+     */
     DeleteResponseAdapter(@Nullable DeleteOneCallback callback) {
         this.callback = callback;
     }

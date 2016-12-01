@@ -22,6 +22,9 @@ import java.util.Set;
 
 import io.skygear.skygear.Record;
 
+/**
+ * The Conversation model for the Chat Plugin.
+ */
 public class Conversation {
     static final String TYPE_KEY = "conversation";
     static final String TITLE_KEY = "title";
@@ -35,6 +38,15 @@ public class Conversation {
     private Set<String> adminIds;
     private Set<String> participantIds;
 
+    /**
+     * Creates a Compatible Skygear Record
+     *
+     * @param participantIds the participant ids
+     * @param title          the title
+     * @param metadata       the metadata
+     * @param options        the options
+     * @return the record
+     */
     static Record newRecord(final Set<String> participantIds,
                             @Nullable final String title,
                             @Nullable final Map<String, Object> metadata,
@@ -76,6 +88,11 @@ public class Conversation {
         return record;
     }
 
+    /**
+     * Instantiates a Conversation from a Skygear Record.
+     *
+     * @param record the record
+     */
     Conversation(final Record record) {
         this.record = record;
 
@@ -104,26 +121,51 @@ public class Conversation {
         }
     }
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
     @NonNull
     public String getId() {
         return record.getId();
     }
 
+    /**
+     * Gets title.
+     *
+     * @return the title
+     */
     @Nullable
     public String getTitle() {
         return (String) record.get(TITLE_KEY);
     }
 
+    /**
+     * Gets admin ids.
+     *
+     * @return the admin ids
+     */
     @Nullable
     public Set<String> getAdminIds() {
         return adminIds;
     }
 
+    /**
+     * Gets participant ids.
+     *
+     * @return the participant ids
+     */
     @Nullable
     public Set<String> getParticipantIds() {
         return participantIds;
     }
 
+    /**
+     * Gets metadata.
+     *
+     * @return the metadata
+     */
     public Map<String, Object> getMetadata() {
         Object metadata = this.record.get(METADATA_KEY);
         if (metadata == null) {
@@ -153,19 +195,39 @@ public class Conversation {
         throw new IllegalArgumentException("Metadata is in incorrect format");
     }
 
+    /**
+     * Whether the conversation is distinct by participants.
+     *
+     * @return the boolean
+     */
     public boolean isDistinctByParticipants() {
         return (boolean) record.get(DISTINCT_BY_PARTICIPANTS_KEY);
     }
 
+    /**
+     * Serializes to a JSON Object
+     *
+     * @return the JSON object
+     */
     @Nullable
     public JSONObject toJson() {
         return record.toJson();
     }
 
+    /**
+     * Deserializes from a JSON Object
+     *
+     * @param jsonObject the JSON object
+     * @return the conversation
+     * @throws JSONException the JSON exception
+     */
     public static Conversation fromJson(JSONObject jsonObject) throws JSONException {
         return new Conversation(Record.fromJson(jsonObject));
     }
 
+    /**
+     * The Option Key for Conversation Creation.
+     */
     public enum OptionKey {
         ADMIN_IDS("admin_ids"),
         DISTINCT_BY_PARTICIPANTS("distinct_by_participant");
@@ -176,6 +238,11 @@ public class Conversation {
             this.value = value;
         }
 
+        /**
+         * Gets the value.
+         *
+         * @return the value
+         */
         String getValue() {
             return this.value;
         }

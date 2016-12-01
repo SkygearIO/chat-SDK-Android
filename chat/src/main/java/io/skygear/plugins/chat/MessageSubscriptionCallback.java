@@ -7,6 +7,9 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * The callback for message subscription.
+ */
 public abstract class MessageSubscriptionCallback implements SubscriptionCallback {
     static final String[] SUPPORTED_EVENT_TYPES = new String[]{
             "create",
@@ -16,6 +19,11 @@ public abstract class MessageSubscriptionCallback implements SubscriptionCallbac
     private static final String TAG = "SkygearChatSubscription";
     private final String conversationId;
 
+    /**
+     * Instantiates a new message subscription callback.
+     *
+     * @param conversation the conversation
+     */
     public MessageSubscriptionCallback(@NonNull Conversation conversation) {
         super();
 
@@ -73,5 +81,11 @@ public abstract class MessageSubscriptionCallback implements SubscriptionCallbac
         }
     }
 
+    /**
+     * Notify a message event.
+     *
+     * @param eventType the event type
+     * @param message   the message
+     */
     public abstract void notify(@NonNull String eventType, @NonNull Message message);
 }

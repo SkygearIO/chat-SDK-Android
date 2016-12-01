@@ -10,9 +10,21 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
+/**
+ * The type Message receipt.
+ */
 public class MessageReceipt {
+    /**
+     * The User id key.
+     */
     static final String USER_ID_KEY = "user_id";
+    /**
+     * The Read at key.
+     */
     static final String READ_AT_KEY = "read_at";
+    /**
+     * The Delivered at key.
+     */
     static final String DELIVERED_AT_KEY = "delivered_at";
 
     private static DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime().withZoneUTC();
@@ -21,6 +33,13 @@ public class MessageReceipt {
     private final Date readAt;
     private final Date deliveredAt;
 
+    /**
+     * Instantiates a new Message receipt.
+     *
+     * @param userId      the user id
+     * @param readAt      the read at
+     * @param deliveredAt the delivered at
+     */
     MessageReceipt(@NonNull String userId, @Nullable Date readAt, @Nullable Date deliveredAt) {
         super();
 
@@ -29,21 +48,43 @@ public class MessageReceipt {
         this.deliveredAt = deliveredAt;
     }
 
+    /**
+     * Gets user id.
+     *
+     * @return the user id
+     */
     @NonNull
     public String getUserId() {
         return userId;
     }
 
+    /**
+     * Gets read time.
+     *
+     * @return the read time
+     */
     @Nullable
     public Date getReadAt() {
         return readAt;
     }
 
+    /**
+     * Gets delivered time.
+     *
+     * @return the delivered time
+     */
     @Nullable
     public Date getDeliveredAt() {
         return deliveredAt;
     }
 
+    /**
+     * Deserialize from a JSON Object
+     *
+     * @param jsonObject the JSON object
+     * @return the message receipt
+     * @throws JSONException the JSON exception
+     */
     static MessageReceipt fromJSON(@NonNull JSONObject jsonObject) throws JSONException {
         String userId = jsonObject.getString(USER_ID_KEY);
 

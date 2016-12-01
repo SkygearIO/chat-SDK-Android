@@ -199,7 +199,7 @@ class ConversationsActivity : AppCompatActivity() {
     fun updateParticipants(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_participants), c.participantIds)
         f.setOnOkBtnClickedListener { ids ->
-            mChatContainer.setConversationParticipantsIds(c, HashSet(ids), object : SaveCallback<Conversation> {
+            mChatContainer.setConversationParticipants(c, HashSet(ids), object : SaveCallback<Conversation> {
                 override fun onSucc(new: Conversation?) {
                     mAdapter.updateConversation(c, new)
                 }

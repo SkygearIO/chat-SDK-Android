@@ -8,13 +8,29 @@ import java.util.Map;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordSaveResponseHandler;
 
+/**
+ * An adapter converting record save response to save object callback
+ *
+ * @param <T> the type parameter
+ */
 abstract class SaveResponseAdapter<T> extends RecordSaveResponseHandler {
     private final SaveCallback<T> callback;
 
+    /**
+     * Instantiates a new save response adapter.
+     *
+     * @param callback the callback
+     */
     SaveResponseAdapter(@Nullable final SaveCallback<T> callback) {
         this.callback = callback;
     }
 
+    /**
+     * The convert method.
+     *
+     * @param record the record
+     * @return the type parameter
+     */
     @Nullable
     public abstract T convert(Record record);
 

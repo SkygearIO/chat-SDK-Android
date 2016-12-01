@@ -14,7 +14,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * The callback for typing subscription.
+ */
 public abstract class TypingSubscriptionCallback implements SubscriptionCallback {
+    /**
+     * The Supported event types.
+     */
     static final String[] SUPPORTED_EVENT_TYPES = new String[]{
             "typing"
     };
@@ -22,6 +28,11 @@ public abstract class TypingSubscriptionCallback implements SubscriptionCallback
     static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime().withZoneUTC();
     private final String conversationId;
 
+    /**
+     * Instantiates a new typing subscription callback.
+     *
+     * @param conversation the conversation
+     */
     public TypingSubscriptionCallback(@NonNull Conversation conversation) {
         super();
 
@@ -97,5 +108,10 @@ public abstract class TypingSubscriptionCallback implements SubscriptionCallback
         }
     }
 
+    /**
+     * Notify a typing event.
+     *
+     * @param typingList the typing list
+     */
     public abstract void notify(@NonNull List<Typing> typingList);
 }

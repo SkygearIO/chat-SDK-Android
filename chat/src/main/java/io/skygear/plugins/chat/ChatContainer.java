@@ -12,9 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +35,9 @@ import io.skygear.skygear.RecordQueryResponseHandler;
 import io.skygear.skygear.RecordSaveResponseHandler;
 import io.skygear.skygear.Reference;
 
+/**
+ * The Container for Chat Plugin
+ */
 public final class ChatContainer {
     private static final int GET_MESSAGES_DEFAULT_LIMIT = 50; // default value
     private static final String TAG = "SkygearChatContainer";
@@ -49,6 +50,12 @@ public final class ChatContainer {
 
     /* --- Constructor --- */
 
+    /**
+     * Gets the shared instance.
+     *
+     * @param container the container
+     * @return the instance
+     */
     public static ChatContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
             sharedInstance = new ChatContainer(container);
@@ -67,6 +74,15 @@ public final class ChatContainer {
 
     /* --- Conversation --- */
 
+    /**
+     * Create a conversation.
+     *
+     * @param participantIds the participant ids
+     * @param title          the title
+     * @param metadata       the metadata
+     * @param options        the options
+     * @param callback       the callback
+     */
     public void createConversation(@NonNull final Set<String> participantIds,
                                    @Nullable final String title,
                                    @Nullable final Map<String, Object> metadata,
@@ -82,6 +98,14 @@ public final class ChatContainer {
         });
     }
 
+    /**
+     * Create a direct conversation.
+     *
+     * @param participantId the participant id
+     * @param title         the title
+     * @param metadata      the metadata
+     * @param callback      the callback
+     */
     public void createDirectConversation(@NonNull final String participantId,
                                          @Nullable final String title,
                                          @Nullable final Map<String, Object> metadata,
@@ -103,6 +127,11 @@ public final class ChatContainer {
         });
     }
 
+    /**
+     * Gets all conversations.
+     *
+     * @param callback the callback
+     */
     public void getConversations(@Nullable final GetCallback<List<Conversation>> callback) {
         this.getUserConversation(new GetCallback<List<UserConversation>>() {
             @Override
@@ -131,6 +160,12 @@ public final class ChatContainer {
         });
     }
 
+    /**
+     * Gets conversation.
+     *
+     * @param conversationId the conversation id
+     * @param callback       the callback
+     */
     public void getConversation(@NonNull final String conversationId,
                                 @Nullable final GetCallback<Conversation> callback) {
         this.getUserConversation(
@@ -158,6 +193,13 @@ public final class ChatContainer {
                 });
     }
 
+    /**
+     * Sets conversation title.
+     *
+     * @param conversation the conversation
+     * @param title        the title
+     * @param callback     the callback
+     */
     public void setConversationTitle(@NonNull final Conversation conversation,
                                      @NonNull final String title,
                                      @Nullable final SaveCallback<Conversation> callback) {
@@ -167,6 +209,13 @@ public final class ChatContainer {
         this.updateConversation(conversation, map, callback);
     }
 
+    /**
+     * Sets conversation admin ids.
+     *
+     * @param conversation the conversation
+     * @param adminIds     the admin ids
+     * @param callback     the callback
+     */
     public void setConversationAdminIds(@NonNull final Conversation conversation,
                                         @NonNull final Set<String> adminIds,
                                         @Nullable final SaveCallback<Conversation> callback) {
@@ -178,9 +227,16 @@ public final class ChatContainer {
         this.updateConversation(conversation, map, callback);
     }
 
-    public void addConversationAdminId(@NonNull final Conversation conversation,
-                                       @NonNull final String adminId,
-                                       @Nullable final SaveCallback<Conversation> callback) {
+    /**
+     * Add conversation admin.
+     *
+     * @param conversation the conversation
+     * @param adminId      the admin id
+     * @param callback     the callback
+     */
+    public void addConversationAdmin(@NonNull final Conversation conversation,
+                                     @NonNull final String adminId,
+                                     @Nullable final SaveCallback<Conversation> callback) {
         Set<String> adminIds = conversation.getAdminIds();
         if (adminIds == null) {
             adminIds = new HashSet<>();
@@ -190,21 +246,32 @@ public final class ChatContainer {
         this.setConversationAdminIds(conversation, adminIds, callback);
     }
 
-    public void removeConversationAdminId(@NonNull final Conversation conversation,
-                                          @NonNull final String adminId,
-                                          @Nullable final SaveCallback<Conversation> callback) {
+    /**
+     * Remove conversation admin.
+     *
+     * @param conversation the conversation
+     * @param adminId      the admin id
+     * @param callback     the callback
+     */
+    public void removeConversationAdmin(@NonNull final Conversation conversation,
+                                        @NonNull final String adminId,
+                                        @Nullable final SaveCallback<Conversation> callback) {
         Set<String> adminIds = conversation.getAdminIds();
-        if (adminIds == null) {
-            adminIds = new HashSet<>();
-        }
         adminIds.remove(adminId);
 
         this.setConversationAdminIds(conversation, adminIds, callback);
     }
 
-    public void setConversationParticipantsIds(@NonNull final Conversation conversation,
-                                               @NonNull final Set<String> participantIds,
-                                               @Nullable final SaveCallback<Conversation> callback) {
+    /**
+     * Sets conversation participants.
+     *
+     * @param conversation   the conversation
+     * @param participantIds the participant ids
+     * @param callback       the callback
+     */
+    public void setConversationParticipants(@NonNull final Conversation conversation,
+                                            @NonNull final Set<String> participantIds,
+                                            @Nullable final SaveCallback<Conversation> callback) {
         Map<String, Object> map = new HashMap<>();
         String[] ids = new String[participantIds.size()];
         participantIds.toArray(ids);
@@ -213,30 +280,48 @@ public final class ChatContainer {
         this.updateConversation(conversation, map, callback);
     }
 
-    public void addConversationParticipantId(@NonNull final Conversation conversation,
-                                             @NonNull final String participantId,
-                                             @Nullable final SaveCallback<Conversation> callback) {
+    /**
+     * Add conversation participant.
+     *
+     * @param conversation  the conversation
+     * @param participantId the participant id
+     * @param callback      the callback
+     */
+    public void addConversationParticipant(@NonNull final Conversation conversation,
+                                           @NonNull final String participantId,
+                                           @Nullable final SaveCallback<Conversation> callback) {
         Set<String> participantIds = conversation.getParticipantIds();
         if (participantIds == null) {
             participantIds = new HashSet<>();
         }
         participantIds.add(participantId);
 
-        this.setConversationParticipantsIds(conversation, participantIds, callback);
+        this.setConversationParticipants(conversation, participantIds, callback);
     }
 
-    public void removeConversationParticipantId(@NonNull final Conversation conversation,
-                                                @NonNull final String participantId,
-                                                @Nullable final SaveCallback<Conversation> callback) {
+    /**
+     * Remove conversation participant.
+     *
+     * @param conversation  the conversation
+     * @param participantId the participant id
+     * @param callback      the callback
+     */
+    public void removeConversationParticipant(@NonNull final Conversation conversation,
+                                              @NonNull final String participantId,
+                                              @Nullable final SaveCallback<Conversation> callback) {
         Set<String> participantIds = conversation.getParticipantIds();
-        if (participantIds == null) {
-            participantIds = new HashSet<>();
-        }
         participantIds.remove(participantId);
 
-        this.setConversationParticipantsIds(conversation, participantIds, callback);
+        this.setConversationParticipants(conversation, participantIds, callback);
     }
 
+    /**
+     * Sets whether the conversation is distinct by participants.
+     *
+     * @param conversation             the conversation
+     * @param isDistinctByParticipants the boolean indicating whether it is distinct by participants
+     * @param callback                 the callback
+     */
     public void setConversationDistinctByParticipants(@NonNull final Conversation conversation,
                                                       @NonNull final boolean isDistinctByParticipants,
                                                       @Nullable final SaveCallback<Conversation> callback) {
@@ -246,6 +331,13 @@ public final class ChatContainer {
         this.updateConversation(conversation, map, callback);
     }
 
+    /**
+     * Sets conversation metadata.
+     *
+     * @param conversation the conversation
+     * @param metadata     the metadata
+     * @param callback     the callback
+     */
     public void setConversationMetadata(@NonNull final Conversation conversation,
                                         @NonNull final Map<String, Object> metadata,
                                         @Nullable final SaveCallback<Conversation> callback) {
@@ -256,6 +348,12 @@ public final class ChatContainer {
         this.updateConversation(conversation, map, callback);
     }
 
+    /**
+     * Leave a conversation.
+     *
+     * @param conversation the conversation
+     * @param callback     the callback
+     */
     public void leaveConversation(@NonNull final Conversation conversation,
                                   @Nullable final LambdaResponseHandler callback) {
         this.skygear.callLambdaFunction("chat:leave_conversation",
@@ -263,6 +361,13 @@ public final class ChatContainer {
                                         callback);
     }
 
+    /**
+     * Update a conversation.
+     *
+     * @param conversation the conversation
+     * @param updates      the updates
+     * @param callback     the callback
+     */
     public void updateConversation(@NonNull final Conversation conversation,
                                    @NonNull final Map<String, Object> updates,
                                    @Nullable final SaveCallback<Conversation> callback) {
@@ -302,6 +407,12 @@ public final class ChatContainer {
         });
     }
 
+    /**
+     * Mark last read message of a conversation.
+     *
+     * @param conversation the conversation
+     * @param message      the message
+     */
     public void markConversationLastReadMessage(@NonNull final Conversation conversation,
                                                 @NonNull final Message message) {
         final Database publicDB = this.skygear.getPublicDatabase();
@@ -329,6 +440,12 @@ public final class ChatContainer {
         });
     }
 
+    /**
+     * Gets unread message count for a conversation.
+     *
+     * @param conversation the conversation
+     * @param callback     the callback
+     */
     public void getConversationUnreadMessageCount(@NonNull Conversation conversation,
                                                   @Nullable final GetCallback<Integer> callback) {
         this.getUserConversation(conversation, new GetCallback<UserConversation>() {
@@ -353,6 +470,11 @@ public final class ChatContainer {
         });
     }
 
+    /**
+     * Gets total unread message count.
+     *
+     * @param callback the callback
+     */
     public void getTotalUnreadMessageCount(@Nullable final GetCallback<Integer> callback) {
         this.skygear.callLambdaFunction("chat:total_unread", null, new LambdaResponseHandler() {
             @Override
@@ -380,15 +502,33 @@ public final class ChatContainer {
 
     /* --- User Conversation --- */
 
+    /**
+     * Gets the user conversation relation for current user.
+     *
+     * @param callback the callback
+     */
     public void getUserConversation(@Nullable final GetCallback<List<UserConversation>> callback) {
         this.getUserConversation(this.skygear.getCurrentUser().getId(), callback);
     }
 
+    /**
+     * Gets user conversation relation by a conversation for current user.
+     *
+     * @param conversation the conversation
+     * @param callback     the callback
+     */
     public void getUserConversation(@NonNull final Conversation conversation,
                                     @Nullable final GetCallback<UserConversation> callback) {
         this.getUserConversation(conversation.getId(), this.skygear.getCurrentUser().getId(), callback);
     }
 
+    /**
+     * Gets user conversation relation by a conversation and a user.
+     *
+     * @param conversation the conversation
+     * @param user         the user
+     * @param callback     the callback
+     */
     public void getUserConversation(@NonNull final Conversation conversation,
                                     @NonNull final ChatUser user,
                                     @Nullable final GetCallback<UserConversation> callback) {
@@ -428,6 +568,12 @@ public final class ChatContainer {
         });
     }
 
+    /**
+     * Gets user conversation relation for a user.
+     *
+     * @param user     the user
+     * @param callback the callback
+     */
     public void getUserConversation(@NonNull final ChatUser user,
                                     @Nullable final GetCallback<List<UserConversation>> callback) {
         this.getUserConversation(user.getId(), callback);
@@ -469,6 +615,14 @@ public final class ChatContainer {
 
     /* --- Message --- */
 
+    /**
+     * Gets messages.
+     *
+     * @param conversation the conversation
+     * @param limit        the limit
+     * @param before       the before
+     * @param callback     the callback
+     */
     public void getMessages(@NonNull final Conversation conversation,
                             final int limit,
                             @Nullable final Date before,
@@ -517,6 +671,15 @@ public final class ChatContainer {
         });
     }
 
+    /**
+     * Send message.
+     *
+     * @param conversation the conversation
+     * @param body         the body
+     * @param asset        the asset
+     * @param metadata     the metadata
+     * @param callback     the callback
+     */
     public void sendMessage(@NonNull final Conversation conversation,
                             @Nullable final String body,
                             @Nullable final Asset asset,
@@ -545,6 +708,11 @@ public final class ChatContainer {
         }
     }
 
+    /**
+     * Mark a message as read.
+     *
+     * @param message the message
+     */
     public void markMessageAsRead(@NonNull Message message) {
         List<Message> messages = new LinkedList<>();
         messages.add(message);
@@ -552,6 +720,11 @@ public final class ChatContainer {
         this.markMessagesAsRead(messages);
     }
 
+    /**
+     * Mark some messages as read.
+     *
+     * @param messages the messages
+     */
     public void markMessagesAsRead(@NonNull List<Message> messages) {
         JSONArray messageIds = new JSONArray();
         for (Message eachMessage : messages) {
@@ -574,6 +747,11 @@ public final class ChatContainer {
                 });
     }
 
+    /**
+     * Mark a message as delivered.
+     *
+     * @param message the message
+     */
     public void markMessageAsDelivered(@NonNull Message message) {
         List<Message> messages = new LinkedList<>();
         messages.add(message);
@@ -581,6 +759,11 @@ public final class ChatContainer {
         this.markMessagesAsDelivered(messages);
     }
 
+    /**
+     * Mark some messages as delivered.
+     *
+     * @param messages the messages
+     */
     public void markMessagesAsDelivered(@NonNull List<Message> messages) {
         JSONArray messageIds = new JSONArray();
         for (Message eachMessage : messages) {
@@ -642,6 +825,12 @@ public final class ChatContainer {
 
     /* --- Message Receipt --- */
 
+    /**
+     * Gets the receipts for a message .
+     *
+     * @param message  the message
+     * @param callback the callback
+     */
     public void getMessageReceipt(@NonNull final Message message,
                                   @Nullable final GetCallback<List<MessageReceipt>> callback) {
         this.skygear.callLambdaFunction(
@@ -681,6 +870,12 @@ public final class ChatContainer {
 
     /* --- Typing --- */
 
+    /**
+     * Send typing indicator for a conversation.
+     *
+     * @param conversation the conversation
+     * @param state        the state
+     */
     public void sendTypingIndicator(@NonNull Conversation conversation,
                                     @NonNull Typing.State state) {
         DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime().withZoneUTC();
@@ -699,6 +894,12 @@ public final class ChatContainer {
         });
     }
 
+    /**
+     * Subscribe typing indicator for a conversation.
+     *
+     * @param conversation the conversation
+     * @param callback     the callback
+     */
     public void subscribeTypingIndicator(@NonNull Conversation conversation,
                                          @Nullable final TypingSubscriptionCallback callback) {
         final Pubsub pubsub = this.skygear.getPubsub();
@@ -730,6 +931,11 @@ public final class ChatContainer {
         }
     }
 
+    /**
+     * Unsubscribe typing indicator for a conversation.
+     *
+     * @param conversation the conversation
+     */
     public void unsubscribeTypingIndicator(@NonNull Conversation conversation) {
         final Pubsub pubsub = this.skygear.getPubsub();
         String conversationId = conversation.getId();
@@ -743,6 +949,11 @@ public final class ChatContainer {
 
     /* --- Chat User --- */
 
+    /**
+     * Gets users for the chat plugins.
+     *
+     * @param callback the callback
+     */
     public void getChatUsers(@Nullable final GetCallback<List<ChatUser>> callback) {
         Query query = new Query("user");
         Database publicDB = this.skygear.getPublicDatabase();
@@ -762,6 +973,12 @@ public final class ChatContainer {
 
     /* --- Subscription--- */
 
+    /**
+     * Subscribe conversation message.
+     *
+     * @param conversation the conversation
+     * @param callback     the callback
+     */
     public void subscribeConversationMessage(@NonNull final Conversation conversation,
                                              @Nullable final MessageSubscriptionCallback callback) {
         final Pubsub pubsub = this.skygear.getPubsub();
@@ -793,6 +1010,11 @@ public final class ChatContainer {
         }
     }
 
+    /**
+     * Unsubscribe conversation message.
+     *
+     * @param conversation the conversation
+     */
     public void unsubscribeConversationMessage(@NonNull final Conversation conversation) {
         final Pubsub pubsub = this.skygear.getPubsub();
         String conversationId = conversation.getId();

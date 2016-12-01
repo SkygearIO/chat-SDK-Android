@@ -13,6 +13,9 @@ import io.skygear.skygear.Asset;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.Reference;
 
+/**
+ * The Message model for Chat Plugin.
+ */
 public class Message {
     static final String TYPE_KEY = "message";
     static final String BODY_KEY = "body";
@@ -22,28 +25,53 @@ public class Message {
 
     final Record record;
 
+    /**
+     * Instantiates a new Message from a Skygear Record.
+     *
+     * @param record the record
+     */
     Message(@NonNull final Record record) {
         this.record = record;
     }
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
     @NonNull
     public String getId() {
         return record.getId();
     }
 
+    /**
+     * Gets conversation id.
+     *
+     * @return the conversation id
+     */
     @NonNull
     public String getConversationId() {
         Reference reference = (Reference) record.get("conversation_id");
         return reference.getId();
     }
 
+    /**
+     * Gets body.
+     *
+     * @return the body
+     */
     @Nullable
     public String getBody() {
         return (String)record.get(BODY_KEY);
     }
 
+    /**
+     * Gets metadata.
+     *
+     * @return the metadata
+     */
     @Nullable
-    public JSONObject getMetaData() {
+    public JSONObject getMetadata() {
         if (!record.get(METADATA_KEY).equals(JSONObject.NULL)) {
             return (JSONObject) record.get(METADATA_KEY);
         } else {
@@ -51,50 +79,104 @@ public class Message {
         }
     }
 
+    /**
+     * Gets status.
+     *
+     * @return the status
+     */
     @Nullable
     public Status getStatus() {
         return Status.fromName((String) this.record.get(CONVERSATION_STATUS_KEY));
     }
 
+    /**
+     * Gets created time.
+     *
+     * @return the created time
+     */
     @NonNull
     public Date getCreatedTime() {
         return this.record.getCreatedAt();
     }
 
+    /**
+     * Gets updated time.
+     *
+     * @return the updated time
+     */
     @NonNull
     public Date getUpdatedTime() {
         return this.record.getUpdatedAt();
     }
 
+    /**
+     * Gets asset.
+     *
+     * @return the asset
+     */
     @Nullable
     public Asset getAsset() {
         return (Asset) record.get(ATTACHMENT_KEY);
     }
 
+    /**
+     * Creates a Skygear Reference by message ID
+     *
+     * @param messageId the message id
+     * @return the reference
+     */
     @NonNull
     static Reference newReference(@NonNull final String messageId) {
         return new Reference(TYPE_KEY, messageId);
     }
 
+    /**
+     * Creates a Skygear Reference by a message
+     *
+     * @param message the message
+     * @return the reference
+     */
     @NonNull
     static Reference newReference(@NonNull final Message message) {
         return Message.newReference(message.getId());
     }
 
+    /**
+     * Serializes to a JSON Object
+     *
+     * @return the JSON object
+     */
     @Nullable
     public JSONObject toJson() {
         return record.toJson();
     }
 
+    /**
+     * Deserialization from a JSON Object
+     *
+     * @param jsonObject the JSON object
+     * @return the message
+     * @throws JSONException the JSON exception
+     */
     public static Message fromJson(JSONObject jsonObject) throws JSONException {
         return new Message(Record.fromJson(jsonObject));
     }
 
+    /**
+     * The Message Status.
+     */
     public enum Status {
-        DELIVERED("delivered"), SOME_READ("some_read"), ALL_READ("all_read");
+        DELIVERED("delivered"),
+        SOME_READ("some_read"),
+        ALL_READ("all_read");
 
         private final String name;
 
+        /**
+         * Gets name.
+         *
+         * @return the name
+         */
         public String getName() {
             return name;
         }
@@ -103,6 +185,12 @@ public class Message {
             this.name = name;
         }
 
+        /**
+         * Creates a status from a name
+         *
+         * @param name the name
+         * @return the status
+         */
         @Nullable
         static Status fromName(String name) {
             Status status = null;

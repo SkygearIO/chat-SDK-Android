@@ -13,6 +13,9 @@ import io.skygear.skygear.Query;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordQueryResponseHandler;
 
+/**
+ * The User Conversation Relation model for Chat Plugin.
+ */
 final class UserConversation {
     static final String TYPE_KEY = "user_conversation";
     static final String CONVERSATION_KEY = "conversation";
@@ -22,17 +25,32 @@ final class UserConversation {
 
     final Record record;
 
+    /**
+     * Instantiates a new user conversation relation from a Skygear Record.
+     *
+     * @param record the record
+     */
     UserConversation(@NonNull final Record record) {
         super();
 
         this.record = record;
     }
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
     @NonNull
     public String getId() {
         return this.record.getId();
     }
 
+    /**
+     * Gets conversation.
+     *
+     * @return the conversation
+     */
     @Nullable
     public Conversation getConversation() {
         Object conversationObject = this.record.getTransient().get(CONVERSATION_KEY);
@@ -43,6 +61,11 @@ final class UserConversation {
         return new Conversation((Record) conversationObject);
     }
 
+    /**
+     * Gets user.
+     *
+     * @return the user
+     */
     @Nullable
     public ChatUser getUser() {
         Object chatUserObject = this.record.getTransient().get(USER_KEY);
@@ -53,6 +76,11 @@ final class UserConversation {
         return new ChatUser((Record) chatUserObject);
     }
 
+    /**
+     * Gets unread count.
+     *
+     * @return the unread count
+     */
     public int getUnreadCount() {
         return (int) this.record.get(UNREAD_COUNT_KEY);
     }
