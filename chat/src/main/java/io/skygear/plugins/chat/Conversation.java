@@ -54,9 +54,8 @@ public class Conversation {
         Record record = new Record(TYPE_KEY);
 
         // set participant ids
-        String[] ids = new String[participantIds.size()];
-        participantIds.toArray(ids);
-        record.set(PARTICIPANT_IDS_KEY, ids);
+        JSONArray participantIdArray = new JSONArray(participantIds);
+        record.set(PARTICIPANT_IDS_KEY, participantIdArray);
 
         // set title (allow null)
         if (title != null && title.trim().length() != 0) {
@@ -71,11 +70,8 @@ public class Conversation {
             Object adminIds = options.get(OptionKey.ADMIN_IDS);
             if (adminIds != null) {
                 // set admin ids
-                Collection<String> adminIdCollection = (Collection<String>) adminIds;
-
-                ids = new String[adminIdCollection.size()];
-                adminIdCollection.toArray(ids);
-                record.set(ADMIN_IDS_KEY, ids);
+                JSONArray adminIdArray = new JSONArray((Collection<String>) adminIds);
+                record.set(ADMIN_IDS_KEY, adminIdArray);
             }
 
             // set distinctByParticipants
