@@ -10,9 +10,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Map;
 
 /**
  * The callback for typing subscription.
@@ -72,7 +72,7 @@ public abstract class TypingSubscriptionCallback implements SubscriptionCallback
             return;
         }
 
-        List<Typing> typingList = new LinkedList<>();
+        Map<String, Typing> typingMap = new HashMap<>();
         Iterator<String> typingDataKeys = typingData.keys();
         while (typingDataKeys.hasNext()) {
             String eachTypingUserId = typingDataKeys.next();
@@ -94,8 +94,10 @@ public abstract class TypingSubscriptionCallback implements SubscriptionCallback
                             .parseDateTime(eventTimeString).toDate();
                 }
 
-                typingList.add(new Typing(
-                        userIdSplits[1],
+                String userId = userIdSplits[1];
+
+                typingMap.put(userId, new Typing(
+                        userId,
                         Typing.State.fromName(eventName),
                         eventTime
                 ));
@@ -104,15 +106,15 @@ public abstract class TypingSubscriptionCallback implements SubscriptionCallback
             }
         }
 
-        if (typingList.size() > 0) {
-            this.notify(typingList);
+        if (typingMap.size() > 0) {
+            this.notify(typingMap);
         }
     }
 
     /**
      * Notify a typing event.
      *
-     * @param typingList the typing list
+     * @param typingMap the typings map (user ID --> {@link Typing})
      */
-    public abstract void notify(@NonNull List<Typing> typingList);
+    public abstract void notify(@NonNull Map<String, Typing> typingMap);
 }

@@ -228,11 +228,8 @@ class ConversationActivity : AppCompatActivity() {
         mChatContainer.subscribeTypingIndicator(
                 mConversation!!,
                 object : TypingSubscriptionCallback(mConversation!!) {
-                    override fun notify(typingList: List<Typing>) {
-                        for (eachTyping in typingList) {
-                            mTypingStates.put(eachTyping.userId, eachTyping.state)
-                        }
-
+                    override fun notify(typingMap: Map<String, Typing>) {
+                        typingMap.forEach { mTypingStates.put(it.key, it.value.state) }
                         updateTypingIndicatorTextView()
                     }
 
