@@ -207,8 +207,8 @@ class ConversationActivity : AppCompatActivity() {
                 object : MessageSubscriptionCallback(mConversation!!) {
                     override fun notify(eventType: String, message: Message) {
                         when (eventType) {
-                            "create" -> onReceiveMessage(message)
-                            "update" -> onUpdateMessage(message)
+                            EVENT_TYPE_CREATE -> onReceiveMessage(message)
+                            EVENT_TYPE_UPDATE -> onUpdateMessage(message)
                         }
                     }
 

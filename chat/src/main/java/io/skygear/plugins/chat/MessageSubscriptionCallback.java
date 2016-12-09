@@ -11,11 +11,17 @@ import org.json.JSONObject;
  * The callback for message subscription.
  */
 public abstract class MessageSubscriptionCallback implements SubscriptionCallback {
+
+    public static final String EVENT_TYPE_CREATE = "create";
+    public static final String EVENT_TYPE_UPDATE = "update";
+    public static final String EVENT_TYPE_DELETE = "delete";
+
     static final String[] SUPPORTED_EVENT_TYPES = new String[]{
-            "create",
-            "update",
-            "delete"
+            EVENT_TYPE_CREATE,
+            EVENT_TYPE_UPDATE,
+            EVENT_TYPE_DELETE
     };
+
     private static final String TAG = "SkygearChatSubscription";
     private final String conversationId;
 

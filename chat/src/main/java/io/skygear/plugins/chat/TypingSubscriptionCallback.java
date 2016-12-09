@@ -18,12 +18,13 @@ import java.util.List;
  * The callback for typing subscription.
  */
 public abstract class TypingSubscriptionCallback implements SubscriptionCallback {
-    /**
-     * The Supported event types.
-     */
+
+    public static final String EVENT_TYPE_TYPING = "typing";
+
     static final String[] SUPPORTED_EVENT_TYPES = new String[]{
-            "typing"
+            EVENT_TYPE_TYPING
     };
+
     private static final String TAG = "SkygearChatSubscription";
     static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime().withZoneUTC();
     private final String conversationId;
