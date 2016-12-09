@@ -13,6 +13,8 @@ import io.skygear.skygear.Record;
  * The User model for the Chat Plugin.
  */
 public class ChatUser {
+    // TODO: Implement RecordWrapper when it is available
+
     static final String NAME_KEY = "name";
 
     private final Record record;
@@ -44,6 +46,15 @@ public class ChatUser {
     @Nullable
     public String getName() {
         return (String) record.get(NAME_KEY);
+    }
+
+    /**
+     * Gets record.
+     *
+     * @return the Skygear record
+     */
+    public Record getRecord() {
+        return record;
     }
 
     /**

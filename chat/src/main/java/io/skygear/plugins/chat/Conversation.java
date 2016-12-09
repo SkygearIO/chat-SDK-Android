@@ -26,6 +26,8 @@ import io.skygear.skygear.Record;
  * The Conversation model for the Chat Plugin.
  */
 public class Conversation {
+    // TODO: Implement RecordWrapper when it is available
+
     static final String TYPE_KEY = "conversation";
     static final String TITLE_KEY = "title";
     static final String ADMIN_IDS_KEY = "admin_ids";
@@ -198,6 +200,15 @@ public class Conversation {
      */
     public boolean isDistinctByParticipants() {
         return (boolean) record.get(DISTINCT_BY_PARTICIPANTS_KEY);
+    }
+
+    /**
+     * Gets record.
+     *
+     * @return the Skygear record
+     */
+    public Record getRecord() {
+        return record;
     }
 
     /**

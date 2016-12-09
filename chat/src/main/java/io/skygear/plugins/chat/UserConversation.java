@@ -17,6 +17,8 @@ import io.skygear.skygear.RecordQueryResponseHandler;
  * The User Conversation Relation model for Chat Plugin.
  */
 final class UserConversation {
+    // TODO: Implement RecordWrapper when it is available
+
     static final String TYPE_KEY = "user_conversation";
     static final String CONVERSATION_KEY = "conversation";
     static final String USER_KEY = "user";
@@ -83,5 +85,14 @@ final class UserConversation {
      */
     public int getUnreadCount() {
         return (int) this.record.get(UNREAD_COUNT_KEY);
+    }
+
+    /**
+     * Gets record.
+     *
+     * @return the Skygear record
+     */
+    public Record getRecord() {
+        return record;
     }
 }

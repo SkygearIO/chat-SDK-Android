@@ -17,6 +17,8 @@ import io.skygear.skygear.Reference;
  * The Message model for Chat Plugin.
  */
 public class Message {
+    // TODO: Implement RecordWrapper when it is available
+
     static final String TYPE_KEY = "message";
     static final String BODY_KEY = "body";
     static final String METADATA_KEY = "metadata";
@@ -117,6 +119,15 @@ public class Message {
     @Nullable
     public Asset getAsset() {
         return (Asset) record.get(ATTACHMENT_KEY);
+    }
+
+    /**
+     * Gets record.
+     *
+     * @return the Skygear record
+     */
+    public Record getRecord() {
+        return record;
     }
 
     /**
