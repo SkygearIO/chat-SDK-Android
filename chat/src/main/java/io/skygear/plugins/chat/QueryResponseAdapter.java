@@ -3,6 +3,7 @@ package io.skygear.plugins.chat;
 
 import android.support.annotation.Nullable;
 
+import io.skygear.skygear.Error;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordQueryResponseHandler;
 
@@ -40,9 +41,9 @@ abstract class QueryResponseAdapter<T> extends RecordQueryResponseHandler {
     }
 
     @Override
-    public void onQueryError(String reason) {
+    public void onQueryError(Error reason) {
         if (callback != null) {
-            callback.onFail(reason);
+            callback.onFail(reason.getMessage());
         }
     }
 }

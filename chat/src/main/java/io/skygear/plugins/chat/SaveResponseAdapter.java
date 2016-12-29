@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 
 import java.util.Map;
 
+import io.skygear.skygear.Error;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordSaveResponseHandler;
 
@@ -44,14 +45,14 @@ abstract class SaveResponseAdapter<T> extends RecordSaveResponseHandler {
 
     @Override
     public void onPartiallySaveSuccess(Map<String, Record> successRecords,
-                                       Map<String, String> reasons) {
+                                       Map<String, Error> reasons) {
 
     }
 
     @Override
-    public void onSaveFail(String reason) {
+    public void onSaveFail(Error reason) {
         if (callback != null) {
-            callback.onFail(reason);
+            callback.onFail(reason.getMessage());
         }
     }
 }

@@ -27,6 +27,7 @@ import io.skygear.skygear.AssetPostRequest;
 import io.skygear.skygear.AuthenticationException;
 import io.skygear.skygear.Container;
 import io.skygear.skygear.Database;
+import io.skygear.skygear.Error;
 import io.skygear.skygear.LambdaResponseHandler;
 import io.skygear.skygear.Pubsub;
 import io.skygear.skygear.Query;
@@ -492,9 +493,9 @@ public final class ChatContainer {
             }
 
             @Override
-            public void onLambdaFail(String reason) {
+            public void onLambdaFail(Error reason) {
                 if (callback != null) {
-                    callback.onFail(reason);
+                    callback.onFail(reason.getMessage());
                 }
             }
         });
@@ -560,9 +561,9 @@ public final class ChatContainer {
             }
 
             @Override
-            public void onQueryError(String reason) {
+            public void onQueryError(Error reason) {
                 if (callback != null) {
-                    callback.onFail(reason);
+                    callback.onFail(reason.getMessage());
                 }
             }
         });
@@ -605,9 +606,9 @@ public final class ChatContainer {
             }
 
             @Override
-            public void onQueryError(String reason) {
+            public void onQueryError(Error reason) {
                 if (callback != null) {
-                    callback.onFail(reason);
+                    callback.onFail(reason.getMessage());
                 }
             }
         });
@@ -663,9 +664,9 @@ public final class ChatContainer {
             }
 
             @Override
-            public void onLambdaFail(String reason) {
+            public void onLambdaFail(Error reason) {
                 if (callback != null) {
-                    callback.onFail(reason);
+                    callback.onFail(reason.getMessage());
                 }
             }
         });
@@ -741,8 +742,8 @@ public final class ChatContainer {
                     }
 
                     @Override
-                    public void onLambdaFail(String reason) {
-                        Log.w(TAG, "Fail to mark messages as read: " + reason);
+                    public void onLambdaFail(Error reason) {
+                        Log.w(TAG, "Fail to mark messages as read: " + reason.getMessage());
                     }
                 });
     }
@@ -780,8 +781,8 @@ public final class ChatContainer {
                     }
 
                     @Override
-                    public void onLambdaFail(String reason) {
-                        Log.w(TAG, "Fail to mark messages as delivered: " + reason);
+                    public void onLambdaFail(Error reason) {
+                        Log.w(TAG, "Fail to mark messages as delivered: " + reason.getMessage());
                     }
                 });
     }
@@ -816,8 +817,8 @@ public final class ChatContainer {
             }
 
             @Override
-            public void onPostFail(Asset asset, String reason) {
-                Log.w(TAG, "Fail to upload asset: " + reason);
+            public void onPostFail(Asset asset, Error reason) {
+                Log.w(TAG, "Fail to upload asset: " + reason.getMessage());
                 ChatContainer.this.saveMessageRecord(message, callback);
             }
         });
@@ -859,9 +860,9 @@ public final class ChatContainer {
                     }
 
                     @Override
-                    public void onLambdaFail(String reason) {
+                    public void onLambdaFail(Error reason) {
                         if (callback != null) {
-                            callback.onFail(reason);
+                            callback.onFail(reason.getMessage());
                         }
                     }
                 }
@@ -888,8 +889,8 @@ public final class ChatContainer {
             }
 
             @Override
-            public void onLambdaFail(String reason) {
-                Log.i(TAG, "Fail to send typing indicator: " + reason);
+            public void onLambdaFail(Error reason) {
+                Log.i(TAG, "Fail to send typing indicator: " + reason.getMessage());
             }
         });
     }
@@ -1043,9 +1044,9 @@ public final class ChatContainer {
                 }
 
                 @Override
-                public void onQueryError(String reason) {
+                public void onQueryError(Error reason) {
                     if (callback != null) {
-                        callback.onFail(reason);
+                        callback.onFail(reason.getMessage());
                     }
                 }
             });
@@ -1073,14 +1074,14 @@ public final class ChatContainer {
                 @Override
                 public void onPartiallySaveSuccess(
                         Map<String, Record> successRecords,
-                        Map<String, String> reasons) {
+                        Map<String, Error> reasons) {
 
                 }
 
                 @Override
-                public void onSaveFail(String reason) {
+                public void onSaveFail(Error reason) {
                     if (callback != null) {
-                        callback.onFail(reason);
+                        callback.onFail(reason.getMessage());
                     }
                 }
             };
