@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 
 import java.util.Map;
 
+import io.skygear.skygear.Error;
 import io.skygear.skygear.RecordDeleteResponseHandler;
 
 /**
@@ -30,14 +31,14 @@ final class DeleteResponseAdapter extends RecordDeleteResponseHandler {
     }
 
     @Override
-    public void onDeletePartialSuccess(String[] ids, Map<String, String> reasons) {
+    public void onDeletePartialSuccess(String[] ids, Map<String, Error> reasons) {
 
     }
 
     @Override
-    public void onDeleteFail(String reason) {
+    public void onDeleteFail(Error reason) {
         if (callback != null) {
-            callback.onFail(reason);
+            callback.onFail(reason.getMessage());
         }
     }
 }

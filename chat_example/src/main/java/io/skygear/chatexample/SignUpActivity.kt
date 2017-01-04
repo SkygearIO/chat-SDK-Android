@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.EditText
 import io.skygear.skygear.AuthResponseHandler
 import io.skygear.skygear.Container
+import io.skygear.skygear.Error
 import io.skygear.skygear.User
 
 class SignUpActivity : AppCompatActivity() {
@@ -46,7 +47,7 @@ class SignUpActivity : AppCompatActivity() {
                     signupSuccess()
                 }
 
-                override fun onAuthFail(reason: String) {
+                override fun onAuthFail(reason: Error) {
                     loading.dismiss()
 
                     signupFail()

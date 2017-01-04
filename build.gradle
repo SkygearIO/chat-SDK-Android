@@ -2,7 +2,7 @@
 
 buildscript {
     ext.kotlin_version = '1.0.4'
-    ext.skygear_version = '0.17.2'
+    ext.skygear_version = '0.20.0'
     repositories {
         jcenter()
     }
