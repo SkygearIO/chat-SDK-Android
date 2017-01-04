@@ -12,6 +12,7 @@ import android.view.Menu
 import android.view.MenuItem
 import io.skygear.plugins.chat.*
 import io.skygear.skygear.Container
+import io.skygear.skygear.Error
 import io.skygear.skygear.LambdaResponseHandler
 import io.skygear.skygear.LogoutResponseHandler
 import org.json.JSONObject
@@ -99,7 +100,7 @@ class ConversationsActivity : AppCompatActivity() {
                 logoutSuccess()
             }
 
-            override fun onLogoutFail(reason: String) {
+            override fun onLogoutFail(reason: Error) {
                 loading.dismiss()
 
                 logoutFail()
@@ -166,8 +167,8 @@ class ConversationsActivity : AppCompatActivity() {
                 .setNeutralButton(R.string.dismiss, null)
                 .create()
         mChatContainer.leaveConversation(c, object : LambdaResponseHandler() {
-            override fun onLambdaFail(reason: String?) {
-                val alertMessage = "Fail to leave the conversation: $reason"
+            override fun onLambdaFail(reason: Error?) {
+                val alertMessage = "Fail to leave the conversation: ${reason?.message}"
                 Log.w(LOG_TAG, alertMessage)
                 failAlert.setMessage(alertMessage)
                 failAlert.show()
