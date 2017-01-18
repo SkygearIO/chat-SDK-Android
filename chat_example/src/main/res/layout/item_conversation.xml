@@ -35,6 +35,14 @@
             android:textSize="@dimen/body_text_size"
             tools:text="294f4d9c5a82409f801c14350f79912c"/>
 
+        <TextView
+            android:id="@+id/conversation_last_msg_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/md_grey_500"
+            android:textSize="@dimen/body_text_size"
+            tools:text="294f4d9c5a82409f801c14350f79912c"/>
+
     </LinearLayout>
 
 </LinearLayout>
