@@ -4,19 +4,13 @@ package io.skygear.plugins.chat;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import io.skygear.skygear.Database;
-import io.skygear.skygear.Query;
 import io.skygear.skygear.Record;
-import io.skygear.skygear.RecordQueryResponseHandler;
+import io.skygear.skygear.Reference;
 
 /**
  * The User Conversation Relation model for Chat Plugin.
  */
-final class UserConversation {
+public class UserConversation {
     // TODO: Implement RecordWrapper when it is available
 
     static final String TYPE_KEY = "user_conversation";
@@ -26,6 +20,8 @@ final class UserConversation {
     static final String LAST_READ_MESSAGE_KEY = "last_read_message";
 
     final Record record;
+    Message lastMessage;
+    Conversation conversation;
 
     /**
      * Instantiates a new user conversation relation from a Skygear Record.
@@ -36,6 +32,13 @@ final class UserConversation {
         super();
 
         this.record = record;
+        this.lastMessage = null;
+        Object conversationObject = this.record.getTransient().get(CONVERSATION_KEY);
+        if (conversationObject == null) {
+            this.conversation = null;
+        } else {
+            this.conversation = new Conversation((Record) conversationObject);
+        }
     }
 
     /**
@@ -55,12 +58,10 @@ final class UserConversation {
      */
     @Nullable
     public Conversation getConversation() {
-        Object conversationObject = this.record.getTransient().get(CONVERSATION_KEY);
-        if (conversationObject == null) {
-            return null;
-        }
-
-        return new Conversation((Record) conversationObject);
+        return this.conversation;
+    }
+    public void setConversation(Conversation c) {
+        this.conversation = c;
     }
 
     /**
@@ -87,6 +88,28 @@ final class UserConversation {
         return (int) this.record.get(UNREAD_COUNT_KEY);
     }
 
+    /**
+     * Gets Last read message.
+     *
+     * @return the user
+     */
+    @Nullable
+    public Message getLastReadMessage() {
+        return this.lastMessage;
+    }
+
+    /**
+     * Gets last_read_message id.
+     *
+     * @return the message id without type
+     */
+    public String getLastReadMessageId() {
+        Reference ref = (Reference) this.record.get(LAST_READ_MESSAGE_KEY);
+        if (ref != null) {
+            return ref.getId();
+        }
+        return null;
+    }
     /**
      * Gets record.
      *
