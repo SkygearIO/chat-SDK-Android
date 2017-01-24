@@ -59,10 +59,10 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
         holder.lastMsgTv.text = userConversation?.lastReadMessage?.body
 
         with(holder.container) {
-            tag = conversation
+            tag = userConversation
             setOnClickListener { v ->
-                val c = v.tag as UserConversation
-                mListener(c)
+                val uc = v.tag as UserConversation
+                mListener(uc)
             }
         }
     }
