@@ -36,8 +36,9 @@ public class UserConversation {
         Object conversationObject = this.record.getTransient().get(CONVERSATION_KEY);
         if (conversationObject == null) {
             this.conversation = null;
+        } else {
+            this.conversation = new Conversation((Record) conversationObject);
         }
-        this.conversation = new Conversation((Record) conversationObject);
     }
 
     /**
