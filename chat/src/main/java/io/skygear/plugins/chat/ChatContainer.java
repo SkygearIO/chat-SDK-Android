@@ -644,8 +644,9 @@ public final class ChatContainer {
                             callback.onFail(failReason);
                         }
                     });
+                } else {
+                    callback.onSucc(userConversations);
                 }
-                callback.onSucc(userConversations);
             }
 
             @Override
