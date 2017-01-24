@@ -172,6 +172,7 @@ public final class ChatContainer {
         this.getUserConversation(
                 conversationId,
                 this.skygear.getCurrentUser().getId(),
+                true,
                 new GetCallback<UserConversation>() {
                     @Override
                     public void onSucc(@Nullable UserConversation userConversation) {
@@ -520,7 +521,11 @@ public final class ChatContainer {
      */
     public void getUserConversation(@NonNull final Conversation conversation,
                                     @Nullable final GetCallback<UserConversation> callback) {
-        this.getUserConversation(conversation.getId(), this.skygear.getCurrentUser().getId(), callback);
+        this.getUserConversation(
+            conversation.getId(),
+            this.skygear.getCurrentUser().getId(),
+            true,
+            callback);
     }
 
     /**
@@ -533,11 +538,12 @@ public final class ChatContainer {
     public void getUserConversation(@NonNull final Conversation conversation,
                                     @NonNull final ChatUser user,
                                     @Nullable final GetCallback<UserConversation> callback) {
-        this.getUserConversation(conversation.getId(), user.getId(), callback);
+        this.getUserConversation(conversation.getId(), user.getId(), true, callback);
     }
 
     private void getUserConversation(@NonNull final String conversationId,
                                      @NonNull final String userId,
+                                     @NonNull final boolean getLastMessages,
                                      @Nullable final GetCallback<UserConversation> callback) {
         Query query = new Query(UserConversation.TYPE_KEY)
                 .equalTo(UserConversation.USER_KEY, userId)
@@ -553,11 +559,32 @@ public final class ChatContainer {
                     return;
                 }
 
-                UserConversation userConversation = null;
                 if (records != null && records.length > 0) {
-                    userConversation = new UserConversation(records[0]);
+                    final UserConversation uc = new UserConversation(records[0]);
+                    String mid = uc.getLastReadMessageId();
+                    if (getLastMessages && mid != null) {
+                        List<String> messageIds = new ArrayList<String>();
+                        messageIds.add(mid);
+                        getMessagesByIds(messageIds, new GetCallback<List<Message>>() {
+                            @Override
+                            public void onSucc(@Nullable List<Message> messages) {
+                                if (messages != null && messages.size() > 0) {
+                                    uc.lastMessage = messages.get(0);
+                                }
+                                callback.onSucc(uc);
+                            }
+
+                            @Override
+                            public void onFail(@Nullable String failReason) {
+                                callback.onFail(failReason);
+                            }
+                        });
+                    } else {
+                        callback.onSucc(uc);
+                    }
+                } else {
+                    callback.onFail("User Conversation not found");
                 }
-                callback.onSucc(userConversation);
             }
 
             @Override
