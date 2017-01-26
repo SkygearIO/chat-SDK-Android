@@ -72,9 +72,13 @@
     <!-- conversation title -->
     <string name="title">Title</string>
 
+    <!-- conversation meta -->
+    <string name="meta">Meta</string>
+
     <!-- click on conversation options -->
     <string-array name="conversation_options">
         <item>Enter</item>
+        <item>View Meta</item>
         <item>Edit</item>
         <item>Leave</item>
         <item>Update Admins</item>

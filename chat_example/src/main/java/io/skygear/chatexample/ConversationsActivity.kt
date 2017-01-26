@@ -123,10 +123,11 @@ class ConversationsActivity : AppCompatActivity() {
         val items = resources.getStringArray(R.array.conversation_options)
         builder.setItems(items, { d, i -> when(i) {
             0 -> enter(c)
-            1 -> edit(uc, c)
-            2 -> confirmLeave(c)
-            3 -> updateAdmins(uc, c)
-            4 -> updateParticipants(uc, c)
+            1 -> viewMeta(uc)
+            2 -> edit(uc, c)
+            3 -> confirmLeave(c)
+            4 -> updateAdmins(uc, c)
+            5 -> updateParticipants(uc, c)
         } })
         val alert = builder.create()
         alert.show()
@@ -134,6 +135,11 @@ class ConversationsActivity : AppCompatActivity() {
 
     fun enter(c: Conversation) {
         startActivity(ConversationActivity.newIntent(c, this))
+    }
+
+    fun viewMeta(uc: UserConversation) {
+        val f = MetaFragment.newInstance(uc)
+        f.show(supportFragmentManager, "conversation_meta")
     }
 
     fun edit(uc: UserConversation, c: Conversation) {
