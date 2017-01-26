@@ -8,19 +8,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IllegalFormatException;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import io.skygear.skygear.Record;
+import io.skygear.skygear.Reference;
 
 /**
  * The Conversation model for the Chat Plugin.
@@ -30,6 +26,7 @@ public class Conversation {
 
     static final String TYPE_KEY = "conversation";
     static final String TITLE_KEY = "title";
+    static final String LAST_MESSAGE_KEY = "last_message";
     static final String ADMIN_IDS_KEY = "admin_ids";
     static final String PARTICIPANT_IDS_KEY = "participant_ids";
     static final String DISTINCT_BY_PARTICIPANTS_KEY = "distinct_by_participant";
@@ -138,6 +135,21 @@ public class Conversation {
     public String getTitle() {
         return (String) record.get(TITLE_KEY);
     }
+
+    /**
+     * Gets message ids of last message at conversation.
+     *
+     * @return the the string values of last_message without type
+     */
+    @Nullable
+    public String getLastMessageId() {
+        Reference ref = (Reference) this.record.get(LAST_MESSAGE_KEY);
+        if (ref != null) {
+            return ref.getId();
+        }
+        return null;
+    }
+
 
     /**
      * Gets admin ids.
