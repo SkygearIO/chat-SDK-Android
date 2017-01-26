@@ -15,11 +15,13 @@ class MetaFragment : DialogFragment() {
 
     companion object {
         private val UNREAD_CNT = "unread_count"
+        private val LAST_READ_MESSAGE = "last_read_message"
 
         fun newInstance(userConversation: UserConversation?): MetaFragment {
             val f = MetaFragment()
             val args = Bundle()
             args.putString(UNREAD_CNT, userConversation?.unreadCount.toString())
+            args.putString(LAST_READ_MESSAGE, userConversation?.lastReadMessageId)
             f.arguments = args
 
             return f
@@ -35,9 +37,13 @@ class MetaFragment : DialogFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val titleEt: TextView? = view?.findViewById(R.id.unread_count_tv) as TextView
+        val titleTv: TextView? = view?.findViewById(R.id.unread_count_tv) as TextView
         val unread: String? = arguments?.getString(UNREAD_CNT)
-        titleEt?.text = unread
+        titleTv?.text = unread
+
+        val lastMsgTv: TextView? = view?.findViewById(R.id.last_read_message_tv) as TextView
+        val lasMsg: String? = arguments?.getString(LAST_READ_MESSAGE)
+        lastMsgTv?.text = lasMsg
 
         val okBtn: Button? = view?.findViewById(R.id.ok_btn) as Button
         okBtn?.setOnClickListener {

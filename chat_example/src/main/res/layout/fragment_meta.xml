@@ -10,11 +10,30 @@
 
     <TextView
         android:text="@string/meta"
+        style="@style/Base.TextAppearance.AppCompat.Headline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+
+    <TextView
+        android:text="@string/unread_count"
+        style="@style/Base.TextAppearance.AppCompat.Medium"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/unread_count_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/unread_count_tv"
+        android:text="@string/last_read_message"
+        style="@style/Base.TextAppearance.AppCompat.Medium"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/last_read_message_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

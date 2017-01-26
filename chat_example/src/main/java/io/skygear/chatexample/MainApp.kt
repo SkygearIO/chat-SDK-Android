@@ -5,10 +5,10 @@ import io.skygear.skygear.SkygearApplication
 
 class MainApp() : SkygearApplication() {
     override fun getSkygearEndpoint(): String? {
-        return "http://skygear.dev/"
+        return "http://192.168.2.125:3000/"
     }
 
     override fun getApiKey(): String? {
-        return "changeme"
+        return "secretOURD"
     }
 }
