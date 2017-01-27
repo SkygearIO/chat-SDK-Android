@@ -72,9 +72,15 @@
     <!-- conversation title -->
     <string name="title">Title</string>
 
+    <!-- conversation meta -->
+    <string name="meta">Meta</string>
+    <string name="unread_count">Unread Count</string>
+    <string name="last_read_message">Last Read Message</string>
+
     <!-- click on conversation options -->
     <string-array name="conversation_options">
         <item>Enter</item>
+        <item>View Meta</item>
         <item>Edit</item>
         <item>Leave</item>
         <item>Update Admins</item>
