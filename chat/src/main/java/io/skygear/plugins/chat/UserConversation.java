@@ -94,7 +94,7 @@ public class UserConversation {
      * @return the user
      */
     @Nullable
-    public Message getLastReadMessage() {
+    public Message getLastMessage() {
         return this.lastMessage;
     }
 
