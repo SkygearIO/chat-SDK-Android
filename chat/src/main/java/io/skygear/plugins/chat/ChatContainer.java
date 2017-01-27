@@ -561,7 +561,8 @@ public final class ChatContainer {
 
                 if (records != null && records.length > 0) {
                     final UserConversation uc = new UserConversation(records[0]);
-                    String mid = uc.getLastReadMessageId();
+                    Conversation c = uc.conversation;
+                    String mid = c.getLastMessageId();
                     if (getLastMessages && mid != null) {
                         List<String> messageIds = new ArrayList<String>();
                         messageIds.add(mid);
@@ -646,7 +647,8 @@ public final class ChatContainer {
                 if (getLastMessages) {
                     List<String> messageIds = new ArrayList<String>();
                     for (UserConversation uc : userConversations) {
-                        String mid = uc.getLastReadMessageId();
+                        Conversation c = uc.conversation;
+                        String mid = c.getLastMessageId();
                         if (mid != null) {
                             messageIds.add(mid);
                         }
@@ -659,9 +661,10 @@ public final class ChatContainer {
                                 mMap.put(m.getId(), m);
                             }
                             for (UserConversation uc: userConversations) {
-                               if (uc.getLastReadMessageId() != null) {
-                                   uc.lastMessage = mMap.get(uc.getLastReadMessageId());
-                               }
+                                Conversation c = uc.conversation;
+                                if (c.getLastMessageId() != null) {
+                                    uc.lastMessage = mMap.get(c.getLastMessageId());
+                                }
                             }
                             callback.onSucc(userConversations);
                         }

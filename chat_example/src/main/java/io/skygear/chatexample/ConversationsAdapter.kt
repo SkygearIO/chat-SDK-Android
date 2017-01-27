@@ -56,7 +56,7 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
 
         holder.nameTv.text = conversation?.title
         holder.idTv.text = conversation?.id
-        holder.lastMsgTv.text = userConversation?.lastReadMessage?.body
+        holder.lastMsgTv.text = userConversation?.lastMessage?.body
 
         with(holder.container) {
             tag = userConversation
