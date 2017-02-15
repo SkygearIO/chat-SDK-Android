@@ -1,4 +1,23 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
+
+def skygearChatVersion = "git describe --abbrev=0 --tags".execute().text.trim()
+def skygearChatFullVersion = "git describe --always --tags".execute().text.trim()
+
+group = 'io.skygear.plugins'
+version = skygearChatVersion
+
+def bintrayUser = System.getenv('BINTRAY_USER')
+def bintrayApiKey = System.getenv('BINTRAY_API_KEY')
+
+if (project.rootProject.file('local.properties').exists()) {
+    Properties localProperties = new Properties()
+    localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+    bintrayUser = localProperties.getProperty('bintrayUser', bintrayUser)
+    bintrayApiKey = localProperties.getProperty('bintrayApiKey', bintrayApiKey)
+}
 
 android {
     compileSdkVersion 23
@@ -8,7 +27,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 23
         versionCode 1
-        versionName "0.0.1"
+        versionName skygearChatFullVersion
     }
     buildTypes {
         release {
@@ -22,7 +41,7 @@ dependencies {
     compile 'com.android.support:support-annotations:23.4.0'
     compile 'joda-time:joda-time:2.9.4'
 
-    compile 'io.skygear:skygear:0.20.0'
+    compile 'io.skygear:skygear:0.22.0'
 }
 
 task generateJavadocs(type: Javadoc) {
@@ -34,4 +53,24 @@ afterEvaluate {
     generateJavadocs.classpath += files(android.libraryVariants.collect { variant ->
         variant.javaCompile.classpath.files
     })
+}
+
+bintray {
+    user = bintrayUser
+    key = bintrayApiKey
+    configurations = ['archives']
+    pkg {
+        repo = 'maven'
+        name = 'skygear-chat-android'
+        userOrg = 'skygeario'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/SkygearIO/chat-SDK-Android.git'
+        publish = true
+        version {
+            name = skygearChatFullVersion
+            desc = "Skygear Android SDK ${skygearChatVersion}"
+            released  = new Date()
+            vcsTag = skygearChatVersion
+        }
+    }
 }
