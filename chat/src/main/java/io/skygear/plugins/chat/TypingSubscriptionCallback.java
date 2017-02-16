@@ -114,7 +114,7 @@ public abstract class TypingSubscriptionCallback implements SubscriptionCallback
     /**
      * Notify a typing event.
      *
-     * @param typingMap the typings map (user ID --> {@link Typing})
+     * @param typingMap the typings map (user ID to {@link Typing})
      */
     public abstract void notify(@NonNull Map<String, Typing> typingMap);
 }

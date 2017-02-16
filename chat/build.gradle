@@ -6,7 +6,7 @@ def skygearChatVersion = "git describe --abbrev=0 --tags".execute().text.trim()
 def skygearChatFullVersion = "git describe --always --tags".execute().text.trim()
 
 group = 'io.skygear.plugins'
-version = skygearChatVersion
+version = skygearChatFullVersion
 
 def bintrayUser = System.getenv('BINTRAY_USER')
 def bintrayApiKey = System.getenv('BINTRAY_API_KEY')
@@ -44,6 +44,11 @@ dependencies {
     compile 'io.skygear:skygear:0.22.0'
 }
 
+task generateSourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
+}
+
 task generateJavadocs(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
@@ -53,6 +58,17 @@ afterEvaluate {
     generateJavadocs.classpath += files(android.libraryVariants.collect { variant ->
         variant.javaCompile.classpath.files
     })
+}
+
+task generateJavadocsJar(type: Jar) {
+    from generateJavadocs.destinationDir
+    classifier 'javadoc'
+}
+
+generateJavadocsJar.dependsOn generateJavadocs
+artifacts {
+    archives generateJavadocsJar
+    archives generateSourcesJar
 }
 
 bintray {
