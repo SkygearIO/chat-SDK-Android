@@ -10,7 +10,7 @@ The Skygear Chat Plugin for Android helps your app work with Skygear Chat Plugin
 
 To get started, checkout [Skygear Chat Plugin](https://github.com/SkygearIO/chat), and have the Chat Plugin running by `docker-compose up -d && docker-compose scale plugin=2`.
 
-You can also sign up Skygear Developer Portal at [https://portal.skygear.io](https://portal.skygear.io) and use `git push` the Chat Plugin to your portal cloud code endpoint (Refer detail on [https://docs.skygear.io/cloud-code/guide](https://docs.skygear.io/cloud-code/guide) or [https://github.com/skygear-demo/skygear-catapi](https://github.com/skygear-demo/skygear-catapi) for an example).
+You can also sign up Skygear Developer Portal at [https://portal.skygear.io](https://portal.skygear.io) and use `git push` the Chat Plugin to your portal cloud code endpoint (Refer detail on [https://docs.skygear.io/guides/#Cloud%20Functions](https://docs.skygear.io/guides/#Cloud%20Functions) or [https://github.com/skygear-demo/skygear-catapi](https://github.com/skygear-demo/skygear-catapi) for an example).
 
 After the Chat Plugin is running, remember to initialize Chat Plugin by `curl http://<SKYGEAR ENDPOINT>/chat-plugin-init`.
 
