@@ -907,6 +907,56 @@ public final class ChatContainer {
                 });
     }
 
+    /**
+     * Edit Message
+     *
+     * @param message the message to be edited
+     * @param body    the new message body
+     * @param callback save callback
+     */
+
+    public void editMessage(@NonNull Message message,
+                            @NonNull String body,
+                            @Nullable final SaveCallback<Message> callback)
+    {
+        message.getRecord().set("body", body);
+        this.saveMessageRecord(message.getRecord(), callback);
+    }
+
+
+    /**
+     * Delete a message
+     *
+     * @param message the mesqqsage to be deleted
+     * @param callback
+     */
+
+    public void deleteMessage(@NonNull final Message message, @Nullable final DeleteCallback<Message> callback)
+    {
+        this.skygear.callLambdaFunction(
+                "chat:delete_message",
+                new Object[]{ message.getId() },
+                new LambdaResponseHandler() {
+                    @Override
+                    public void onLambdaSuccess(JSONObject result) {
+                        if (callback == null) {
+                            return;
+                        }
+
+                        callback.onSucc(message);
+                    }
+
+                    @Override
+                    public void onLambdaFail(Error reason) {
+                        if (callback != null) {
+                            callback.onFail(reason.getMessage());
+                        }
+                    }
+                }
+        );
+
+    }
+
     private void saveMessageRecord(final Record message,
                                    @Nullable final SaveCallback<Message> callback) {
         try {

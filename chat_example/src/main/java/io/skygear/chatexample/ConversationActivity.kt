@@ -9,12 +9,14 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.Gravity
 import android.widget.EditText
 import android.widget.TextView
 import io.skygear.plugins.chat.*
@@ -94,6 +96,10 @@ class ConversationActivity : AppCompatActivity() {
 
         mTypingIndicatorTextView = findViewById(R.id.typing_indicator_tv) as TextView
         mTypingIndicatorTextView?.text = ""
+
+        mAdapter.setOnClickListener {
+            m -> showOptions(m)
+        }
     }
 
     override fun onResume() {
@@ -281,6 +287,55 @@ class ConversationActivity : AppCompatActivity() {
     fun setAsset(asset: Asset?) {
         mAsset = asset
         mLoading?.dismiss()
+    }
+
+    fun showOptions(m: Message) {
+            val builder = AlertDialog.Builder(this)
+            val items = resources.getStringArray(R.array.message_options)
+            builder.setItems(items, { d, i -> when(i) {
+                0 -> editMessage(m)
+                1 -> deleteMessage(m)
+            } })
+            val alert = builder.create()
+            alert.show()
+     }
+
+    fun editMessage(m: Message) {
+        val builder = AlertDialog.Builder(this)
+        val editText = EditText(this)
+        editText.maxLines = 1
+        editText.minLines = 1
+        editText.gravity = Gravity.TOP or Gravity.LEFT
+        editText.setText(m.body)
+
+        builder.setView(editText)
+        builder.setPositiveButton(R.string.yes) {dialog, which ->
+            mChatContainer.editMessage(m, editText.text.toString(), object: SaveCallback<Message> {
+                override fun onSucc(message: Message?) {
+                    if (message != null) {
+                        mAdapter.updateMessage(message)
+                    }
+                }
+
+                override fun onFail(failReason: String?) {
+                    Log.w(TAG, "Fail to edit message: " + failReason)
+                }
+            })
+        }
+        builder.show()
+    }
+
+    fun deleteMessage(m: Message) {
+        Log.w(TAG, "Delete a message")
+        mChatContainer.deleteMessage(m, object : DeleteCallback<Message> {
+            override fun onSucc(message: Message) {
+                mAdapter.deleteMessage(message)
+            }
+
+            override fun onFail(failReason: String?) {
+                Log.w(TAG, "Fail to delete message: " + failReason)
+            }
+        })
     }
 
     abstract class TextEditWatcher : TextWatcher {

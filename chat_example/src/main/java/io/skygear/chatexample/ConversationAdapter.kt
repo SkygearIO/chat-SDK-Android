@@ -14,6 +14,11 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
     private val LOG_TAG = "Adapter"
 
     private var mMessages: MutableList<Message> = mutableListOf()
+    private var mListener: (Message) -> Unit = {}
+
+    fun setOnClickListener(listener: (Message) -> Unit) {
+        mListener = listener
+    }
 
     fun setMessages(messages: List<Message>?) {
         if (messages != null) {
@@ -36,6 +41,15 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
         val idx = mMessages.indexOfFirst { it.id == message.id }
         if (idx != -1) {
             mMessages[idx] = message
+            notifyDataSetChanged()
+        }
+    }
+
+    fun deleteMessage(message:Message) {
+        val idx = mMessages.indexOfFirst { it.id == message.id }
+        if (idx != - 1)
+        {
+            mMessages.removeAt(idx)
             notifyDataSetChanged()
         }
     }
@@ -71,6 +85,15 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
             }
             else -> {
                 holder.statusIv.setImageResource(android.R.color.transparent)
+            }
+        }
+
+        with (holder.itemView)
+        {
+            tag = message
+            setOnClickListener { v ->
+                val m = v.tag as Message
+                mListener(m)
             }
         }
     }
