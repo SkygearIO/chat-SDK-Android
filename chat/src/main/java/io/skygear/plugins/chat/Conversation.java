@@ -36,6 +36,10 @@ public class Conversation {
 
     private Set<String> adminIds;
     private Set<String> participantIds;
+    private final int unreadCount;
+    private final String lastReadMessageId;
+    public Message lastMessage;
+    public Message lastReadMessage;
 
     /**
      * Creates a Compatible Skygear Record
@@ -75,7 +79,7 @@ public class Conversation {
 
             // set distinctByParticipants
             Object distinctByParticipants = options.get(OptionKey.DISTINCT_BY_PARTICIPANTS);
-            if (distinctByParticipants != null && (boolean)distinctByParticipants) {
+            if (distinctByParticipants != null && (boolean) distinctByParticipants) {
                 record.set(DISTINCT_BY_PARTICIPANTS_KEY, true);
             }
         }
@@ -88,7 +92,7 @@ public class Conversation {
      *
      * @param record the record
      */
-    Conversation(final Record record) {
+    Conversation(final Record record, int unreadCount, String lastReadMessageId) {
         this.record = record;
 
         JSONArray adminIds = (JSONArray) record.get(ADMIN_IDS_KEY);
@@ -114,6 +118,9 @@ public class Conversation {
             }
             this.participantIds = ids;
         }
+
+        this.unreadCount = unreadCount;
+        this.lastReadMessageId = lastReadMessageId;
     }
 
     /**
@@ -148,6 +155,20 @@ public class Conversation {
             return ref.getId();
         }
         return null;
+    }
+
+    @Nullable
+    public String getLastReadMessageId() {
+        return lastReadMessageId;
+    }
+
+
+    /*
+     * Get Unread Count
+     */
+    public int getUnreadCount()
+    {
+        return unreadCount;
     }
 
 
@@ -240,8 +261,8 @@ public class Conversation {
      * @return the conversation
      * @throws JSONException the JSON exception
      */
-    public static Conversation fromJson(JSONObject jsonObject) throws JSONException {
-        return new Conversation(Record.fromJson(jsonObject));
+    public static Conversation fromJson(JSONObject jsonObject, int unreadCount, String lastReadMessageId) throws JSONException {
+        return new Conversation(Record.fromJson(jsonObject), unreadCount, lastReadMessageId);
     }
 
     /**

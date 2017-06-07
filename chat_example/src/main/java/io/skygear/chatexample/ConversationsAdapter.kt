@@ -6,30 +6,29 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import io.skygear.plugins.chat.Conversation
-import io.skygear.plugins.chat.UserConversation
 
 class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolder>() {
     private val LOG_TAG = "Adapter"
 
-    private var mConversations: List<UserConversation> = listOf()
-    private var mListener: (UserConversation) -> Unit = {}
+    private var mConversations: List<Conversation> = listOf()
+    private var mListener: (Conversation) -> Unit = {}
 
-    fun setOnClickListener(listener: (UserConversation) -> Unit) {
+    fun setOnClickListener(listener: (Conversation) -> Unit) {
         mListener = listener
     }
 
-    fun setConversations(conversations: List<UserConversation>?) {
+    fun setConversations(conversations: List<Conversation>?) {
         mConversations = conversations ?: listOf()
         notifyDataSetChanged()
     }
 
-    fun updateConversation(old: UserConversation, new: Conversation?) {
+    fun updateConversation(old: Conversation, new: Conversation?) {
         if (new != null) {
-            val conversations: MutableList<UserConversation> = mConversations.toMutableList()
+            val conversations: MutableList<Conversation> = mConversations.toMutableList()
             val idx = conversations.indexOf(old)
 
             if (idx != -1) {
-                conversations[idx].conversation = new
+                conversations[idx] = new
                 notifyDataSetChanged()
             }
         }
@@ -37,7 +36,7 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
 
     fun deleteConversation(id: String?) {
         if (id != null) {
-            val conversations: MutableList<UserConversation> = mConversations.toMutableList()
+            val conversations: MutableList<Conversation> = mConversations.toMutableList()
             val conversation = conversations.find { it.id.equals(id) }
             conversations.remove(conversation)
             mConversations = conversations.toList()
@@ -51,17 +50,16 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val userConversation = mConversations[position]
-        val conversation = userConversation.getConversation()
+        val conversation = mConversations[position]
 
         holder.nameTv.text = conversation?.title
         holder.idTv.text = conversation?.id
-        holder.lastMsgTv.text = userConversation?.lastMessage?.body
+        holder.lastMsgTv.text = conversation?.lastReadMessage?.body
 
         with(holder.container) {
-            tag = userConversation
+            tag = conversation
             setOnClickListener { v ->
-                val uc = v.tag as UserConversation
+                val uc = v.tag as Conversation
                 mListener(uc)
             }
         }

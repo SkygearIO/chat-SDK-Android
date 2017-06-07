@@ -94,7 +94,7 @@ public final class ChatContainer {
             @Nullable
             @Override
             public Conversation convert(Record record) {
-                return new Conversation(record);
+                return new Conversation(record, 0, null);
             }
         });
     }
@@ -123,7 +123,7 @@ public final class ChatContainer {
             @Nullable
             @Override
             public Conversation convert(Record record) {
-                return new Conversation(record);
+                return new Conversation(record, 0, null);
             }
         });
     }
@@ -133,21 +133,13 @@ public final class ChatContainer {
      *
      * @param callback the callback
      */
-    public void getConversations(@Nullable final GetCallback<List<Conversation>> callback) {
-        this.getUserConversation(new GetCallback<List<UserConversation>>() {
-            @Override
-            public void onSucc(@Nullable List<UserConversation> userConversations) {
-                if (callback == null) {
-                    // nothing to do
-                    return;
-                }
 
-                List<Conversation> conversations = null;
-                if (userConversations != null) {
-                    conversations = new LinkedList<>();
-                    for (UserConversation eachUserConversations : userConversations) {
-                        conversations.add(eachUserConversations.getConversation());
-                    }
+    public void getConversations(@Nullable final GetCallback<List<Conversation>> callback) {
+        this.getConversations(true, new GetCallback<List<Conversation>>() {
+            @Override
+            public void onSucc(@Nullable List<Conversation> conversations) {
+                if (callback == null) {
+                    return;
                 }
                 callback.onSucc(conversations);
             }
@@ -169,18 +161,13 @@ public final class ChatContainer {
      */
     public void getConversation(@NonNull final String conversationId,
                                 @Nullable final GetCallback<Conversation> callback) {
-        this.getUserConversation(
+        this.getConversation(
                 conversationId,
-                this.skygear.getCurrentUser().getId(),
                 true,
-                new GetCallback<UserConversation>() {
+                new GetCallback<Conversation>() {
                     @Override
-                    public void onSucc(@Nullable UserConversation userConversation) {
+                    public void onSucc(@Nullable Conversation conversation) {
                         if (callback != null) {
-                            Conversation conversation = null;
-                            if (userConversation != null) {
-                                conversation = userConversation.getConversation();
-                            }
 
                             callback.onSucc(conversation);
                         }
@@ -375,27 +362,27 @@ public final class ChatContainer {
                                    @Nullable final SaveCallback<Conversation> callback) {
         final Database publicDB = this.skygear.getPublicDatabase();
 
-        this.getUserConversation(conversation, new GetCallback<UserConversation>() {
+        this.getConversation(conversation.getId(), true, new GetCallback<Conversation>() {
             @Override
-            public void onSucc(@Nullable UserConversation userConversation) {
+            public void onSucc(@Nullable final Conversation conversation) {
                 if (callback == null) {
                     // nothing to do
                     return;
                 }
 
-                if (userConversation == null) {
+                if (conversation == null) {
                     callback.onFail("Cannot find the conversation");
                     return;
                 }
 
-                Record conversationRecord = userConversation.getConversation().record;
+                Record conversationRecord = conversation.record;
                 for (Map.Entry<String, Object> entry : updates.entrySet()) {
                     conversationRecord.set(entry.getKey(), entry.getValue());
                 }
                 publicDB.save(conversationRecord, new SaveResponseAdapter<Conversation>(callback) {
                     @Override
                     public Conversation convert(Record record) {
-                        return new Conversation(record);
+                        return new Conversation(record, conversation.getUnreadCount(), conversation.getLastReadMessageId());
                     }
                 });
             }
@@ -418,7 +405,7 @@ public final class ChatContainer {
     public void markConversationLastReadMessage(@NonNull final Conversation conversation,
                                                 @NonNull final Message message) {
         final Database publicDB = this.skygear.getPublicDatabase();
-        this.getUserConversation(conversation, new GetCallback<UserConversation>() {
+        this.getUserConversation(conversation.getId(), new GetCallback<UserConversation>() {
             @Override
             public void onSucc(@Nullable UserConversation userConversation) {
                 if (userConversation == null) {
@@ -438,36 +425,6 @@ public final class ChatContainer {
             @Override
             public void onFail(@Nullable String failReason) {
                 Log.i(TAG, "Fail to mark conversation last read message: " + failReason);
-            }
-        });
-    }
-
-    /**
-     * Gets unread message count for a conversation.
-     *
-     * @param conversation the conversation
-     * @param callback     the callback
-     */
-    public void getConversationUnreadMessageCount(@NonNull Conversation conversation,
-                                                  @Nullable final GetCallback<Integer> callback) {
-        this.getUserConversation(conversation, new GetCallback<UserConversation>() {
-            @Override
-            public void onSucc(@Nullable UserConversation userConversation) {
-                if (callback != null) {
-                    if (userConversation == null) {
-                        callback.onFail("Cannot find the conversation");
-                        return;
-                    }
-
-                    callback.onSucc(userConversation.getUnreadCount());
-                }
-            }
-
-            @Override
-            public void onFail(@Nullable String failReason) {
-                if (callback != null) {
-                    callback.onFail(failReason);
-                }
             }
         });
     }
@@ -502,51 +459,21 @@ public final class ChatContainer {
         });
     }
 
-    /* --- User Conversation --- */
+    /* --- Conversation (Private) --- */
 
     /**
-     * Gets the user conversation relation for current user.
+     * Gets single conversation for current user.
      *
-     * @param callback the callback
+     * @param conversationId  the ID of conversation
+     * @param getLastMessages if true, then last_message and last_read_message are fetched.
+     * @param callback        the callback
      */
-    public void getUserConversation(@Nullable final GetCallback<List<UserConversation>> callback) {
-        this.getUserConversation(this.skygear.getCurrentUser().getId(), true, callback);
-    }
 
-    /**
-     * Gets user conversation relation by a conversation for current user.
-     *
-     * @param conversation the conversation
-     * @param callback     the callback
-     */
-    public void getUserConversation(@NonNull final Conversation conversation,
-                                    @Nullable final GetCallback<UserConversation> callback) {
-        this.getUserConversation(
-            conversation.getId(),
-            this.skygear.getCurrentUser().getId(),
-            true,
-            callback);
-    }
-
-    /**
-     * Gets user conversation relation by a conversation and a user.
-     *
-     * @param conversation the conversation
-     * @param user         the user
-     * @param callback     the callback
-     */
-    public void getUserConversation(@NonNull final Conversation conversation,
-                                    @NonNull final ChatUser user,
-                                    @Nullable final GetCallback<UserConversation> callback) {
-        this.getUserConversation(conversation.getId(), user.getId(), true, callback);
-    }
-
-    private void getUserConversation(@NonNull final String conversationId,
-                                     @NonNull final String userId,
-                                     @NonNull final boolean getLastMessages,
-                                     @Nullable final GetCallback<UserConversation> callback) {
+    private void getConversation(@NonNull final String conversationId,
+                                      @NonNull final boolean getLastMessages,
+                                      @Nullable final GetCallback<Conversation> callback) {
         Query query = new Query(UserConversation.TYPE_KEY)
-                .equalTo(UserConversation.USER_KEY, userId)
+                .equalTo(UserConversation.USER_KEY, skygear.getCurrentUser().getId())
                 .equalTo(UserConversation.CONVERSATION_KEY, conversationId)
                 .transientInclude(UserConversation.USER_KEY)
                 .transientInclude(UserConversation.CONVERSATION_KEY);
@@ -560,19 +487,39 @@ public final class ChatContainer {
                 }
 
                 if (records != null && records.length > 0) {
-                    final UserConversation uc = new UserConversation(records[0]);
-                    Conversation c = uc.conversation;
-                    String mid = c.getLastMessageId();
-                    if (getLastMessages && mid != null) {
+                    final Conversation c = UserConversation.GetConversationByUserConversationRecord(records[0]);
+                    final String lastMessageId = c.getLastMessageId();
+                    final String lastReadMessageId = c.getLastReadMessageId();
+                    if (getLastMessages) {
+
                         List<String> messageIds = new ArrayList<String>();
-                        messageIds.add(mid);
+                        if (lastMessageId != null) {
+                            messageIds.add(lastMessageId);
+                        }
+
+                        if (lastReadMessageId != null)
+                        {
+                            messageIds.add(lastReadMessageId);
+                        }
+
                         getMessagesByIds(messageIds, new GetCallback<List<Message>>() {
                             @Override
                             public void onSucc(@Nullable List<Message> messages) {
-                                if (messages != null && messages.size() > 0) {
-                                    uc.lastMessage = messages.get(0);
+                                Map<String, Message> mMap = new HashMap<String, Message>();
+                                for (Message m : messages) {
+                                    mMap.put(m.getId(), m);
                                 }
-                                callback.onSucc(uc);
+
+                                if (lastMessageId != null) {
+                                    c.lastMessage = mMap.get(lastMessageId);
+                                }
+
+                                if (lastReadMessageId != null)
+                                {
+                                    c.lastReadMessage = mMap.get(lastReadMessageId);
+                                }
+
+                                callback.onSucc(c);
                             }
 
                             @Override
@@ -581,7 +528,7 @@ public final class ChatContainer {
                             }
                         });
                     } else {
-                        callback.onSucc(uc);
+                        callback.onSucc(c);
                     }
                 } else {
                     callback.onFail("User Conversation not found");
@@ -598,35 +545,17 @@ public final class ChatContainer {
     }
 
     /**
-     * Gets user conversation relation for a user.
+     * Gets all conversations for current user.
      *
-     * @param user     the user
-     * @param callback the callback
-     */
-    public void getUserConversation(@NonNull final ChatUser user,
-                                    @Nullable final GetCallback<List<UserConversation>> callback) {
-        this.getUserConversation(user.getId(), true, callback);
-    }
-
-    /**
-     * Gets user conversation relation for a user, with getLastMessages
-     *
-     * @param user            the user
-     * @param getLastMessages transientInclude the `last_read_message` field
+     * @param getLastMessages if true, then last_message and last_read_message are fetched.
      * @param callback        the callback
      */
-    public void getUserConversation(@NonNull final ChatUser user,
-                                    @NonNull final Boolean getLastMessages,
-                                    @Nullable final GetCallback<List<UserConversation>> callback) {
-        this.getUserConversation(user.getId(), getLastMessages, callback);
-    }
 
-    private void getUserConversation(@NonNull final String userId,
-                                     @NonNull final Boolean getLastMessages,
-                                     @Nullable final GetCallback<List<UserConversation>> callback
+    private void getConversations(@NonNull final Boolean getLastMessages,
+                                  @Nullable final GetCallback<List<Conversation>> callback
     ) {
         Query query = new Query(UserConversation.TYPE_KEY)
-                .equalTo(UserConversation.USER_KEY, userId)
+                .equalTo(UserConversation.USER_KEY, skygear.getCurrentUser().getId())
                 .transientInclude(UserConversation.USER_KEY)
                 .transientInclude(UserConversation.CONVERSATION_KEY);
 
@@ -638,19 +567,24 @@ public final class ChatContainer {
                     return;
                 }
 
-                final List<UserConversation> userConversations = new LinkedList<>();;
+                final List<Conversation> conversations = new LinkedList<>();;
                 if (records != null && records.length > 0) {
                     for (Record eachRecord : records) {
-                        userConversations.add(new UserConversation(eachRecord));
+                        conversations.add(UserConversation.GetConversationByUserConversationRecord(eachRecord));
                     }
                 }
                 if (getLastMessages) {
                     List<String> messageIds = new ArrayList<String>();
-                    for (UserConversation uc : userConversations) {
-                        Conversation c = uc.conversation;
-                        String mid = c.getLastMessageId();
-                        if (mid != null) {
-                            messageIds.add(mid);
+                    for (Conversation c : conversations) {
+                        String lastMessageId = c.getLastMessageId();
+                        if (lastMessageId != null) {
+                            messageIds.add(lastMessageId);
+                        }
+
+                        String lastReadMessageId = c.getLastReadMessageId();
+                        if (lastReadMessageId != null)
+                        {
+                            messageIds.add(lastReadMessageId);
                         }
                     }
                     getMessagesByIds(messageIds, new GetCallback<List<Message>>() {
@@ -660,13 +594,22 @@ public final class ChatContainer {
                             for (Message m : messages) {
                                 mMap.put(m.getId(), m);
                             }
-                            for (UserConversation uc: userConversations) {
-                                Conversation c = uc.conversation;
-                                if (c.getLastMessageId() != null) {
-                                    uc.lastMessage = mMap.get(c.getLastMessageId());
+                            for (Conversation c: conversations)
+                            {
+
+                                if (c.getLastMessageId() != null)
+                                {
+                                    c.lastMessage = mMap.get(c.getLastMessageId());
+
+                                }
+
+                                if (c.getLastReadMessageId() != null)
+                                {
+                                    c.lastReadMessage = mMap.get(c.getLastReadMessageId());
+
                                 }
                             }
-                            callback.onSucc(userConversations);
+                            callback.onSucc(conversations);
                         }
 
                         @Override
@@ -675,7 +618,48 @@ public final class ChatContainer {
                         }
                     });
                 } else {
-                    callback.onSucc(userConversations);
+                    callback.onSucc(conversations);
+                }
+            }
+
+            @Override
+            public void onQueryError(Error reason) {
+                if (callback != null) {
+                    callback.onFail(reason.getMessage());
+                }
+            }
+        });
+    }
+
+    /* --- User Conversation --- */
+
+    /**
+     * Gets user conversation relation by a conversation for current user.
+     *
+     * @param conversationId the ID of conversation
+     * @param callback       the callback
+     */
+
+    private void getUserConversation(@NonNull final String conversationId,
+                                     @Nullable final GetCallback<UserConversation> callback) {
+        Query query = new Query(UserConversation.TYPE_KEY)
+                .equalTo(UserConversation.USER_KEY, skygear.getCurrentUser().getId())
+                .equalTo(UserConversation.CONVERSATION_KEY, conversationId)
+                .transientInclude(UserConversation.USER_KEY)
+                .transientInclude(UserConversation.CONVERSATION_KEY);
+
+        this.skygear.getPublicDatabase().query(query, new RecordQueryResponseHandler() {
+            @Override
+            public void onQuerySuccess(Record[] records) {
+                if (callback == null) {
+                    return;
+                }
+
+                if (records != null && records.length > 0) {
+                    final UserConversation uc = new UserConversation(records[0]);
+                    callback.onSucc(uc);
+                } else {
+                    callback.onFail("User Conversation not found");
                 }
             }
 

@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
-import io.skygear.plugins.chat.UserConversation
+import io.skygear.plugins.chat.Conversation
 
 class MetaFragment : DialogFragment() {
     private var mListener: (String) -> Unit = {}
@@ -17,11 +17,11 @@ class MetaFragment : DialogFragment() {
         private val UNREAD_CNT = "unread_count"
         private val LAST_READ_MESSAGE = "last_read_message"
 
-        fun newInstance(userConversation: UserConversation?): MetaFragment {
+        fun newInstance(conversation: Conversation?): MetaFragment {
             val f = MetaFragment()
             val args = Bundle()
-            args.putString(UNREAD_CNT, userConversation?.unreadCount.toString())
-            args.putString(LAST_READ_MESSAGE, userConversation?.lastReadMessageId)
+            args.putString(UNREAD_CNT, conversation?.unreadCount.toString())
+            args.putString(LAST_READ_MESSAGE, conversation?.lastReadMessage?.id)
             f.arguments = args
 
             return f
