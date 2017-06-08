@@ -87,10 +87,24 @@ public class Conversation {
         return record;
     }
 
+
     /**
      * Instantiates a Conversation from a Skygear Record.
      *
      * @param record the record
+     */
+    Conversation(final Record record)
+    {
+        this(record, 0, null);
+    }
+
+
+    /**
+     * Instantiates a Conversation from a Skygear Record and user information.
+     *
+     * @param record the record
+     * @param unreadCount user unread count
+     * @param lastReadMessageId user last read message ID
      */
     Conversation(final Record record, int unreadCount, String lastReadMessageId) {
         this.record = record;

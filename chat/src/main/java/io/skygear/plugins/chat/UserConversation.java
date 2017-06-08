@@ -36,8 +36,9 @@ class UserConversation {
     static Conversation GetConversationByUserConversationRecord(@NonNull final Record record)
     {
         Object conversationObject = record.getTransient().get(CONVERSATION_KEY);
-        final int unreadCount = (int) record.get(UNREAD_COUNT_KEY);
-        final String lastReadMessageId = ((Reference) record.get(LAST_READ_MESSAGE_KEY)).getId();
+        int unreadCount = (int) record.get(UNREAD_COUNT_KEY);
+        Reference lastReadMessageKey = (Reference) record.get(LAST_READ_MESSAGE_KEY);
+        String lastReadMessageId = lastReadMessageKey == null ? null : lastReadMessageKey.getId();
         return new Conversation((Record) conversationObject, unreadCount, lastReadMessageId);
     }
 }

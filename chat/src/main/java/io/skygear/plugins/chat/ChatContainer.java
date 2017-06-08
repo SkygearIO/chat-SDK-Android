@@ -94,7 +94,7 @@ public final class ChatContainer {
             @Nullable
             @Override
             public Conversation convert(Record record) {
-                return new Conversation(record, 0, null);
+                return new Conversation(record);
             }
         });
     }
