@@ -68,8 +68,8 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     fun getAllConversations() {
-        mChatContainer.getUserConversation(object : GetCallback<List<UserConversation>> {
-            override fun onSucc(list: List<UserConversation>?) {
+        mChatContainer.getConversations(object : GetCallback<List<Conversation>> {
+            override fun onSucc(list: List<Conversation>?) {
                 mAdapter.setConversations(list)
             }
 
@@ -117,17 +117,16 @@ class ConversationsActivity : AppCompatActivity() {
         AlertDialog.Builder(this).setTitle(R.string.logout_failed).show()
     }
 
-    fun showOptions(uc: UserConversation) {
+    fun showOptions(c: Conversation) {
         val builder = AlertDialog.Builder(this)
-        var c: Conversation = uc.conversation!!
         val items = resources.getStringArray(R.array.conversation_options)
         builder.setItems(items, { d, i -> when(i) {
             0 -> enter(c)
-            1 -> viewMeta(uc)
-            2 -> edit(uc, c)
+            1 -> viewMeta(c)
+            2 -> edit(c)
             3 -> confirmLeave(c)
-            4 -> updateAdmins(uc, c)
-            5 -> updateParticipants(uc, c)
+            4 -> updateAdmins(c)
+            5 -> updateParticipants(c)
         } })
         val alert = builder.create()
         alert.show()
@@ -137,21 +136,21 @@ class ConversationsActivity : AppCompatActivity() {
         startActivity(ConversationActivity.newIntent(c, this))
     }
 
-    fun viewMeta(uc: UserConversation) {
-        val f = MetaFragment.newInstance(uc)
+    fun viewMeta(c: Conversation) {
+        val f = MetaFragment.newInstance(c)
         f.show(supportFragmentManager, "conversation_meta")
     }
 
-    fun edit(uc: UserConversation, c: Conversation) {
+    fun edit(c: Conversation) {
         val f = TitleFragment.newInstance(c.title)
-        f.setOnOkBtnClickedListener { t -> updateTitle(uc, c, t) }
+        f.setOnOkBtnClickedListener { t -> updateTitle(c, t) }
         f.show(supportFragmentManager, "update_conversation")
     }
 
-    fun updateTitle(uc: UserConversation, c: Conversation, t: String) {
+    fun updateTitle(c: Conversation, t: String) {
         mChatContainer.setConversationTitle(c, t, object : SaveCallback<Conversation> {
             override fun onSucc(new: Conversation?) {
-                mAdapter.updateConversation(uc, new)
+                mAdapter.updateConversation(c, new)
             }
 
             override fun onFail(failReason: String?) {
@@ -188,12 +187,12 @@ class ConversationsActivity : AppCompatActivity() {
         } )
     }
 
-    fun updateAdmins(uc: UserConversation, c: Conversation) {
+    fun updateAdmins(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
         f.setOnOkBtnClickedListener { ids ->
             mChatContainer.setConversationAdminIds(c, HashSet(ids), object : SaveCallback<Conversation> {
                 override fun onSucc(new: Conversation?) {
-                    mAdapter.updateConversation(uc, new)
+                    mAdapter.updateConversation(c, new)
                 }
 
                 override fun onFail(failReason: String?) {
@@ -204,12 +203,12 @@ class ConversationsActivity : AppCompatActivity() {
         f.show(supportFragmentManager, "update_admins")
     }
 
-    fun updateParticipants(uc: UserConversation, c: Conversation) {
+    fun updateParticipants(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_participants), c.participantIds)
         f.setOnOkBtnClickedListener { ids ->
             mChatContainer.setConversationParticipants(c, HashSet(ids), object : SaveCallback<Conversation> {
                 override fun onSucc(new: Conversation?) {
-                    mAdapter.updateConversation(uc, new)
+                    mAdapter.updateConversation(c, new)
                 }
 
                 override fun onFail(failReason: String?) {

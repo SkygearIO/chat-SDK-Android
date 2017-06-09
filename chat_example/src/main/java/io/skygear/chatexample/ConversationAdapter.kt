@@ -30,6 +30,10 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
         notifyDataSetChanged()
     }
 
+    fun getLatestMessage(): Message?{
+        return mMessages.firstOrNull()
+    }
+
     fun addMessage(message: Message?) {
         if (message != null) {
             mMessages.add(0, message)

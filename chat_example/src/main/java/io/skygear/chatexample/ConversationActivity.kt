@@ -54,13 +54,16 @@ class ConversationActivity : AppCompatActivity() {
     private var mTypingCheckerTask : Runnable? = null
 
     companion object {
-        private val CONVERSATION_KEY = "conversation_key"
+        private val CONVERSATION_KEY         = "conversation_key"
+        private val UNREAD_COUNT_KEY         = "unread_count_key"
+        private val LAST_READ_MESSAGE_ID_KEY = "last_read_message_id_key"
 
         fun newIntent(conversation: Conversation, context: Context): Intent {
             val i = Intent(context, ConversationActivity::class.java)
             val serializedConversation = conversation.toJson().toString()
             i.putExtra(CONVERSATION_KEY, serializedConversation)
-
+            i.putExtra(UNREAD_COUNT_KEY, conversation.unreadCount)
+            i.putExtra(LAST_READ_MESSAGE_ID_KEY, conversation.lastReadMessageId)
             return i
         }
     }
@@ -74,8 +77,10 @@ class ConversationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_conversation)
 
-        val serializedConversation = intent.getStringExtra(CONVERSATION_KEY)
-        mConversation = Conversation.fromJson(JSONObject(serializedConversation))
+        val serializedConversation   = intent.getStringExtra(CONVERSATION_KEY)
+        val unreadCount              = intent.getIntExtra(UNREAD_COUNT_KEY, 0)
+        val lastReadMessageIdKey     = intent.getStringExtra(LAST_READ_MESSAGE_ID_KEY)
+        mConversation = Conversation.fromJson(JSONObject(serializedConversation), unreadCount, lastReadMessageIdKey)
 
         mConversationRv = findViewById(R.id.conversation_rv) as RecyclerView
         mConversationRv?.adapter = mAdapter
@@ -127,15 +132,24 @@ class ConversationActivity : AppCompatActivity() {
 
     fun onReceiveInitialMessages(messages: List<Message>?) {
         mAdapter.setMessages(messages)
+        markLatestMessageAsLastRead()
         if (messages != null && !messages.isEmpty()) {
-            mChatContainer.markConversationLastReadMessage(mConversation!!, messages.first())
             mChatContainer.markMessagesAsRead(messages)
         }
     }
 
     fun onReceiveMessage(message: Message) {
         mAdapter.addMessage(message)
+        markLatestMessageAsLastRead()
         mChatContainer.markMessageAsRead(message)
+    }
+
+    fun markLatestMessageAsLastRead()
+    {
+        val lastMessage = mAdapter.getLatestMessage()
+        if (lastMessage != null) {
+            mChatContainer.markConversationLastReadMessage(mConversation!!, lastMessage)
+        }
     }
 
     fun onUpdateMessage(message: Message) {
