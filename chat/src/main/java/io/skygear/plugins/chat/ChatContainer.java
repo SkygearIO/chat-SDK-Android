@@ -128,42 +128,30 @@ public final class ChatContainer {
         });
     }
 
+
     /**
-     * Gets all conversations.
+     * Gets all conversations with last_message and last_read_message.
      *
      * @param callback the callback
      */
 
     public void getConversations(@Nullable final GetCallback<List<Conversation>> callback) {
-        this.getConversations(true, new GetCallback<List<Conversation>>() {
-            @Override
-            public void onSucc(@Nullable List<Conversation> conversations) {
-                if (callback == null) {
-                    return;
-                }
-                callback.onSucc(conversations);
-            }
-
-            @Override
-            public void onFail(@Nullable String failReason) {
-                if (callback != null) {
-                    callback.onFail(failReason);
-                }
-            }
-        });
+        this.getConversations(callback, true);
     }
+
 
     /**
      * Gets conversation.
      *
      * @param conversationId the conversation id
      * @param callback       the callback
+     * @param getLastMessage get last_message and last_read_message if getLastMessage is true
      */
     public void getConversation(@NonNull final String conversationId,
-                                @Nullable final GetCallback<Conversation> callback) {
+                                @Nullable final GetCallback<Conversation> callback, boolean getLastMessage) {
         this.getConversation(
                 conversationId,
-                true,
+                getLastMessage,
                 new GetCallback<Conversation>() {
                     @Override
                     public void onSucc(@Nullable Conversation conversation) {
@@ -180,6 +168,18 @@ public final class ChatContainer {
                         }
                     }
                 });
+    }
+
+
+    /**
+     * Gets conversation.
+     *
+     * @param conversationId the conversation id
+     * @param callback       the callback
+     */
+    public void getConversation(@NonNull final String conversationId,
+                                @Nullable final GetCallback<Conversation> callback) {
+        this.getConversation(conversationId, true, callback);
     }
 
     /**
@@ -551,8 +551,8 @@ public final class ChatContainer {
      * @param callback        the callback
      */
 
-    private void getConversations(@NonNull final Boolean getLastMessages,
-                                  @Nullable final GetCallback<List<Conversation>> callback
+    public void getConversations(@Nullable final GetCallback<List<Conversation>> callback,
+                                  @NonNull final Boolean getLastMessages
     ) {
         Query query = new Query(UserConversation.TYPE_KEY)
                 .equalTo(UserConversation.USER_KEY, skygear.getCurrentUser().getId())
@@ -903,7 +903,6 @@ public final class ChatContainer {
                             @NonNull String body,
                             @Nullable final SaveCallback<Message> callback)
     {
-        message.getRecord().set("body", body);
         this.saveMessageRecord(message.getRecord(), callback);
     }
 
