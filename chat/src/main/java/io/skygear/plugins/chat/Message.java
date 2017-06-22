@@ -23,7 +23,7 @@ public class Message {
     static final String BODY_KEY = "body";
     static final String METADATA_KEY = "metadata";
     static final String ATTACHMENT_KEY = "attachment";
-    static final String CONVERSATION_STATUS_KEY = "conversation_status";
+    static final String MESSAGE_STATUS_KEY = "message_status";
 
     final Record record;
 
@@ -53,8 +53,17 @@ public class Message {
      */
     @NonNull
     public String getConversationId() {
-        Reference reference = (Reference) record.get("conversation_id");
+        Reference reference = (Reference) record.get("conversation");
         return reference.getId();
+    }
+
+    /**
+     * Sets body.
+     *
+     */
+    @Nullable
+    public void setBody(String body) {
+        record.set(BODY_KEY, body);
     }
 
     /**
@@ -88,7 +97,7 @@ public class Message {
      */
     @Nullable
     public Status getStatus() {
-        return Status.fromName((String) this.record.get(CONVERSATION_STATUS_KEY));
+        return Status.fromName((String) this.record.get(MESSAGE_STATUS_KEY));
     }
 
     /**
