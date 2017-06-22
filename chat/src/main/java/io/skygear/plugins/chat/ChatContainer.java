@@ -793,7 +793,7 @@ public final class ChatContainer {
         if (!StringUtils.isEmpty(body) || asset != null || metadata != null) {
             Record record = new Record("message");
             Reference reference = new Reference("conversation", conversation.getId());
-            record.set("conversation_id", reference);
+            record.set("conversation", reference);
             if (body != null) {
                 record.set("body", body);
             }
@@ -903,6 +903,7 @@ public final class ChatContainer {
                             @NonNull String body,
                             @Nullable final SaveCallback<Message> callback)
     {
+        message.setBody(body);
         this.saveMessageRecord(message.getRecord(), callback);
     }
 

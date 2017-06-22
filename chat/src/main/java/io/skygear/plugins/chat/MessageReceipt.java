@@ -17,7 +17,7 @@ public class MessageReceipt {
     /**
      * The User id key.
      */
-    static final String USER_ID_KEY = "user_id";
+    static final String USER_KEY = "user";
     /**
      * The Read at key.
      */
@@ -86,7 +86,7 @@ public class MessageReceipt {
      * @throws JSONException the JSON exception
      */
     static MessageReceipt fromJSON(@NonNull JSONObject jsonObject) throws JSONException {
-        String userId = jsonObject.getString(USER_ID_KEY);
+        String userId = jsonObject.getString(USER_KEY);
 
         Date readAt = null;
         if (jsonObject.has(READ_AT_KEY)) {
