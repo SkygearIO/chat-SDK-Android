@@ -3,12 +3,12 @@ package io.skygear.plugins.chat;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,86 +27,29 @@ public class Conversation {
     static final String TYPE_KEY = "conversation";
     static final String TITLE_KEY = "title";
     static final String LAST_MESSAGE_KEY = "last_message";
+    static final String LAST_READ_MESSAGE_KEY = "last_read_message";
+    static final String LAST_MESSAGE_REF_KEY = "last_message_ref";
+    static final String LAST_READ_MESSAGE_REF_KEY = "last_read_message_ref";
     static final String ADMIN_IDS_KEY = "admin_ids";
     static final String PARTICIPANT_IDS_KEY = "participant_ids";
     static final String DISTINCT_BY_PARTICIPANTS_KEY = "distinct_by_participant";
     static final String METADATA_KEY = "metadata";
+    static final String UNREAD_COUNT = "unread_count";
 
     final Record record;
 
     private Set<String> adminIds;
     private Set<String> participantIds;
-    private final int unreadCount;
-    private final String lastReadMessageId;
-    public Message lastMessage;
-    public Message lastReadMessage;
-
-    /**
-     * Creates a Compatible Skygear Record
-     *
-     * @param participantIds the participant ids
-     * @param title          the title
-     * @param metadata       the metadata
-     * @param options        the options
-     * @return the record
-     */
-    static Record newRecord(final Set<String> participantIds,
-                            @Nullable final String title,
-                            @Nullable final Map<String, Object> metadata,
-                            @Nullable final Map<OptionKey, Object> options) {
-        Record record = new Record(TYPE_KEY);
-
-        // set participant ids
-        JSONArray participantIdArray = new JSONArray(participantIds);
-        record.set(PARTICIPANT_IDS_KEY, participantIdArray);
-
-        // set title (allow null)
-        if (title != null && title.trim().length() != 0) {
-            record.set(TITLE_KEY, title.trim());
-        }
-
-        if (metadata != null) {
-            record.set(METADATA_KEY, new JSONObject(metadata));
-        }
-
-        if (options != null) {
-            Object adminIds = options.get(OptionKey.ADMIN_IDS);
-            if (adminIds != null) {
-                // set admin ids
-                JSONArray adminIdArray = new JSONArray((Collection<String>) adminIds);
-                record.set(ADMIN_IDS_KEY, adminIdArray);
-            }
-
-            // set distinctByParticipants
-            Object distinctByParticipants = options.get(OptionKey.DISTINCT_BY_PARTICIPANTS);
-            if (distinctByParticipants != null && (boolean) distinctByParticipants) {
-                record.set(DISTINCT_BY_PARTICIPANTS_KEY, true);
-            }
-        }
-
-        return record;
-    }
-
-
-    /**
-     * Instantiates a Conversation from a Skygear Record.
-     *
-     * @param record the record
-     */
-    Conversation(final Record record)
-    {
-        this(record, 0, null);
-    }
-
+    private Message lastMessage;
+    private Message lastReadMessage;
+    private static final String TAG = "SkygearChatSubscription";
 
     /**
      * Instantiates a Conversation from a Skygear Record and user information.
      *
      * @param record the record
-     * @param unreadCount user unread count
-     * @param lastReadMessageId user last read message ID
      */
-    Conversation(final Record record, int unreadCount, String lastReadMessageId) {
+    Conversation(final Record record) {
         this.record = record;
 
         JSONArray adminIds = (JSONArray) record.get(ADMIN_IDS_KEY);
@@ -132,9 +75,6 @@ public class Conversation {
             }
             this.participantIds = ids;
         }
-
-        this.unreadCount = unreadCount;
-        this.lastReadMessageId = lastReadMessageId;
     }
 
     /**
@@ -164,8 +104,9 @@ public class Conversation {
      */
     @Nullable
     public String getLastMessageId() {
-        Reference ref = (Reference) this.record.get(LAST_MESSAGE_KEY);
-        if (ref != null) {
+        Object obj = this.record.get(LAST_MESSAGE_REF_KEY);
+        if (! JSONObject.NULL.equals(obj)) {
+            Reference ref = (Reference) obj;
             return ref.getId();
         }
         return null;
@@ -173,7 +114,44 @@ public class Conversation {
 
     @Nullable
     public String getLastReadMessageId() {
-        return lastReadMessageId;
+        Object obj = this.record.get(LAST_READ_MESSAGE_REF_KEY);
+        if (! JSONObject.NULL.equals(obj)) {
+            Reference ref = (Reference) obj;
+            return ref.getId();
+        }
+        return null;
+    }
+
+    @Nullable
+    private Message getMessage(String key) {
+        Object obj = record.get(key);
+        if (! JSONObject.NULL.equals(obj)) {
+            JSONObject messageRecord = (JSONObject) obj;
+            if (messageRecord != null) {
+                try {
+                    return Message.fromJson(messageRecord);
+                } catch (JSONException e) {
+                    Log.w(TAG, "Fail parsing last_message", e);
+                }
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public Message getLastMessage() {
+        if (lastMessage == null) {
+            lastMessage = getMessage(LAST_MESSAGE_KEY);
+        }
+        return lastMessage;
+    }
+
+    @Nullable
+    public Message getLastReadMessage() {
+        if (lastReadMessage == null) {
+            lastReadMessage = getMessage(LAST_READ_MESSAGE_KEY);
+        }
+        return lastReadMessage;
     }
 
 
@@ -182,7 +160,7 @@ public class Conversation {
      */
     public int getUnreadCount()
     {
-        return unreadCount;
+        return (int) this.record.get(UNREAD_COUNT);
     }
 
 
@@ -275,8 +253,8 @@ public class Conversation {
      * @return the conversation
      * @throws JSONException the JSON exception
      */
-    public static Conversation fromJson(JSONObject jsonObject, int unreadCount, String lastReadMessageId) throws JSONException {
-        return new Conversation(Record.fromJson(jsonObject), unreadCount, lastReadMessageId);
+    public static Conversation fromJson(JSONObject jsonObject) throws JSONException {
+        return new Conversation(Record.fromJson(jsonObject));
     }
 
     /**

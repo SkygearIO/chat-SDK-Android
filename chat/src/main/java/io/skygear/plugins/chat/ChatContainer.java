@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.joda.time.DateTime;
+import org.joda.time.convert.Converter;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.json.JSONArray;
@@ -13,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -89,13 +91,31 @@ public final class ChatContainer {
                                    @Nullable final Map<String, Object> metadata,
                                    @Nullable final Map<Conversation.OptionKey, Object> options,
                                    @Nullable final SaveCallback<Conversation> callback) {
-        Record record = Conversation.newRecord(participantIds, title, metadata, options);
-        skygear.getPublicDatabase().save(record, new SaveResponseAdapter<Conversation>(callback) {
-            @Nullable
-            @Override
-            public Conversation convert(Record record) {
-                return new Conversation(record);
-            }
+        this.skygear.callLambdaFunction("chat:create_conversation",
+                new Object[]{new JSONArray(participantIds), title, metadata == null ? null : new JSONObject(metadata), options == null ? null : new JSONObject(options)},
+                new LambdaResponseHandler(){
+                    @Override
+                    public void onLambdaSuccess(JSONObject result){
+                        try {
+                            Conversation conversation = Conversation.fromJson((JSONObject) result.get("conversation"));
+                            if (callback != null) {
+                                callback.onSucc(conversation);
+                            }
+                        } catch (JSONException e)
+                        {
+                            if (callback != null) {
+                                callback.onFail(e.getMessage());
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onLambdaFail(Error error) {
+
+                        if (callback != null) {
+                            callback.onFail(error.getMessage());
+                        }
+                    }
         });
     }
 
@@ -117,15 +137,7 @@ public final class ChatContainer {
 
         Map<Conversation.OptionKey, Object> options = new HashMap<>();
         options.put(Conversation.OptionKey.DISTINCT_BY_PARTICIPANTS, true);
-
-        Record record = Conversation.newRecord(participantIds, title, metadata, options);
-        this.skygear.getPublicDatabase().save(record, new SaveResponseAdapter<Conversation>(callback) {
-            @Nullable
-            @Override
-            public Conversation convert(Record record) {
-                return new Conversation(record, 0, null);
-            }
-        });
+        createConversation(participantIds, title, metadata, options, callback);
     }
 
 
@@ -198,110 +210,93 @@ public final class ChatContainer {
         this.updateConversation(conversation, map, callback);
     }
 
-    /**
-     * Sets conversation admin ids.
-     *
-     * @param conversation the conversation
-     * @param adminIds     the admin ids
-     * @param callback     the callback
-     */
-    public void setConversationAdminIds(@NonNull final Conversation conversation,
-                                        @NonNull final Set<String> adminIds,
-                                        @Nullable final SaveCallback<Conversation> callback) {
-        Map<String, Object> map = new HashMap<>();
-        String[] ids = new String[adminIds.size()];
-        adminIds.toArray(ids);
-        map.put(Conversation.ADMIN_IDS_KEY, ids);
 
-        this.updateConversation(conversation, map, callback);
+    private void updateConversationMembership(@NonNull final Conversation conversation,
+                                              @NonNull final String lambda,
+                                              @NonNull final List<String> memberIds,
+                                              @Nullable final SaveCallback<Conversation> callback)
+    {
+        this.skygear.callLambdaFunction(lambda,
+                new Object[]{conversation.getId(), new JSONArray(memberIds)},
+                new LambdaResponseHandler(){
+                    @Override
+                    public void onLambdaSuccess(JSONObject result){
+                        try {
+                            Conversation conversation = Conversation.fromJson((JSONObject) result.get("conversation"));
+                            if (callback != null) {
+                                callback.onSucc(conversation);
+                            }
+                        } catch (JSONException e)
+                        {
+                            if (callback != null) {
+                                callback.onFail(e.getMessage());
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onLambdaFail(Error error) {
+
+                        if (callback != null) {
+                            callback.onFail(error.getMessage());
+                        }
+                    }
+                });
+
     }
+
 
     /**
      * Add conversation admin.
      *
      * @param conversation the conversation
-     * @param adminId      the admin id
+     * @param adminIds     the admin ids
      * @param callback     the callback
      */
-    public void addConversationAdmin(@NonNull final Conversation conversation,
-                                     @NonNull final String adminId,
-                                     @Nullable final SaveCallback<Conversation> callback) {
-        Set<String> adminIds = conversation.getAdminIds();
-        if (adminIds == null) {
-            adminIds = new HashSet<>();
-        }
-        adminIds.add(adminId);
-
-        this.setConversationAdminIds(conversation, adminIds, callback);
+    public void addConversationAdmins(@NonNull final Conversation conversation,
+                                      @NonNull final List<String> adminIds,
+                                      @Nullable final SaveCallback<Conversation> callback) {
+        updateConversationMembership(conversation, "chat:add_admins", adminIds, callback);
     }
 
     /**
      * Remove conversation admin.
      *
      * @param conversation the conversation
-     * @param adminId      the admin id
+     * @param adminIds      the admin ids
      * @param callback     the callback
      */
     public void removeConversationAdmin(@NonNull final Conversation conversation,
-                                        @NonNull final String adminId,
+                                        @NonNull final List<String> adminIds,
                                         @Nullable final SaveCallback<Conversation> callback) {
-        Set<String> adminIds = conversation.getAdminIds();
-        adminIds.remove(adminId);
-
-        this.setConversationAdminIds(conversation, adminIds, callback);
+        updateConversationMembership(conversation, "chat:remove_admins", adminIds, callback);
     }
 
-    /**
-     * Sets conversation participants.
-     *
-     * @param conversation   the conversation
-     * @param participantIds the participant ids
-     * @param callback       the callback
-     */
-    public void setConversationParticipants(@NonNull final Conversation conversation,
-                                            @NonNull final Set<String> participantIds,
-                                            @Nullable final SaveCallback<Conversation> callback) {
-        Map<String, Object> map = new HashMap<>();
-        String[] ids = new String[participantIds.size()];
-        participantIds.toArray(ids);
-        map.put(Conversation.PARTICIPANT_IDS_KEY, ids);
-
-        this.updateConversation(conversation, map, callback);
-    }
 
     /**
      * Add conversation participant.
      *
      * @param conversation  the conversation
-     * @param participantId the participant id
+     * @param participantIds the participant ids
      * @param callback      the callback
      */
-    public void addConversationParticipant(@NonNull final Conversation conversation,
-                                           @NonNull final String participantId,
+    public void addConversationParticipants(@NonNull final Conversation conversation,
+                                           @NonNull final List<String> participantIds,
                                            @Nullable final SaveCallback<Conversation> callback) {
-        Set<String> participantIds = conversation.getParticipantIds();
-        if (participantIds == null) {
-            participantIds = new HashSet<>();
-        }
-        participantIds.add(participantId);
-
-        this.setConversationParticipants(conversation, participantIds, callback);
+        updateConversationMembership(conversation, "chat:add_participants", participantIds, callback);
     }
 
     /**
      * Remove conversation participant.
      *
      * @param conversation  the conversation
-     * @param participantId the participant id
+     * @param participantIds the participant ids
      * @param callback      the callback
      */
     public void removeConversationParticipant(@NonNull final Conversation conversation,
-                                              @NonNull final String participantId,
+                                              @NonNull final List<String> participantIds,
                                               @Nullable final SaveCallback<Conversation> callback) {
-        Set<String> participantIds = conversation.getParticipantIds();
-        participantIds.remove(participantId);
-
-        this.setConversationParticipants(conversation, participantIds, callback);
+        updateConversationMembership(conversation, "chat:remove_participants", participantIds, callback);
     }
 
     /**
@@ -382,7 +377,7 @@ public final class ChatContainer {
                 publicDB.save(conversationRecord, new SaveResponseAdapter<Conversation>(callback) {
                     @Override
                     public Conversation convert(Record record) {
-                        return new Conversation(record, conversation.getUnreadCount(), conversation.getLastReadMessageId());
+                        return new Conversation(record);
                     }
                 });
             }
@@ -404,29 +399,7 @@ public final class ChatContainer {
      */
     public void markConversationLastReadMessage(@NonNull final Conversation conversation,
                                                 @NonNull final Message message) {
-        final Database publicDB = this.skygear.getPublicDatabase();
-        this.getUserConversation(conversation.getId(), new GetCallback<UserConversation>() {
-            @Override
-            public void onSucc(@Nullable UserConversation userConversation) {
-                if (userConversation == null) {
-                    Log.w(TAG, "Cannot find the conversation");
-                    return;
-                }
-
-                Record userConversationRecord = userConversation.record;
-                userConversationRecord.set(
-                        UserConversation.LAST_READ_MESSAGE_KEY,
-                        Message.newReference(message)
-                );
-
-                publicDB.save(userConversationRecord, null);
-            }
-
-            @Override
-            public void onFail(@Nullable String failReason) {
-                Log.i(TAG, "Fail to mark conversation last read message: " + failReason);
-            }
-        });
+        markMessagesAsRead(Arrays.asList(new Message[]{message}));
     }
 
     /**
@@ -472,76 +445,32 @@ public final class ChatContainer {
     private void getConversation(@NonNull final String conversationId,
                                       @NonNull final boolean getLastMessages,
                                       @Nullable final GetCallback<Conversation> callback) {
-        Query query = new Query(UserConversation.TYPE_KEY)
-                .equalTo(UserConversation.USER_KEY, skygear.getCurrentUser().getId())
-                .equalTo(UserConversation.CONVERSATION_KEY, conversationId)
-                .transientInclude(UserConversation.USER_KEY)
-                .transientInclude(UserConversation.CONVERSATION_KEY);
-
-        this.skygear.getPublicDatabase().query(query, new RecordQueryResponseHandler() {
-            @Override
-            public void onQuerySuccess(Record[] records) {
-                if (callback == null) {
-                    // nothing to do
-                    return;
-                }
-
-                if (records != null && records.length > 0) {
-                    final Conversation c = UserConversation.GetConversationByUserConversationRecord(records[0]);
-                    final String lastMessageId = c.getLastMessageId();
-                    final String lastReadMessageId = c.getLastReadMessageId();
-                    if (getLastMessages) {
-
-                        List<String> messageIds = new ArrayList<String>();
-                        if (lastMessageId != null) {
-                            messageIds.add(lastMessageId);
-                        }
-
-                        if (lastReadMessageId != null)
+        this.skygear.callLambdaFunction("chat:get_conversation",
+                new Object[]{conversationId, getLastMessages},
+                new LambdaResponseHandler(){
+                    @Override
+                    public void onLambdaSuccess(JSONObject result){
+                        try {
+                            Conversation conversation = Conversation.fromJson(result.getJSONObject("conversation"));
+                            if (callback != null) {
+                                callback.onSucc(conversation);
+                            }
+                        } catch (JSONException e)
                         {
-                            messageIds.add(lastReadMessageId);
+                            if (callback != null) {
+                                callback.onFail(e.getMessage());
+                            }
                         }
-
-                        getMessagesByIds(messageIds, new GetCallback<List<Message>>() {
-                            @Override
-                            public void onSucc(@Nullable List<Message> messages) {
-                                Map<String, Message> mMap = new HashMap<String, Message>();
-                                for (Message m : messages) {
-                                    mMap.put(m.getId(), m);
-                                }
-
-                                if (lastMessageId != null) {
-                                    c.lastMessage = mMap.get(lastMessageId);
-                                }
-
-                                if (lastReadMessageId != null)
-                                {
-                                    c.lastReadMessage = mMap.get(lastReadMessageId);
-                                }
-
-                                callback.onSucc(c);
-                            }
-
-                            @Override
-                            public void onFail(@Nullable String failReason) {
-                                callback.onFail(failReason);
-                            }
-                        });
-                    } else {
-                        callback.onSucc(c);
                     }
-                } else {
-                    callback.onFail("User Conversation not found");
-                }
-            }
 
-            @Override
-            public void onQueryError(Error reason) {
-                if (callback != null) {
-                    callback.onFail(reason.getMessage());
-                }
-            }
-        });
+                    @Override
+                    public void onLambdaFail(Error error) {
+
+                        if (callback != null) {
+                            callback.onFail(error.getMessage());
+                        }
+                    }
+                });
     }
 
     /**
@@ -554,124 +483,38 @@ public final class ChatContainer {
     public void getConversations(@Nullable final GetCallback<List<Conversation>> callback,
                                   @NonNull final Boolean getLastMessages
     ) {
-        Query query = new Query(UserConversation.TYPE_KEY)
-                .equalTo(UserConversation.USER_KEY, skygear.getCurrentUser().getId())
-                .transientInclude(UserConversation.USER_KEY)
-                .transientInclude(UserConversation.CONVERSATION_KEY);
-
-        this.skygear.getPublicDatabase().query(query, new RecordQueryResponseHandler() {
-            @Override
-            public void onQuerySuccess(Record[] records) {
-                if (callback == null) {
-                    // nothing to do
-                    return;
-                }
-
-                final List<Conversation> conversations = new LinkedList<>();;
-                if (records != null && records.length > 0) {
-                    for (Record eachRecord : records) {
-                        conversations.add(UserConversation.GetConversationByUserConversationRecord(eachRecord));
-                    }
-                }
-                if (getLastMessages) {
-                    List<String> messageIds = new ArrayList<String>();
-                    for (Conversation c : conversations) {
-                        String lastMessageId = c.getLastMessageId();
-                        if (lastMessageId != null) {
-                            messageIds.add(lastMessageId);
-                        }
-
-                        String lastReadMessageId = c.getLastReadMessageId();
-                        if (lastReadMessageId != null)
-                        {
-                            messageIds.add(lastReadMessageId);
+        this.skygear.callLambdaFunction("chat:get_conversations",
+                new Object[]{1, 50, getLastMessages},
+                new LambdaResponseHandler() {
+                    @Override
+                    public void onLambdaSuccess(JSONObject result) {
+                        try {
+                            JSONArray items = result.getJSONArray("conversations");
+                            ArrayList<Conversation> conversations = new ArrayList<>();
+                            int n = items.length();
+                            for (int i = 0; i < n; i++) {
+                                JSONObject o = items.getJSONObject(i);
+                                conversations.add(Conversation.fromJson(o));
+                            }
+                            if (callback != null) {
+                                callback.onSucc(conversations);
+                            }
+                        } catch (JSONException e) {
+                            if (callback != null) {
+                                callback.onFail(e.getMessage());
+                            }
                         }
                     }
-                    getMessagesByIds(messageIds, new GetCallback<List<Message>>() {
-                        @Override
-                        public void onSucc(@Nullable List<Message> messages) {
-                            Map<String, Message> mMap = new HashMap<String, Message>();
-                            for (Message m : messages) {
-                                mMap.put(m.getId(), m);
-                            }
-                            for (Conversation c: conversations)
-                            {
 
-                                if (c.getLastMessageId() != null)
-                                {
-                                    c.lastMessage = mMap.get(c.getLastMessageId());
+                    @Override
+                    public void onLambdaFail(Error error) {
 
-                                }
-
-                                if (c.getLastReadMessageId() != null)
-                                {
-                                    c.lastReadMessage = mMap.get(c.getLastReadMessageId());
-
-                                }
-                            }
-                            callback.onSucc(conversations);
+                        if (callback != null) {
+                            callback.onFail(error.getMessage());
                         }
-
-                        @Override
-                        public void onFail(@Nullable String failReason) {
-                            callback.onFail(failReason);
-                        }
-                    });
-                } else {
-                    callback.onSucc(conversations);
-                }
-            }
-
-            @Override
-            public void onQueryError(Error reason) {
-                if (callback != null) {
-                    callback.onFail(reason.getMessage());
-                }
-            }
-        });
+                    }
+                });
     }
-
-    /* --- User Conversation --- */
-
-    /**
-     * Gets user conversation relation by a conversation for current user.
-     *
-     * @param conversationId the ID of conversation
-     * @param callback       the callback
-     */
-
-    private void getUserConversation(@NonNull final String conversationId,
-                                     @Nullable final GetCallback<UserConversation> callback) {
-        Query query = new Query(UserConversation.TYPE_KEY)
-                .equalTo(UserConversation.USER_KEY, skygear.getCurrentUser().getId())
-                .equalTo(UserConversation.CONVERSATION_KEY, conversationId)
-                .transientInclude(UserConversation.USER_KEY)
-                .transientInclude(UserConversation.CONVERSATION_KEY);
-
-        this.skygear.getPublicDatabase().query(query, new RecordQueryResponseHandler() {
-            @Override
-            public void onQuerySuccess(Record[] records) {
-                if (callback == null) {
-                    return;
-                }
-
-                if (records != null && records.length > 0) {
-                    final UserConversation uc = new UserConversation(records[0]);
-                    callback.onSucc(uc);
-                } else {
-                    callback.onFail("User Conversation not found");
-                }
-            }
-
-            @Override
-            public void onQueryError(Error reason) {
-                if (callback != null) {
-                    callback.onFail(reason.getMessage());
-                }
-            }
-        });
-    }
-
     /* --- Message --- */
 
     /**
@@ -729,52 +572,6 @@ public final class ChatContainer {
             }
         });
     }
-
-    /**
-     * Gets messages by ids.
-     *
-     * @param messageIds   List of message ids to be fetch
-     * @param callback     the callback
-     */
-    public void getMessagesByIds(@NonNull final List<String> messageIds,
-                                 @Nullable final GetCallback<List<Message>> callback) {
-
-        JSONArray msgJSON = new JSONArray(messageIds);
-        Object[] args = new Object[]{msgJSON};
-        this.skygear.callLambdaFunction("chat:get_messages_by_ids", args, new LambdaResponseHandler() {
-            @Override
-            public void onLambdaSuccess(JSONObject result) {
-                List<Message> messages = null;
-                JSONArray results = result.optJSONArray("results");
-
-                if (results != null) {
-                    messages = new ArrayList<>(results.length());
-
-                    for (int i = 0; i < results.length(); i++) {
-                        try {
-                            JSONObject object = results.getJSONObject(i);
-                            Record record = Record.fromJson(object);
-                            Message message = new Message(record);
-                            messages.add(message);
-                        } catch (JSONException e) {
-                            Log.e(TAG, "Fail to get message: " + e.getMessage());
-                        }
-                    }
-                }
-                if (callback != null) {
-                    callback.onSucc(messages);
-                }
-            }
-
-            @Override
-            public void onLambdaFail(Error reason) {
-                if (callback != null) {
-                    callback.onFail(reason.getMessage());
-                }
-            }
-        });
-    }
-
 
     /**
      * Send message.
@@ -943,21 +740,15 @@ public final class ChatContainer {
 
     private void saveMessageRecord(final Record message,
                                    @Nullable final SaveCallback<Message> callback) {
-        try {
-            this.skygear.getPrivateDatabase().save(
-                    message,
-                    new SaveResponseAdapter<Message>(callback) {
-                        @Override
-                        public Message convert(Record record) {
-                            return new Message(record);
-                        }
+        this.skygear.getPublicDatabase().save(
+                message,
+                new SaveResponseAdapter<Message>(callback) {
+                    @Override
+                    public Message convert(Record record) {
+                        return new Message(record);
                     }
-            );
-        } catch (AuthenticationException e) {
-            if (callback != null) {
-                callback.onFail(e.getMessage());
-            }
-        }
+                }
+        );
     }
 
     private void saveMessageRecord(final Record message,

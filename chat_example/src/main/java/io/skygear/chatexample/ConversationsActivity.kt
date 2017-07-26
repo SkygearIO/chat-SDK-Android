@@ -190,7 +190,7 @@ class ConversationsActivity : AppCompatActivity() {
     fun updateAdmins(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
         f.setOnOkBtnClickedListener { ids ->
-            mChatContainer.setConversationAdminIds(c, HashSet(ids), object : SaveCallback<Conversation> {
+            mChatContainer.addConversationAdmins(c, ids, object : SaveCallback<Conversation> {
                 override fun onSucc(new: Conversation?) {
                     mAdapter.updateConversation(c, new)
                 }
@@ -206,7 +206,7 @@ class ConversationsActivity : AppCompatActivity() {
     fun updateParticipants(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_participants), c.participantIds)
         f.setOnOkBtnClickedListener { ids ->
-            mChatContainer.setConversationParticipants(c, HashSet(ids), object : SaveCallback<Conversation> {
+            mChatContainer.addConversationParticipants(c, ids, object : SaveCallback<Conversation> {
                 override fun onSucc(new: Conversation?) {
                     mAdapter.updateConversation(c, new)
                 }

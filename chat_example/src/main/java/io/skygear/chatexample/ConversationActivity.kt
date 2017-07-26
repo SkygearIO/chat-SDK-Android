@@ -80,7 +80,7 @@ class ConversationActivity : AppCompatActivity() {
         val serializedConversation   = intent.getStringExtra(CONVERSATION_KEY)
         val unreadCount              = intent.getIntExtra(UNREAD_COUNT_KEY, 0)
         val lastReadMessageIdKey     = intent.getStringExtra(LAST_READ_MESSAGE_ID_KEY)
-        mConversation = Conversation.fromJson(JSONObject(serializedConversation), unreadCount, lastReadMessageIdKey)
+        mConversation = Conversation.fromJson(JSONObject(serializedConversation))
 
         mConversationRv = findViewById(R.id.conversation_rv) as RecyclerView
         mConversationRv?.adapter = mAdapter
