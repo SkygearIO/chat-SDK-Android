@@ -245,9 +245,21 @@ public final class ChatContainer {
 
     }
 
-
     /**
      * Add conversation admin.
+     *
+     * @param conversation the conversation
+     * @param adminId      the admin id
+     * @param callback     the callback
+     */
+    public void addConversationAdmin(@NonNull final Conversation conversation,
+                                     @NonNull final String adminId,
+                                     @Nullable final SaveCallback<Conversation> callback) {
+        addConversationAdmins(conversation, Arrays.asList(adminId), callback);
+    }
+
+    /**
+     * Add conversation admins.
      *
      * @param conversation the conversation
      * @param adminIds     the admin ids
@@ -260,21 +272,34 @@ public final class ChatContainer {
     }
 
     /**
-     * Remove conversation admin.
+     * Remove conversation admins.
      *
      * @param conversation the conversation
      * @param adminIds      the admin ids
      * @param callback     the callback
      */
-    public void removeConversationAdmin(@NonNull final Conversation conversation,
+    public void removeConversationAdmins(@NonNull final Conversation conversation,
                                         @NonNull final List<String> adminIds,
                                         @Nullable final SaveCallback<Conversation> callback) {
         updateConversationMembership(conversation, "chat:remove_admins", adminIds, callback);
     }
 
+    /**
+     * Remove conversation admin.
+     *
+     * @param conversation the conversation
+     * @param adminId      the admin id
+     * @param callback     the callback
+     */
+    public void removeConversationAdmin(@NonNull final Conversation conversation,
+                                         @NonNull final String adminId,
+                                         @Nullable final SaveCallback<Conversation> callback) {
+        removeConversationAdmins(conversation, Arrays.asList(adminId), callback);
+    }
+
 
     /**
-     * Add conversation participant.
+     * Add conversation participants.
      *
      * @param conversation  the conversation
      * @param participantIds the participant ids
@@ -287,16 +312,42 @@ public final class ChatContainer {
     }
 
     /**
-     * Remove conversation participant.
+     * Add conversation participant.
+     *
+     * @param conversation  the conversation
+     * @param participantId the participant id
+     * @param callback      the callback
+     */
+    public void addConversationParticipant(@NonNull final Conversation conversation,
+                                            @NonNull final String participantId,
+                                            @Nullable final SaveCallback<Conversation> callback) {
+        addConversationParticipants(conversation, Arrays.asList(participantId), callback);
+    }
+
+    /**
+     * Remove conversation participants.
      *
      * @param conversation  the conversation
      * @param participantIds the participant ids
      * @param callback      the callback
      */
-    public void removeConversationParticipant(@NonNull final Conversation conversation,
-                                              @NonNull final List<String> participantIds,
-                                              @Nullable final SaveCallback<Conversation> callback) {
+    public void removeConversationParticipants(@NonNull final Conversation conversation,
+                                               @NonNull final List<String> participantIds,
+                                               @Nullable final SaveCallback<Conversation> callback) {
         updateConversationMembership(conversation, "chat:remove_participants", participantIds, callback);
+    }
+
+    /**
+     * Remove conversation participant.
+     *
+     * @param conversation  the conversation
+     * @param participantId the participant id
+     * @param callback      the callback
+     */
+    public void removeConversationParticipant(@NonNull final Conversation conversation,
+                                              @NonNull final String participantId,
+                                              @Nullable final SaveCallback<Conversation> callback) {
+        removeConversationParticipants(conversation, Arrays.asList(participantId), callback);
     }
 
     /**
