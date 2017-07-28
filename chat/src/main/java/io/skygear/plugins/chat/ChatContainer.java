@@ -397,6 +397,31 @@ public final class ChatContainer {
     }
 
     /**
+     * Delete a conversation.
+     *
+     * @param conversation  the conversation
+     * @param callback     the callback
+     */
+    public void deleteConversation(@NonNull final Conversation conversation,
+                                  @Nullable final DeleteCallback<Conversation> callback) {
+        this.skygear.callLambdaFunction("chat:delete_conversation",
+                new Object[]{conversation.getId()},
+                new LambdaResponseHandler() {
+                    @Override
+                    public void onLambdaSuccess(JSONObject result) {
+                        callback.onSucc(conversation);
+                    }
+
+                    @Override
+                    public void onLambdaFail(Error reason) {
+                        if (callback != null) {
+                            callback.onFail(reason.getMessage());
+                        }
+                    }
+                });
+    }
+
+    /**
      * Update a conversation.
      *
      * @param conversation the conversation

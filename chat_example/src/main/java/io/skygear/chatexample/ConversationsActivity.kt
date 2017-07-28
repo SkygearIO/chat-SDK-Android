@@ -125,8 +125,9 @@ class ConversationsActivity : AppCompatActivity() {
             1 -> viewMeta(c)
             2 -> edit(c)
             3 -> confirmLeave(c)
-            4 -> updateAdmins(c)
-            5 -> updateParticipants(c)
+            4 -> confirmDelete(c)
+            5 -> updateAdmins(c)
+            6 -> updateParticipants(c)
         } })
         val alert = builder.create()
         alert.show()
@@ -186,6 +187,35 @@ class ConversationsActivity : AppCompatActivity() {
             }
         } )
     }
+
+    fun confirmDelete(c: Conversation) {
+        AlertDialog.Builder(this)
+                .setTitle(R.string.confirm)
+                .setMessage(R.string.are_your_sure_to_delete_conversation)
+                .setPositiveButton(R.string.yes) { dialog, which -> delete(c) }
+                .setNegativeButton(R.string.no, null).show()
+    }
+
+    fun delete(c: Conversation) {
+        val failAlert = AlertDialog.Builder(this)
+                .setTitle("Oops")
+                .setNeutralButton(R.string.dismiss, null)
+                .create()
+        mChatContainer.deleteConversation(c, object : DeleteCallback<Conversation> {
+            override fun onFail(reason: String?) {
+                val alertMessage = "Fail to delete the conversation: " + reason
+                Log.w(LOG_TAG, alertMessage)
+                failAlert.setMessage(alertMessage)
+                failAlert.show()
+            }
+
+            override fun onSucc(result: Conversation?) {
+                Log.i(LOG_TAG, "Successfully delete the conversation")
+                getAllConversations()
+            }
+        } )
+    }
+
 
     fun updateAdmins(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
