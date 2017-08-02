@@ -403,13 +403,13 @@ public final class ChatContainer {
      * @param callback     the callback
      */
     public void deleteConversation(@NonNull final Conversation conversation,
-                                  @Nullable final DeleteCallback<Conversation> callback) {
+                                  @Nullable final DeleteCallback<Boolean> callback) {
         this.skygear.callLambdaFunction("chat:delete_conversation",
                 new Object[]{conversation.getId()},
                 new LambdaResponseHandler() {
                     @Override
                     public void onLambdaSuccess(JSONObject result) {
-                        callback.onSucc(conversation);
+                        callback.onSucc(true);
                     }
 
                     @Override

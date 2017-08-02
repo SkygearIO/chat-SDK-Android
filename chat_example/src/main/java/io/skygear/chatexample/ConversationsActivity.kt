@@ -201,7 +201,7 @@ class ConversationsActivity : AppCompatActivity() {
                 .setTitle("Oops")
                 .setNeutralButton(R.string.dismiss, null)
                 .create()
-        mChatContainer.deleteConversation(c, object : DeleteCallback<Conversation> {
+        mChatContainer.deleteConversation(c, object : DeleteCallback<Boolean> {
             override fun onFail(reason: String?) {
                 val alertMessage = "Fail to delete the conversation: " + reason
                 Log.w(LOG_TAG, alertMessage)
@@ -209,7 +209,7 @@ class ConversationsActivity : AppCompatActivity() {
                 failAlert.show()
             }
 
-            override fun onSucc(result: Conversation?) {
+            override fun onSucc(result: Boolean?) {
                 Log.i(LOG_TAG, "Successfully delete the conversation")
                 getAllConversations()
             }
