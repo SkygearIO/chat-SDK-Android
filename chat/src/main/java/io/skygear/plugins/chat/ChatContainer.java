@@ -613,7 +613,7 @@ public final class ChatContainer {
             limitCount = GET_MESSAGES_DEFAULT_LIMIT;
         }
 
-        Object[] args = new Object[]{conversation.getId(), limitCount, beforeTimeISO8601, order};
+        Object[] args = new Object[]{conversation.getId(), limitCount, beforeTimeISO8601};
         this.skygear.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {
