@@ -83,12 +83,16 @@
         <item>View Meta</item>
         <item>Edit</item>
         <item>Leave</item>
+        <item>Delete</item>
         <item>Update Admins</item>
         <item>Update Participants</item>
     </string-array>
 
     <!-- intent title for selecting pic -->
     <string name="select_image">Select Image</string>
+
+    <!-- confirm string for log out -->
+    <string name="are_your_sure_to_delete_conversation">Are you sure to delete the conversation?</string>
 
     <!-- confirm string for log out -->
     <string name="are_your_sure_to_leave_conversation">Are you sure to leave the conversation?</string>
