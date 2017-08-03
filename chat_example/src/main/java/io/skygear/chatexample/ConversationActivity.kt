@@ -157,7 +157,7 @@ class ConversationActivity : AppCompatActivity() {
     }
 
     fun updateTypingIndicatorTextView() {
-        val currentUserId = mSkygear.currentUser.id
+        val currentUserId = mSkygear.auth.currentUser.id
         val typingUserCount = mTypingStates
                 .filter { it.key != currentUserId && it.value == Typing.State.BEGIN }
                 .size
@@ -196,7 +196,7 @@ class ConversationActivity : AppCompatActivity() {
     }
 
     private fun sendTypingState(state : Typing.State) {
-        val currentUserId = mSkygear.currentUser.id
+        val currentUserId = mSkygear.auth.currentUser.id
         val currentUserState = mTypingStates[currentUserId] ?: Typing.State.FINISHED
         if (currentUserState != state) {
             mChatContainer.sendTypingIndicator(mConversation!!, state)

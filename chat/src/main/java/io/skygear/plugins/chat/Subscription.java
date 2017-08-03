@@ -9,7 +9,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.skygear.skygear.Pubsub;
+import io.skygear.skygear.PubsubContainer;
+import io.skygear.skygear.PubsubHandler;
 
 /**
  * The Conversation Subscription.
@@ -19,7 +20,7 @@ final class Subscription {
 
     private final String conversationId;
     private final String channel;
-    private final Pubsub.Handler handler;
+    private final PubsubHandler handler;
     private final Map<String, SubscriptionCallback> callbackMap;
 
     /**
@@ -37,7 +38,7 @@ final class Subscription {
         this.callbackMap = new HashMap<>();
 
         this.addCallBack(callback);
-        this.handler = new Pubsub.Handler() {
+        this.handler = new PubsubHandler() {
             @Override
             public void handle(JSONObject data) {
                 if (data != null) {
@@ -69,7 +70,7 @@ final class Subscription {
      *
      * @param pubsub the pubsub
      */
-    void attach(final Pubsub pubsub) {
+    void attach(final PubsubContainer pubsub) {
         pubsub.subscribe(channel, this.handler);
     }
 
@@ -78,7 +79,7 @@ final class Subscription {
      *
      * @param pubsub the pubsub
      */
-    void detach(final Pubsub pubsub) {
+    void detach(final PubsubContainer pubsub) {
         pubsub.unsubscribe(channel, this.handler);
     }
 

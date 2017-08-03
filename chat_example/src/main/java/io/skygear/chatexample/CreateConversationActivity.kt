@@ -23,7 +23,7 @@ class CreateConversationActivity : AppCompatActivity() {
     init {
         mSkygear = Container.defaultContainer(this)
         mChatContainer = ChatContainer.getInstance(mSkygear)
-        mAdapter = ChatUsesAdapter(mSkygear?.currentUser?.id)
+        mAdapter = ChatUsesAdapter(mSkygear.auth.currentUser.id)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +66,7 @@ class CreateConversationActivity : AppCompatActivity() {
     fun createConversation(users: List<ChatUser>?, title: String?) {
         if (users != null && users.isNotEmpty()) {
             val participantIds = users.map { it.id }.toMutableSet()
-            val currentUser = mSkygear.currentUser
+            val currentUser = mSkygear.auth.currentUser
             if (currentUser != null) {
                 participantIds.add(currentUser.id)
             }

@@ -7,10 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.text.Editable
 import android.widget.Button
 import android.widget.EditText
-import io.skygear.skygear.AuthResponseHandler
-import io.skygear.skygear.Container
-import io.skygear.skygear.Error
-import io.skygear.skygear.User
+import io.skygear.skygear.*
 
 class LogInActivity : AppCompatActivity() {
     private val LOG_TAG: String = "LogInActivity"
@@ -41,8 +38,8 @@ class LogInActivity : AppCompatActivity() {
             loading.setMessage(getString(R.string.logging_in))
             loading.show()
 
-            mSkygear?.loginWithUsername(username?.toString(), password?.toString(), object : AuthResponseHandler() {
-                override fun onAuthSuccess(user: User) {
+            mSkygear?.auth?.loginWithUsername(username?.toString(), password?.toString(), object : AuthResponseHandler() {
+                override fun onAuthSuccess(user: Record) {
                     loading.dismiss()
                     loginSuccess()
                 }

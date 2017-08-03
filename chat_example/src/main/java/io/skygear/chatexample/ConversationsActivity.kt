@@ -93,7 +93,7 @@ class ConversationsActivity : AppCompatActivity() {
         loading.setMessage(getString(R.string.logging_out))
         loading.show()
 
-        mSkygear.logout(object : LogoutResponseHandler() {
+        mSkygear.auth.logout(object : LogoutResponseHandler() {
             override fun onLogoutSuccess() {
                 loading.dismiss()
 

@@ -41,7 +41,7 @@ dependencies {
     compile 'com.android.support:support-annotations:23.4.0'
     compile 'joda-time:joda-time:2.9.4'
 
-    compile 'io.skygear:skygear:0.22.0'
+    compile 'io.skygear:skygear:1.1.0-alpha.0'
 }
 
 task generateSourcesJar(type: Jar) {
