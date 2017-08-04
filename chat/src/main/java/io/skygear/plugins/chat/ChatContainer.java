@@ -26,12 +26,14 @@ import java.util.UUID;
 
 import io.skygear.skygear.Asset;
 import io.skygear.skygear.AssetPostRequest;
+import io.skygear.skygear.AssetSerializer;
 import io.skygear.skygear.AuthenticationException;
 import io.skygear.skygear.Container;
 import io.skygear.skygear.Database;
 import io.skygear.skygear.Error;
 import io.skygear.skygear.LambdaResponseHandler;
-import io.skygear.skygear.Pubsub;
+import io.skygear.skygear.PubsubContainer;
+import io.skygear.skygear.PubsubHandler;
 import io.skygear.skygear.Query;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordQueryResponseHandler;
@@ -132,7 +134,7 @@ public final class ChatContainer {
                                          @Nullable final Map<String, Object> metadata,
                                          @Nullable final SaveCallback<Conversation> callback) {
         Set<String> participantIds = new HashSet<>();
-        participantIds.add(this.skygear.getCurrentUser().getId());
+        participantIds.add(this.skygear.getAuth().getCurrentUser().getId());
         participantIds.add(participantId);
 
         Map<Conversation.OptionKey, Object> options = new HashMap<>();
@@ -592,7 +594,6 @@ public final class ChatContainer {
                 });
     }
     /* --- Message --- */
-
     /**
      * Gets messages.
      *
@@ -830,7 +831,7 @@ public final class ChatContainer {
     private void saveMessageRecord(final Record message,
                                    final Asset asset,
                                    @Nullable final SaveCallback<Message> callback) {
-        this.skygear.uploadAsset(asset, new AssetPostRequest.ResponseHandler() {
+        this.skygear.getPublicDatabase().uploadAsset(asset, new AssetPostRequest.ResponseHandler() {
             @Override
             public void onPostSuccess(Asset asset, String response) {
                 message.set("attachment", asset);
@@ -924,7 +925,7 @@ public final class ChatContainer {
      */
     public void subscribeTypingIndicator(@NonNull Conversation conversation,
                                          @Nullable final TypingSubscriptionCallback callback) {
-        final Pubsub pubsub = this.skygear.getPubsub();
+        final PubsubContainer pubsub = this.skygear.getPubsub();
         final String conversationId = conversation.getId();
 
         if (typingSubscription.get(conversationId) == null) {
@@ -959,7 +960,7 @@ public final class ChatContainer {
      * @param conversation the conversation
      */
     public void unsubscribeTypingIndicator(@NonNull Conversation conversation) {
-        final Pubsub pubsub = this.skygear.getPubsub();
+        final PubsubContainer pubsub = this.skygear.getPubsub();
         String conversationId = conversation.getId();
         Subscription subscription = typingSubscription.get(conversationId);
 
@@ -1003,7 +1004,7 @@ public final class ChatContainer {
      */
     public void subscribeConversationMessage(@NonNull final Conversation conversation,
                                              @Nullable final MessageSubscriptionCallback callback) {
-        final Pubsub pubsub = this.skygear.getPubsub();
+        final PubsubContainer pubsub = this.skygear.getPubsub();
         final String conversationId = conversation.getId();
 
         if (messageSubscription.get(conversationId) == null) {
@@ -1038,7 +1039,7 @@ public final class ChatContainer {
      * @param conversation the conversation
      */
     public void unsubscribeConversationMessage(@NonNull final Conversation conversation) {
-        final Pubsub pubsub = this.skygear.getPubsub();
+        final PubsubContainer pubsub = this.skygear.getPubsub();
         String conversationId = conversation.getId();
         Subscription subscription = messageSubscription.get(conversationId);
 

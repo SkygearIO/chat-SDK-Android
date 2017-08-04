@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Button
 import io.skygear.skygear.Container
-import io.skygear.skygear.User
+import io.skygear.skygear.Record
 
 class MainActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "MainActivity"
@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        val currentUser: User? = mSkygear?.getCurrentUser()
+        val currentUser: Record? = mSkygear?.auth?.currentUser
         if (currentUser != null) {
             startActivity(Intent(this, ConversationsActivity::class.java))
 

@@ -56,7 +56,7 @@ class UserIdsFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         mUserIdsRv = view?.findViewById(R.id.user_ids_rv) as RecyclerView
-        mAdapter = UserIdsAdapter(mSkygear.currentUser?.id)
+        mAdapter = UserIdsAdapter(mSkygear.auth.currentUser?.id)
         mUserIdsRv?.adapter = mAdapter
         mUserIdsRv?.layoutManager = LinearLayoutManager(activity)
 

@@ -10,7 +10,8 @@ import android.widget.EditText
 import io.skygear.skygear.AuthResponseHandler
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
-import io.skygear.skygear.User
+import io.skygear.skygear.Record
+
 
 class SignUpActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "SignUpActivity"
@@ -41,8 +42,8 @@ class SignUpActivity : AppCompatActivity() {
             loading.setMessage(getString(R.string.signing_up))
             loading.show()
 
-            mSkygear?.signupWithUsername(username?.toString(), password?.toString(), object : AuthResponseHandler() {
-                override fun onAuthSuccess(user: User) {
+            mSkygear?.auth?.signupWithUsername(username?.toString(), password?.toString(), object : AuthResponseHandler() {
+                override fun onAuthSuccess(user: Record) {
                     loading.dismiss()
                     signupSuccess()
                 }
