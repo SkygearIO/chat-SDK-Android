@@ -600,11 +600,13 @@ public final class ChatContainer {
      * @param conversation the conversation
      * @param limit        the limit
      * @param before       the before
+     * @param order        the order, either 'edited_at' or '_created_at'
      * @param callback     the callback
      */
     public void getMessages(@NonNull final Conversation conversation,
                             final int limit,
                             @Nullable final Date before,
+                            @Nullable final String order,
                             @Nullable final GetCallback<List<Message>> callback) {
         int limitCount = limit;
         String beforeTimeISO8601 = DateUtils.toISO8601(before != null ? before : new Date());
@@ -613,7 +615,7 @@ public final class ChatContainer {
             limitCount = GET_MESSAGES_DEFAULT_LIMIT;
         }
 
-        Object[] args = new Object[]{conversation.getId(), limitCount, beforeTimeISO8601};
+        Object[] args = new Object[]{conversation.getId(), limitCount, beforeTimeISO8601, order};
         this.skygear.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {

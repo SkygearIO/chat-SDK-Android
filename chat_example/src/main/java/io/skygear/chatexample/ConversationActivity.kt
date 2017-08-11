@@ -204,7 +204,7 @@ class ConversationActivity : AppCompatActivity() {
     }
 
     private fun getAllMessages() {
-        mChatContainer.getMessages(mConversation!!, MESSAGES_LIMIT, Date(),
+        mChatContainer.getMessages(mConversation!!, MESSAGES_LIMIT, Date(), null,
                 object : GetCallback<List<Message>> {
                     override fun onSucc(list: List<Message>?) {
                         onReceiveInitialMessages(list)
