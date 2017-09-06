@@ -34,21 +34,10 @@ script:
   # - ./gradlew :chat:connectedAndroidTest --info --stacktrace
 
 before_deploy:
-  - ./gradlew :chat:generateJavadocs
+  - pip install https://github.com/SkygearIO/skygear-doc-tools/archive/master.zip
+  - generate-android-doc --pwd $PWD --src-dir ./chat/src/main/java --package io.skygear.plugins.chat --dst-dir ./javadoc
 
 deploy:
-  - provider: s3
-    access_key_id: $AWS_ACCESS_KEY_ID
-    secret_access_key: $AWS_SECRET_ACCESS_KEY
-    bucket: "docs.skygear.io"
-    skip_cleanup: true
-    acl: public_read
-    local_dir: "chat/build/docs/javadoc"
-    upload-dir: "android/plugins/chat/reference"
-    cache_control: "max-age=604800"
-    on:
-      repo: SkygearIO/chat-SDK-Android
-      tags: true
   - provider: script
     script: scripts/deploy.sh
     skip_cleanup: true

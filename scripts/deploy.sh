@@ -10,4 +10,10 @@ if [[ -z "$BINTRAY_API_KEY" ]]; then
   exit 1
 fi
 
+if [ "$TRAVIS_TAG" == "latest" ]; then
+fi
+
+
+publish-doc --platform android --pwd $PWD  --doc-dir $PWD/javadoc --bucket 'docs.skygear.io' --prefix '/android/chat/reference' --version 'latest' --distribution-id E31J8XF8IPV2V
+
 ./gradlew :chat:bintrayUpload
