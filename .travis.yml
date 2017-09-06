@@ -37,7 +37,6 @@ before_deploy:
   - sudo pip install awscli
   - sudo pip install https://github.com/SkygearIO/skygear-doc-tools/archive/master.zip
   - aws configure set preview.cloudfront true
-  - generate-android-doc --pwd $PWD --src-dir ./chat/src/main/java --package io.skygear.plugins.chat --dst-dir ./javadoc
 
 deploy:
   - provider: script

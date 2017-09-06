@@ -14,7 +14,9 @@ if [ "$TRAVIS_TAG" == "latest" ]; then
     echo $TRAVIS_TAG
 fi
 
-
+echo $PWD
+generate-android-doc --pwd $PWD --src-dir ./chat/src/main/java --package io.skygear.plugins.chat --dst-dir ./javadoc
+ls $PWD
 publish-doc --platform android --pwd $PWD  --doc-dir $PWD/javadoc --bucket 'docs.skygear.io' --prefix '/android/chat/reference' --version 'latest' --distribution-id E31J8XF8IPV2V
 
 ./gradlew :chat:bintrayUpload
