@@ -1,4 +1,9 @@
 #!/bin/bash -e
+generate_doc ()
+{
+  generate-android-doc --pwd $PWD --src-dir ./chat/src/main/java --package io.skygear.plugins.chat --dst-dir ./javadoc
+  publish-doc --platform android --pwd $PWD  --doc-dir $PWD/javadoc --bucket 'docs.skygear.io' --prefix '/android/chat/reference' --version $1 --distribution-id E31J8XF8IPV2V
+}
 
 if [[ -z "$BINTRAY_USER" ]]; then
   echo >&2 "Error: \$BINTRAY_USER is not set"
@@ -10,4 +15,11 @@ if [[ -z "$BINTRAY_API_KEY" ]]; then
   exit 1
 fi
 
-./gradlew :chat:bintrayUpload
+if [ -n "$TRAVIS_TAG" ]; then
+   generate_doc $TRAVIS_TAG
+  ./gradlew :chat:bintrayUpload
+fi
+
+if [ -n "$TRAVIS_BRANCH" ]; then
+   generate_doc $TRAVIS_BRANCH
+fi
