@@ -11,6 +11,7 @@ if [[ -z "$BINTRAY_API_KEY" ]]; then
 fi
 
 if [ "$TRAVIS_TAG" == "latest" ]; then
+    echo $TRAVIS_TAG
 fi
 
 
