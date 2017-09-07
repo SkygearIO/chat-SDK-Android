@@ -44,7 +44,6 @@ deploy:
     skip_cleanup: true
     on:
       repo: SkygearIO/chat-SDK-Android
-      all_branches: true
 
 after_deploy:
   - ./scripts/after-deploy.sh
