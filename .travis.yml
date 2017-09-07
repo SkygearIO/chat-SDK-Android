@@ -45,7 +45,6 @@ deploy:
     on:
       repo: SkygearIO/chat-SDK-Android
       all_branches: true
-      tags: true
 
 after_deploy:
   - ./scripts/after-deploy.sh
