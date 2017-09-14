@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 
@@ -40,8 +41,10 @@ android {
 dependencies {
     compile 'com.android.support:support-annotations:25.3.1'
     compile 'joda-time:joda-time:2.9.4'
+    compile 'com.github.stfalcon:chatkit:0.2.2'
 
     compile 'io.skygear:skygear:1.1.0-alpha.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 }
 
 task generateSourcesJar(type: Jar) {
@@ -89,4 +92,7 @@ bintray {
             vcsTag = skygearChatVersion
         }
     }
+}
+repositories {
+    mavenCentral()
 }
