@@ -42,7 +42,7 @@ public class Conversation {
     private Set<String> participantIds;
     private Message lastMessage;
     private Message lastReadMessage;
-    private static final String TAG = "SkygearChatSubscription";
+    private static final String TAG = "SkygearChatConversation";
 
     /**
      * Instantiates a Conversation from a Skygear Record and user information.
