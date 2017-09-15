@@ -6,7 +6,7 @@ import org.json.JSONException
 import io.skygear.plugins.chat.Conversation as ChatConversation
 
 class Conversation: IDialog<Message> {
-    private val chatConversation: ChatConversation
+    val chatConversation: ChatConversation
 
     constructor(record: Record) {
         try {

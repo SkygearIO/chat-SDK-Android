@@ -20,7 +20,7 @@ class User : IUser {
         var AvatarField = "avatar"
     }
 
-    private val chatUser: ChatUser
+    val chatUser: ChatUser
 
     constructor(record: Record) {
         try {

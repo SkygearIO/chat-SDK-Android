@@ -8,7 +8,7 @@ import io.skygear.plugins.chat.Message as ChatMessage
 
 class Message: IMessage {
 
-    private val chatMessage: ChatMessage
+    val chatMessage: ChatMessage
 
     constructor(record: Record) {
         try {

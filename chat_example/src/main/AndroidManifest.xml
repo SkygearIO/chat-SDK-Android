@@ -47,17 +47,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ConversationsActivity" />
         </activity>
-        <activity android:name=".ConversationActivity"
-                  android:label="@string/conversation"
-                  android:parentActivityName=".ConversationsActivity">
         <activity
-            android:name=".ConversationActivity"
-            android:label="@string/conversation"
-            android:parentActivityName=".ConversationsActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ConversationsActivity" />
-        </activity>
+            android:name="io.skygear.plugins.chat.ui.ConversationActivity" />
     </application>
 
 </manifest>
