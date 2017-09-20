@@ -184,7 +184,6 @@ public final class ChatContainer {
                 });
     }
 
-
     /**
      * Gets conversation.
      *

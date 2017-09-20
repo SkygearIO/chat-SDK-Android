@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.dokka-android'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 
@@ -20,12 +22,12 @@ if (project.rootProject.file('local.properties').exists()) {
 }
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.3"
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 23
+        targetSdkVersion 25
         versionCode 1
         versionName skygearChatFullVersion
     }
@@ -38,38 +40,43 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-annotations:23.4.0'
+    compile 'com.android.support:support-annotations:25.3.1'
     compile 'joda-time:joda-time:2.9.4'
+    compile 'com.github.stfalcon:chatkit:0.2.2'
 
     compile 'io.skygear:skygear:1.1.0-alpha.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 }
 
-task generateSourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier 'sources'
-}
-
-task generateJavadocs(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-
-afterEvaluate {
-    generateJavadocs.classpath += files(android.libraryVariants.collect { variant ->
-        variant.javaCompile.classpath.files
-    })
-}
-
-task generateJavadocsJar(type: Jar) {
-    from generateJavadocs.destinationDir
-    classifier 'javadoc'
-}
-
-generateJavadocsJar.dependsOn generateJavadocs
-artifacts {
-    archives generateJavadocsJar
-    archives generateSourcesJar
-}
+//
+// TODO: Generate Javadoc and Kotlin Doc using dokka
+//
+// task generateSourcesJar(type: Jar) {
+//     from android.sourceSets.main.java.srcDirs
+//     classifier 'sources'
+// }
+//
+// task generateJavadocs(type: Javadoc) {
+//     source = android.sourceSets.main.java.srcDirs
+//     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+// }
+//
+// afterEvaluate {
+//     generateJavadocs.classpath += files(android.libraryVariants.collect { variant ->
+//         variant.javaCompile.classpath.files
+//     })
+// }
+//
+// task generateJavadocsJar(type: Jar) {
+//     from generateJavadocs.destinationDir
+//     classifier 'javadoc'
+// }
+//
+// generateJavadocsJar.dependsOn generateJavadocs
+// artifacts {
+//     archives generateJavadocsJar
+//     archives generateSourcesJar
+// }
 
 bintray {
     user = bintrayUser
@@ -89,4 +96,7 @@ bintray {
             vcsTag = skygearChatVersion
         }
     }
+}
+repositories {
+    mavenCentral()
 }

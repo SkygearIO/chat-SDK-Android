@@ -1,6 +1,5 @@
 package io.skygear.plugins.chat;
 
-
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -14,8 +13,6 @@ import io.skygear.skygear.Record;
  */
 public class ChatUser {
     // TODO: Implement RecordWrapper when it is available
-
-    static final String NAME_KEY = "name";
 
     private final Record record;
 
@@ -36,16 +33,6 @@ public class ChatUser {
     @NonNull
     public String getId() {
         return record.getId();
-    }
-
-    /**
-     * Gets name.
-     *
-     * @return the name
-     */
-    @Nullable
-    public String getName() {
-        return (String) record.get(NAME_KEY);
     }
 
     /**

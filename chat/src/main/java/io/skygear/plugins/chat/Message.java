@@ -61,7 +61,6 @@ public class Message {
      * Sets body.
      *
      */
-    @Nullable
     public void setBody(String body) {
         record.set(BODY_KEY, body);
     }

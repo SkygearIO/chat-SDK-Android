@@ -42,7 +42,7 @@ public class Conversation {
     private Set<String> participantIds;
     private Message lastMessage;
     private Message lastReadMessage;
-    private static final String TAG = "SkygearChatSubscription";
+    private static final String TAG = "SkygearChatConversation";
 
     /**
      * Instantiates a Conversation from a Skygear Record and user information.
@@ -138,6 +138,11 @@ public class Conversation {
         return null;
     }
 
+    /**
+     * Gets the last message
+     *
+     * @return the last message
+     */
     @Nullable
     public Message getLastMessage() {
         if (lastMessage == null) {
@@ -154,9 +159,10 @@ public class Conversation {
         return lastReadMessage;
     }
 
-
-    /*
+    /**
      * Get Unread Count
+     *
+     * @return the unread count
      */
     public int getUnreadCount()
     {
