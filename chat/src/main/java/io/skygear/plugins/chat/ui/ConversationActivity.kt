@@ -2,10 +2,8 @@ package io.skygear.plugins.chat.ui
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.ui.model.Conversation
-import org.json.JSONObject
 import io.skygear.plugins.chat.Conversation as ChatConversation
 
 class ConversationActivity : AppCompatActivity() {
