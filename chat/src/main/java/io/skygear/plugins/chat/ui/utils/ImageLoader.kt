@@ -19,6 +19,6 @@ class ImageLoader(val context: Context): ImageLoader {
             return
         }
 
-        TODO("load from network")
+        Picasso.with(this.context).load(url).into(imageView)
     }
 }
