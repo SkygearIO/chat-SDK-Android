@@ -5,6 +5,7 @@ import com.stfalcon.chatkit.commons.models.IUser
 import org.json.JSONException
 
 import io.skygear.plugins.chat.ChatUser
+import io.skygear.plugins.chat.ui.utils.AvatarBuilder
 import io.skygear.skygear.Record
 
 class User : IUser {
@@ -12,7 +13,7 @@ class User : IUser {
         /**
          * The field name for display name of the user
          */
-        var DisplayNameField = "username"
+        var DisplayNameField = "name"
 
         /**
          * The field name for avatar of the user
@@ -34,16 +35,18 @@ class User : IUser {
         this.chatUser = u
     }
 
-    override fun getId(): String {
-        return this.chatUser.id
-    }
+    override fun getId() = this.chatUser.id
 
-    override fun getName(): String {
-        return this.chatUser.record.get(User.DisplayNameField) as String
-    }
+    override fun getName()
+        = this.chatUser.record.get(User.DisplayNameField) as String
 
     override fun getAvatar(): String {
-        return this.chatUser.record.get(User.AvatarField) as String
+        val avatarUrl = this.chatUser.record.get(User.AvatarField) as String?
+        if (avatarUrl != null) {
+            return avatarUrl
+        }
+
+        return AvatarBuilder.AvatarUriForName(this.name)
     }
 
 
