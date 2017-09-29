@@ -56,7 +56,7 @@ class Conversation: IDialog<Message> {
         }
 
         val dialogName = this.dialogName ?: ""
-        return AvatarBuilder.AvatarUriForName(dialogName)
+        return AvatarBuilder.defaultBuilder().avatarUriForName(dialogName)
     }
 
     override fun getUnreadCount(): Int = this.chatConversation.unreadCount

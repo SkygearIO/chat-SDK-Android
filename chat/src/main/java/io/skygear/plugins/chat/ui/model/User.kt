@@ -46,7 +46,7 @@ class User : IUser {
             return avatarUrl
         }
 
-        return AvatarBuilder.AvatarUriForName(this.name)
+        return AvatarBuilder.defaultBuilder().avatarUriForName(this.name)
     }
 
 

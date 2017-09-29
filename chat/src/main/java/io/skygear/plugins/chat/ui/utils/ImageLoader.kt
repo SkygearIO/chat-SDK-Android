@@ -5,7 +5,12 @@ import android.widget.ImageView
 import com.squareup.picasso.Picasso
 import com.stfalcon.chatkit.commons.ImageLoader
 
-class ImageLoader(val context: Context): ImageLoader {
+class ImageLoader(
+        val context: Context,
+        val avatarBuilder: AvatarBuilder
+): ImageLoader {
+
+    constructor(context: Context): this(context, AvatarBuilder.defaultBuilder())
 
     override fun loadImage(imageView: ImageView?, url: String?) {
         if (url == null) {
@@ -13,8 +18,8 @@ class ImageLoader(val context: Context): ImageLoader {
         }
 
         // Load from avatar builder
-        if (AvatarBuilder.isValidAvatarBuilderUri(url)) {
-            val bm = AvatarBuilder.AvatarForUri(url)
+        if (this.avatarBuilder.isValidAvatarBuilderUri(url)) {
+            val bm = this.avatarBuilder.avatarForUri(url)
             imageView?.setImageBitmap(bm)
             return
         }
