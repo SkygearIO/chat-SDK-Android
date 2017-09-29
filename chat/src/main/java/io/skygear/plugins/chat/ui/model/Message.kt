@@ -8,7 +8,8 @@ import io.skygear.plugins.chat.Message as ChatMessage
 
 class Message: IMessage {
 
-    private val chatMessage: ChatMessage
+    val chatMessage: ChatMessage
+    var author: User? = null
 
     constructor(record: Record) {
         try {
@@ -22,19 +23,11 @@ class Message: IMessage {
         this.chatMessage = m
     }
 
-    override fun getId(): String {
-        return this.chatMessage.id
-    }
+    override fun getId(): String = this.chatMessage.id
 
-    override fun getCreatedAt(): Date {
-        return this.chatMessage.record.createdAt
-    }
+    override fun getCreatedAt(): Date = this.chatMessage.record.createdAt
 
-    override fun getUser(): User {
-        TODO("get user from user cache")
-    }
+    override fun getUser(): User? = this.author
 
-    override fun getText(): String? {
-        return this.chatMessage.body
-    }
+    override fun getText(): String? = this.chatMessage.body
 }

@@ -3,10 +3,12 @@ package io.skygear.plugins.chat.ui.model
 import com.stfalcon.chatkit.commons.models.IDialog
 import io.skygear.skygear.Record
 import org.json.JSONException
+import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 
 class Conversation: IDialog<Message> {
-    private val chatConversation: ChatConversation
+    val chatConversation: ChatConversation
+    var userList: List<User> = LinkedList()
 
     constructor(record: Record) {
         try {
@@ -20,13 +22,9 @@ class Conversation: IDialog<Message> {
         this.chatConversation = c
     }
 
-    override fun getDialogName(): String? {
-        return this.chatConversation.title
-    }
+    override fun getDialogName(): String? = this.chatConversation.title
 
-    override fun getId(): String {
-        return this.chatConversation.id
-    }
+    override fun getId(): String = this.chatConversation.id
 
     override fun getLastMessage(): Message? {
         this.chatConversation.lastMessage?.let { lastChatMessage ->
@@ -37,19 +35,14 @@ class Conversation: IDialog<Message> {
     }
 
     override fun setLastMessage(message: Message?) {
-        TODO("set last message")
+        // TODO: set last message
     }
 
-    override fun getUsers(): MutableList<out User> {
-        TODO("get users from cache list")
-    }
+    override fun getUsers(): List<User> = this.userList
 
-    override fun getDialogPhoto(): String {
-        TODO("get the thumbnail of the conversation")
-    }
+    // TODO: get the thumbnail of the conversation
+    override fun getDialogPhoto(): String? = null
 
-    override fun getUnreadCount(): Int {
-        return this.chatConversation.unreadCount
-    }
+    override fun getUnreadCount(): Int = this.chatConversation.unreadCount
 
 }
