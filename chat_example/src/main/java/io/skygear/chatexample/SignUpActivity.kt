@@ -7,10 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.text.Editable
 import android.widget.Button
 import android.widget.EditText
-import io.skygear.skygear.AuthResponseHandler
-import io.skygear.skygear.Container
-import io.skygear.skygear.Error
-import io.skygear.skygear.Record
+import io.skygear.skygear.*
 
 
 class SignUpActivity : AppCompatActivity() {
@@ -36,27 +33,53 @@ class SignUpActivity : AppCompatActivity() {
     }
 
     fun signup(username: Editable?, password: Editable?) {
-        if (username?.isNullOrBlank() == false && password?.isNullOrBlank() == false) {
+        if (!username.isNullOrBlank() && !password.isNullOrBlank()) {
             val loading = ProgressDialog(this)
             loading.setTitle(R.string.loading)
             loading.setMessage(getString(R.string.signing_up))
             loading.show()
 
-            mSkygear?.auth?.signupWithUsername(username?.toString(), password?.toString(), object : AuthResponseHandler() {
-                override fun onAuthSuccess(user: Record) {
-                    loading.dismiss()
-                    signupSuccess()
-                }
 
-                override fun onAuthFail(reason: Error) {
-                    loading.dismiss()
+            val authFail = fun (_: Error?) {
+                loading.dismiss()
+                this@SignUpActivity.signupFail()
+            }
 
-                    signupFail()
-                }
-            })
+            val authSuccess = fun (userRecord: Record, username: String) {
+                userRecord.set("name", username)
+                this@SignUpActivity.mSkygear?.publicDatabase?.save(
+                        userRecord,
+                        object : RecordSaveResponseHandler() {
+                            override fun onPartiallySaveSuccess(
+                                    successRecords: MutableMap<String, Record>?,
+                                    errors: MutableMap<String, Error>?
+                            ) = Unit
+
+                            override fun onSaveSuccess(records: Array<out Record>?) {
+                                if (records != null && records.isNotEmpty()) {
+                                    loading.dismiss()
+                                    this@SignUpActivity.signupSuccess()
+                                }
+                            }
+
+                            override fun onSaveFail(error: Error?) = authFail(error)
+
+                        })
+                return
+            }
+
+            mSkygear?.auth?.signupWithUsername(
+                    username.toString(),
+                    password.toString(),
+                    object : AuthResponseHandler() {
+                        override fun onAuthSuccess(user: Record)
+                                = authSuccess(user, username.toString())
+
+                        override fun onAuthFail(reason: Error)
+                                = authFail(reason)
+                    })
         }
     }
-
 
     fun signupSuccess() {
         finish()
