@@ -21,13 +21,15 @@ import io.skygear.plugins.chat.ui.model.Message
 import io.skygear.plugins.chat.ui.utils.UserCache
 import io.skygear.skygear.Container
 import org.json.JSONObject
+import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
 class ConversationFragment : Fragment(),
         MessageInput.InputListener,
-        MessageInput.AttachmentsListener
-{
+        MessageInput.AttachmentsListener,
+        MessagesListAdapter.OnLoadMoreListener {
+
     companion object {
         val ConversationBundleKey = "CONVERSATION"
         private val TAG = "ConversationFragment"
@@ -45,6 +47,7 @@ class ConversationFragment : Fragment(),
     private var messagesListAdapter: MessagesListAdapter<Message>? = null
     private var messagesListViewReachBottomListener: MessagesListViewReachBottomListener? = null
 
+    private var messageLoadMoreBefore: Date = Date()
     private var messageSubscriptionRetryCount = 0
 
     override fun onAttach(context: Context?) {
@@ -89,7 +92,8 @@ class ConversationFragment : Fragment(),
             this.messagesListView?.addOnScrollListener(this.messagesListViewReachBottomListener)
         }
 
-        // TODO: Set On Load More Listener
+        this.messagesListAdapter?.setLoadMoreListener(this)
+
         // TODO: setup typing indicator subscription
 
         this.messageInput?.setInputListener(this)
@@ -111,22 +115,7 @@ class ConversationFragment : Fragment(),
                     }
                 }
 
-                this.skygearChat?.getMessages(
-                        conv.chatConversation,
-                        0,
-                        null,
-                        null,
-                        object : GetCallback<List<ChatMessage>> {
-                            override fun onSucc(chatMsgs: List<ChatMessage>?) {
-                                chatMsgs?.map { chatMsg -> Message(chatMsg) }?.let { msgs ->
-                                    this@ConversationFragment.addMessages(msgs, isAddToTop = true)
-                                }
-                            }
-
-                            override fun onFail(failReason: String?) {
-                                Log.w(TAG, "Failed to get message: %s".format(failReason))
-                            }
-                        })
+                this.fetchMessages()
             }
         }
 
@@ -138,6 +127,41 @@ class ConversationFragment : Fragment(),
         super.onPause()
 
         this.unsubscribeMessage()
+    }
+
+    private fun fetchMessages(
+            before: Date? = null,
+            complete: ((msgs: List<Message>?, error: String?) -> Unit)? = null
+    ) {
+        val successCallback = fun (chatMsgs: List<ChatMessage>?) {
+            val msgs = chatMsgs?.map { chatMsg -> Message(chatMsg) }
+            msgs?.let { this@ConversationFragment.addMessages(it, isAddToTop = true) }
+            msgs?.map { it.createdAt }?.min()?.let { newBefore ->
+                // update load more cursor
+                if (newBefore.before(this@ConversationFragment.messageLoadMoreBefore)) {
+                    this@ConversationFragment.messageLoadMoreBefore = newBefore
+                }
+            }
+
+            complete?.let { it(msgs, null) }
+        }
+
+        this.conversation?.let { conv ->
+            this.skygearChat?.getMessages(
+                    conv.chatConversation,
+                    0,
+                    before,
+                    null,
+                    object : GetCallback<List<ChatMessage>> {
+                        override fun onSucc(chatMsgs: List<ChatMessage>?)
+                                = successCallback(chatMsgs)
+
+                        override fun onFail(failReason: String?) {
+                            Log.w(TAG, "Failed to get message: %s".format(failReason))
+                            complete?.let { it(null, failReason) }
+                        }
+                    })
+        }
     }
 
     private fun addMessages(msgs: List<Message>,
@@ -238,6 +262,10 @@ class ConversationFragment : Fragment(),
 
     private fun onUpdateChatMessage(msg: Message) {
         this.updateMessages(listOf(msg))
+    }
+
+    override fun onLoadMore(page: Int, totalItemsCount: Int) {
+        this.fetchMessages(before = this.messageLoadMoreBefore)
     }
 
     // implement MessageInput.AttachmentsListener
