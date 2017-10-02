@@ -1,10 +1,15 @@
 package io.skygear.plugins.chat.ui
 
+import android.app.Activity
 import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -18,23 +23,26 @@ import io.skygear.plugins.chat.MessageSubscriptionCallback
 import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.Message
-import io.skygear.plugins.chat.ui.utils.ImageLoader
-import io.skygear.plugins.chat.ui.utils.UserCache
+import io.skygear.plugins.chat.ui.utils.*
+import io.skygear.skygear.Asset
 import io.skygear.skygear.Container
 import org.json.JSONObject
 import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
+
 class ConversationFragment : Fragment(),
         MessageInput.InputListener,
         MessageInput.AttachmentsListener,
-        MessagesListAdapter.OnLoadMoreListener {
-
+        MessagesListAdapter.OnLoadMoreListener,
+        DialogInterface.OnClickListener
+{
     companion object {
         val ConversationBundleKey = "CONVERSATION"
         private val TAG = "ConversationFragment"
         private val MESSAGE_SUBSCRIPTION_MAX_RETRY = 10
+        private val PICK_IMAGES_REQUEST = 5001
     }
 
     var conversation: Conversation? = null
@@ -272,7 +280,9 @@ class ConversationFragment : Fragment(),
 
     // implement MessageInput.AttachmentsListener
     override fun onAddAttachments() {
-        // TODO: add attachment
+        AlertDialog.Builder(activity)
+                .setItems(R.array.attachment_options, this)
+                .show()
     }
 
     // implement MessageInput.InputListener
@@ -290,6 +300,73 @@ class ConversationFragment : Fragment(),
         return true
     }
 
+    // implement DialogInterface.OnClickListener
+    override fun onClick(dialogInterface: DialogInterface, i: Int) {
+        when (i) {
+            0 -> {
+
+            }
+            1 -> {
+                val intent = Intent()
+                intent.type = "image/*"
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                intent.action = Intent.ACTION_GET_CONTENT
+                startActivityForResult(
+                        Intent.createChooser(intent, "Select Photos"), PICK_IMAGES_REQUEST)
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == PICK_IMAGES_REQUEST && resultCode == Activity.RESULT_OK) {
+            var clipData = data?.getClipData()
+                if(clipData == null){
+                    // selected one image
+                    var uri = data?.getData()
+                    val imageData = uri?.let { sendImageMessage(it) }
+                }else{
+                    // selected multiple images
+                    var i = 0
+                    var total = clipData.getItemCount()
+                    while (i < total) {
+                        var item = clipData.getItemAt(i)
+                        var uri = item.uri
+                        sendImageMessage(uri)
+                        i++
+                    }
+                }
+        }
+    }
+
+    fun sendImageMessage(imageUri: Uri) {
+        val imageData = getResizedBitmap(context, imageUri)
+        if (imageData == null) {
+            Log.w(TAG, "Failed to decode image from uri: %s".format(imageUri))
+            return
+        }
+        this.conversation?.chatConversation?.let { conv ->
+            var imageByteArray = bitmapToByteArray(imageData.image)
+            var thumbByteArray = bitmapToByteArray(imageData.thumbnail)
+
+            val meta = JSONObject()
+            val encoded = Base64.encodeToString(thumbByteArray, Base64.DEFAULT)
+            meta.put("thumbnail", encoded)
+            meta.put("thumbnailHeight", imageData.thumbnail.height)
+            meta.put("thumbnailWidth", imageData.thumbnail.width)
+
+            meta.put("height", imageData.image.height)
+            meta.put("width", imageData.image.width)
+
+            this.skygearChat?.sendMessage(
+                    conv,
+                    null,
+                    Asset("image.jpg", "image/jpeg", imageByteArray),
+                    meta,
+                    null
+            )
+        }
+    }
 }
 
 private class MessagesListViewReachBottomListener(

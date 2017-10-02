@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Chat</string>
+
+    <string-array name="attachment_options">
+        <item name="camera">Camera</item>
+        <item name="photos">Photos from image gallery</item>
+    </string-array>
 </resources>
