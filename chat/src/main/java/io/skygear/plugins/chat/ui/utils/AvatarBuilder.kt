@@ -66,7 +66,13 @@ class AvatarBuilder(
         val name = queries[NameQueryKey]?.first() as String
         val initials = TextUtils.join(
                 "",
-                name.split(' ', limit = 2).map { it.substring(0, 1) }
+                name.split(' ', limit = 2).map(fun(str): String {
+                    if (str.isNotEmpty()) {
+                        return str.substring(0, 1)
+                    }
+
+                    return ""
+                })
         )
 
         // retrieve from cache if available

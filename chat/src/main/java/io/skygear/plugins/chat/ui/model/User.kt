@@ -16,6 +16,11 @@ class User : IUser {
         var DisplayNameField = "name"
 
         /**
+         * The default display name when user's name field is absent.
+         */
+        var DefaultDisplayName = "Unknown"
+
+        /**
          * The field name for avatar of the user
          */
         var AvatarField = "avatar"
@@ -37,8 +42,14 @@ class User : IUser {
 
     override fun getId() = this.chatUser.id
 
-    override fun getName()
-        = this.chatUser.record.get(User.DisplayNameField) as String
+    override fun getName(): String {
+        val userName = this.chatUser.record.get(User.DisplayNameField) as String?
+        if (userName != null) {
+            return userName
+        }
+
+        return User.DefaultDisplayName
+    }
 
     override fun getAvatar(): String {
         val avatarUrl = this.chatUser.record.get(User.AvatarField) as String?
@@ -46,7 +57,9 @@ class User : IUser {
             return avatarUrl
         }
 
-        return AvatarBuilder.defaultBuilder().avatarUriForName(this.name)
+        val userName = this.chatUser.record.get(User.DisplayNameField) as String?
+        val userNameForAvatar = userName ?: ""
+        return AvatarBuilder.defaultBuilder().avatarUriForName(userNameForAvatar)
     }
 
 
