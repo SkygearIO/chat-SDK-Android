@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Chat</string>
-
     <string-array name="attachment_options">
         <item name="camera">Camera</item>
         <item name="photos">Photos from image gallery</item>
@@ -13,4 +12,5 @@
     <string name="camera_is_not_available">Camera is not available</string>
 
     <string name="close">Close</string>
+    <string name="slide_to_cancel">Slide to cancel</string>
 </resources>

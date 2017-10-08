@@ -16,14 +16,19 @@ import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
+import com.dewarder.holdinglibrary.HoldingButtonLayout
+import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
 import com.stfalcon.chatkit.messages.MessageHolders
-import com.stfalcon.chatkit.messages.MessageInput
 import com.stfalcon.chatkit.messages.MessagesList
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import io.skygear.plugins.chat.ChatContainer
@@ -32,11 +37,7 @@ import io.skygear.plugins.chat.MessageSubscriptionCallback
 import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.ui.holder.CustomOutcomingImageMessageViewHolder
 import io.skygear.plugins.chat.ui.holder.CustomOutcomingTextMessageViewHolder
-import io.skygear.plugins.chat.ui.model.Conversation
-import io.skygear.plugins.chat.ui.model.ImageMessage
-import io.skygear.plugins.chat.ui.model.Message
-import io.skygear.plugins.chat.ui.model.MessageFactory
-import io.skygear.plugins.chat.ui.model.User
+import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.utils.*
 import io.skygear.skygear.Asset
 import io.skygear.skygear.Container
@@ -47,10 +48,8 @@ import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
-
-class ConversationFragment : Fragment(),
-        MessageInput.InputListener,
-        MessageInput.AttachmentsListener,
+class ConversationFragment :
+        Fragment(),
         MessagesListAdapter.OnLoadMoreListener,
         MessagesListAdapter.OnMessageClickListener<Message>,
         DialogInterface.OnClickListener
@@ -67,7 +66,11 @@ class ConversationFragment : Fragment(),
     var conversation: Conversation? = null
 
     private var messagesListView: MessagesList? = null
-    private var messageInput: MessageInput? = null
+    private var addAttachmentButton: ImageButton? = null
+    private var messageSendButton: ImageButton? = null
+    private var messageEditText: EditText? = null
+    private var voiceButtonHolderHint: View? = null
+    private var voiceButtonHolder: HoldingButtonLayout? = null
 
     private var skygear: Container? = null
     private var skygearChat: ChatContainer? = null
@@ -100,7 +103,38 @@ class ConversationFragment : Fragment(),
         val view = inflater?.inflate(R.layout.conversation_view, container, false)
 
         this.messagesListView = view?.findViewById(R.id.messages_list) as MessagesList?
-        this.messageInput = view?.findViewById(R.id.message_input) as MessageInput?
+
+        this.addAttachmentButton = view?.findViewById(R.id.add_attachment_btn) as ImageButton?
+        this.addAttachmentButton?.setOnClickListener {
+            this@ConversationFragment.onAddAttachmentButtonClick()
+        }
+
+        this.messageSendButton = view?.findViewById(R.id.msg_send_btn) as ImageButton?
+        this.messageSendButton?.setOnClickListener {
+            this@ConversationFragment.onSendMessageButtonClick()
+        }
+
+        this.messageEditText = view?.findViewById(R.id.msg_edit_text) as EditText?
+        this.messageEditText?.addTextChangedListener(object: TextBaseWatcher() {
+            override fun afterTextChanged(s: Editable?) {
+                super.afterTextChanged(s)
+                this@ConversationFragment.onMessageEditTextChanged()
+            }
+        })
+
+        this.voiceButtonHolderHint = view?.findViewById(R.id.voice_recording_btn_holder_hint)
+        this.voiceButtonHolder = view?.findViewById(R.id.voice_recording_btn_holder) as HoldingButtonLayout?
+        this.voiceButtonHolder?.addListener(object: HoldingButtonLayoutBaseListener() {
+            override fun onExpand() {
+                super.onExpand()
+                this@ConversationFragment.onVoiceRecordingButtonPressedDown()
+            }
+
+            override fun onCollapse(isCancel: Boolean) {
+                super.onCollapse(isCancel)
+                this@ConversationFragment.onVoiceRecordingButtonPressedUp(isCancel)
+            }
+        })
 
         this.arguments?.let { args ->
             args.getString(ConversationBundleKey)?.let { convJson ->
@@ -136,9 +170,6 @@ class ConversationFragment : Fragment(),
         this.messagesListAdapter?.setOnMessageClickListener(this)
 
         // TODO: setup typing indicator subscription
-
-        this.messageInput?.setInputListener(this)
-        this.messageInput?.setAttachmentsListener(this)
 
         return view
     }
@@ -321,18 +352,60 @@ class ConversationFragment : Fragment(),
         this.fetchMessages(before = this.messageLoadMoreBefore)
     }
 
-    // implement MessageInput.AttachmentsListener
-    override fun onAddAttachments() {
+    fun onAddAttachmentButtonClick() {
+        // TODO: add attachment
         AlertDialog.Builder(activity)
                 .setItems(R.array.attachment_options, this)
                 .show()
     }
 
-    // implement MessageInput.InputListener
-    override fun onSubmit(input: CharSequence?): Boolean {
+    fun onSendMessageButtonClick() {
+        this.messageEditText?.text?.toString()?.let { msgContent ->
+            if (msgContent.isEmpty()) {
+                return
+            }
+
+            val success = this@ConversationFragment.onSendMessage(msgContent)
+            if (success) {
+                this@ConversationFragment.messageEditText?.setText("")
+            }
+        }
+    }
+
+    fun onMessageEditTextChanged() {
+        this.messageEditText?.text?.let { msgContent ->
+            if (msgContent.isEmpty()) {
+                this@ConversationFragment.voiceButtonHolder?.visibility = View.VISIBLE
+                this@ConversationFragment.messageSendButton?.visibility = View.INVISIBLE
+            } else {
+                this@ConversationFragment.voiceButtonHolder?.visibility = View.INVISIBLE
+                this@ConversationFragment.messageSendButton?.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    fun onVoiceRecordingButtonPressedDown() {
+        this.voiceButtonHolderHint?.visibility = View.VISIBLE
+        listOf(this.addAttachmentButton, this.messageEditText).map {
+            it?.visibility = View.INVISIBLE
+        }
+
+        // TODO: Start recording
+    }
+
+    fun onVoiceRecordingButtonPressedUp(isCancel: Boolean) {
+        this.voiceButtonHolderHint?.visibility = View.INVISIBLE
+        listOf(this.addAttachmentButton, this.messageEditText).map {
+            it?.visibility = View.VISIBLE
+        }
+
+        // TODO: Finish recording
+    }
+
+    fun onSendMessage(input: String): Boolean {
         this.conversation?.chatConversation?.let { conv ->
             val message = ChatMessage()
-            message.body = input?.toString()?.trim()
+            message.body = input.trim()
 
             val msg = Message(message)
             msg.author = User(this.skygear?.auth?.currentUser!!)
@@ -521,4 +594,24 @@ private class MessagesListViewReachBottomListener(
         val pastVisibleItems = this.layoutManager.findFirstVisibleItemPosition()
         this.isReachEnd = pastVisibleItems < BOTTOM_ITEM_THRESHOLD
     }
+}
+
+private abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
+    override fun onBeforeCollapse() {}
+
+    override fun onOffsetChanged(offset: Float, isCancel: Boolean) {}
+
+    override fun onBeforeExpand() {}
+
+    override fun onExpand() {}
+
+    override fun onCollapse(isCancel: Boolean) {}
+}
+
+private abstract class TextBaseWatcher: TextWatcher {
+    override fun afterTextChanged(s: Editable?) {}
+
+    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 }
