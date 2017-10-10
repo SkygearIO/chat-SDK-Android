@@ -45,7 +45,7 @@ fun getResizedBitmap(context: Context, uri: Uri): ImageData? {
 
 fun getBitmap(context: Context, uri: Uri, ratio: Double) : Bitmap {
     val bitmapOptions = BitmapFactory.Options()
-    bitmapOptions.inSampleSize = getPowerOfTwoForSampleRatio(ratio as Double)
+    bitmapOptions.inSampleSize = getPowerOfTwoForSampleRatio(ratio)
     bitmapOptions.inPreferredConfig = Bitmap.Config.ARGB_8888
 
     val input = context.getContentResolver().openInputStream(uri)

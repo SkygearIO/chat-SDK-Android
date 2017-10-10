@@ -352,9 +352,6 @@ class ConversationFragment : Fragment(),
             val meta = JSONObject()
             val encoded = Base64.encodeToString(thumbByteArray, Base64.DEFAULT)
             meta.put("thumbnail", encoded)
-            meta.put("thumbnailHeight", imageData.thumbnail.height)
-            meta.put("thumbnailWidth", imageData.thumbnail.width)
-
             meta.put("height", imageData.image.height)
             meta.put("width", imageData.image.width)
 
