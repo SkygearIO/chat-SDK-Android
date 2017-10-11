@@ -1,12 +1,20 @@
 package io.skygear.plugins.chat.ui.model
 
 import com.stfalcon.chatkit.commons.models.IDialog
+import io.skygear.plugins.chat.ui.utils.AvatarBuilder
 import io.skygear.skygear.Record
 import org.json.JSONException
 import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 
 class Conversation: IDialog<Message> {
+    companion object {
+        /**
+         * The field name for thumbnail of the conversation
+         */
+        var ThumbnailField = "thumbnail"
+    }
+
     val chatConversation: ChatConversation
     var userList: List<User> = LinkedList()
 
@@ -40,8 +48,16 @@ class Conversation: IDialog<Message> {
 
     override fun getUsers(): List<User> = this.userList
 
-    // TODO: get the thumbnail of the conversation
-    override fun getDialogPhoto(): String? = null
+    override fun getDialogPhoto(): String? {
+        val thumbnailUrl
+                = this.chatConversation.record.get(Conversation.ThumbnailField) as String?
+        if (thumbnailUrl != null) {
+            return thumbnailUrl
+        }
+
+        val dialogName = this.dialogName ?: ""
+        return AvatarBuilder.defaultBuilder().avatarUriForName(dialogName)
+    }
 
     override fun getUnreadCount(): Int = this.chatConversation.unreadCount
 

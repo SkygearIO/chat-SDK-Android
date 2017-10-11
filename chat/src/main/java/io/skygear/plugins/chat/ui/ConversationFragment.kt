@@ -18,6 +18,7 @@ import io.skygear.plugins.chat.MessageSubscriptionCallback
 import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.Message
+import io.skygear.plugins.chat.ui.utils.ImageLoader
 import io.skygear.plugins.chat.ui.utils.UserCache
 import io.skygear.skygear.Container
 import org.json.JSONObject
@@ -77,9 +78,10 @@ class ConversationFragment : Fragment(),
 
         this.activity.title = this.conversation?.dialogName
 
-        // TODO: add image loader
-        this.messagesListAdapter =
-                MessagesListAdapter(this.skygear?.auth?.currentUser?.id, null)
+        this.messagesListAdapter = MessagesListAdapter(
+                this.skygear?.auth?.currentUser?.id,
+                ImageLoader(this.activity)
+        )
         this.messagesListView?.setAdapter(this.messagesListAdapter)
 
         if (this.messagesListView?.layoutManager is LinearLayoutManager) {
