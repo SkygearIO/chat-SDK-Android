@@ -1,11 +1,18 @@
 package io.skygear.plugins.chat.ui
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
+import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -14,6 +21,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.stfalcon.chatkit.messages.MessageInput
 import com.stfalcon.chatkit.messages.MessagesList
 import com.stfalcon.chatkit.messages.MessagesListAdapter
@@ -27,6 +35,8 @@ import io.skygear.plugins.chat.ui.utils.*
 import io.skygear.skygear.Asset
 import io.skygear.skygear.Container
 import org.json.JSONObject
+import java.io.File
+import java.io.IOException
 import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
@@ -42,7 +52,9 @@ class ConversationFragment : Fragment(),
         val ConversationBundleKey = "CONVERSATION"
         private val TAG = "ConversationFragment"
         private val MESSAGE_SUBSCRIPTION_MAX_RETRY = 10
-        private val PICK_IMAGES_REQUEST = 5001
+        private val REQUEST_PICK_IMAGES = 5001
+        private val REQUEST_IMAGE_CAPTURE = 5002
+        private val REQUEST_CAMERA_PERMISSION = 5003
     }
 
     var conversation: Conversation? = null
@@ -58,6 +70,8 @@ class ConversationFragment : Fragment(),
 
     private var messageLoadMoreBefore: Date = Date()
     private var messageSubscriptionRetryCount = 0
+    private var mNeverAskAgain = false
+    private var mCameraPhotoUri: Uri? = null
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
@@ -304,7 +318,7 @@ class ConversationFragment : Fragment(),
     override fun onClick(dialogInterface: DialogInterface, i: Int) {
         when (i) {
             0 -> {
-
+                takePhotoFromCameraIntent()
             }
             1 -> {
                 val intent = Intent()
@@ -312,14 +326,14 @@ class ConversationFragment : Fragment(),
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                 intent.action = Intent.ACTION_GET_CONTENT
                 startActivityForResult(
-                        Intent.createChooser(intent, "Select Photos"), PICK_IMAGES_REQUEST)
+                        Intent.createChooser(intent, "Select Photos"), REQUEST_PICK_IMAGES)
             }
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PICK_IMAGES_REQUEST && resultCode == Activity.RESULT_OK) {
+        if (requestCode == REQUEST_PICK_IMAGES && resultCode == Activity.RESULT_OK) {
             var clipData = data?.getClipData()
                 if(clipData == null){
                     // selected one image
@@ -336,6 +350,28 @@ class ConversationFragment : Fragment(),
                         i++
                     }
                 }
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
+            mCameraPhotoUri?.let {
+                sendImageMessage(it)
+            }
+            mCameraPhotoUri = null
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                takePhotoFromCameraIntent();
+            } else {
+                var neverAskAgain = !ActivityCompat.shouldShowRequestPermissionRationale(
+                        activity, Manifest.permission.CAMERA) ||
+                        !ActivityCompat.shouldShowRequestPermissionRationale(
+                                activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                if (neverAskAgain) {
+                    mNeverAskAgain = true;
+                }
+            }
         }
     }
 
@@ -363,6 +399,70 @@ class ConversationFragment : Fragment(),
                     null
             )
         }
+    }
+
+    private fun takePhotoFromCameraIntent() {
+        if (checkOrRequestTakingPhotoPermissions()) {
+            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            if (intent.resolveActivity(activity.packageManager) != null) {
+                var photoFile: File? = null
+                try {
+                    photoFile = createImageFile(activity)
+                } catch (e: IOException) {
+                    // Error occurred while creating the File
+                }
+                if (photoFile != null) {
+                    mCameraPhotoUri = FileProvider.getUriForFile(activity,
+                            activity.packageName + ".fileprovider",
+                            photoFile)
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraPhotoUri)
+                    startActivityForResult(intent, REQUEST_IMAGE_CAPTURE)
+                }
+            } else {
+                Toast.makeText(
+                        activity,
+                        getString(R.string.camera_is_not_available),
+                        Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun checkOrRequestTakingPhotoPermissions() : Boolean {
+        var isPermissionWriteStorageGranted = ContextCompat.checkSelfPermission(
+                activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        var isPermissionCameraGranted = ContextCompat.checkSelfPermission(
+                activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        if (isPermissionCameraGranted && isPermissionWriteStorageGranted) {
+            return true;
+        }
+
+        if (mNeverAskAgain) {
+            var warningText = R.string.please_turn_on_camera_and_write_external_storage_permissions
+            if (isPermissionWriteStorageGranted) {
+                warningText = R.string.please_turn_on_camera_permission
+            }
+            if (isPermissionCameraGranted) {
+                warningText = R.string.please_turn_on_write_external_storage_permissions
+            }
+            Toast.makeText(
+                    activity,
+                    getString(warningText),
+                    Toast.LENGTH_SHORT).show()
+        } else {
+            var permissionsShouldAsk = ArrayList<String>()
+            if (!isPermissionCameraGranted) {
+                permissionsShouldAsk.add(Manifest.permission.CAMERA)
+            }
+            if (!isPermissionWriteStorageGranted) {
+                permissionsShouldAsk.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+
+            requestPermissions(
+                    permissionsShouldAsk.toTypedArray(),
+                    REQUEST_CAMERA_PERMISSION
+            )
+        }
+        return false
     }
 }
 
