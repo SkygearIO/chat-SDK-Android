@@ -22,6 +22,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessageInput
 import com.stfalcon.chatkit.messages.MessagesList
 import com.stfalcon.chatkit.messages.MessagesListAdapter
@@ -103,8 +104,12 @@ class ConversationFragment : Fragment(),
 
         this.activity.title = this.conversation?.dialogName
 
+        val messageHolder = MessageHolders()
+                .setOutcomingImageLayout(R.layout.item_custom_outcoming_image_message)
+
         this.messagesListAdapter = MessagesListAdapter(
                 this.skygear?.auth?.currentUser?.id,
+                messageHolder,
                 ImageLoader(this.activity)
         )
         this.messagesListView?.setAdapter(this.messagesListAdapter)
