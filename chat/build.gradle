@@ -44,6 +44,7 @@ dependencies {
     compile 'joda-time:joda-time:2.9.4'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.github.stfalcon:chatkit:0.2.2'
+    compile 'com.github.chrisbanes:PhotoView:2.0.0'
 
     compile 'io.skygear:skygear:1.1.0-alpha.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"

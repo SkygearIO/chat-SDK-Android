@@ -47,6 +47,7 @@ class ConversationFragment : Fragment(),
         MessageInput.InputListener,
         MessageInput.AttachmentsListener,
         MessagesListAdapter.OnLoadMoreListener,
+        MessagesListAdapter.OnMessageClickListener<Message>,
         DialogInterface.OnClickListener
 {
     companion object {
@@ -122,6 +123,8 @@ class ConversationFragment : Fragment(),
         }
 
         this.messagesListAdapter?.setLoadMoreListener(this)
+
+        this.messagesListAdapter?.setOnMessageClickListener(this)
 
         // TODO: setup typing indicator subscription
 
@@ -317,6 +320,13 @@ class ConversationFragment : Fragment(),
         }
 
         return true
+    }
+
+    override fun onMessageClick(message: Message?) {
+        message?.imageUrl?.let {
+            var intent = ImagePreviewActivity.newIntent(activity, it)
+            startActivity(intent)
+        }
     }
 
     // implement DialogInterface.OnClickListener
