@@ -9,6 +9,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.media.MediaMetadataRetriever
+import android.media.MediaRecorder
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
@@ -44,6 +46,13 @@ import io.skygear.skygear.Container
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import io.skygear.plugins.chat.*
+import io.skygear.plugins.chat.ui.model.Conversation
+import io.skygear.plugins.chat.ui.model.Message
+import io.skygear.plugins.chat.ui.utils.ImageLoader
+import io.skygear.plugins.chat.ui.utils.UserCache
+import java.io.BufferedInputStream
+import java.io.FileInputStream
 import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
@@ -61,6 +70,8 @@ class ConversationFragment :
         private val REQUEST_PICK_IMAGES = 5001
         private val REQUEST_IMAGE_CAPTURE = 5002
         private val REQUEST_CAMERA_PERMISSION = 5003
+        private val REQUEST_VOICE_RECORDING_PERMISSIONS = 5004
+        private val VOICE_RECORDING_PERMISSIONS = arrayOf(Manifest.permission.RECORD_AUDIO)
     }
 
     var conversation: Conversation? = null
@@ -74,13 +85,21 @@ class ConversationFragment :
 
     private var skygear: Container? = null
     private var skygearChat: ChatContainer? = null
+
     private var userCache: UserCache? = null
-    private var messageIDs: HashSet<String> = HashSet<String>()
+    private var messageIDs: HashSet<String> = HashSet()
+
+    private var voiceRecorder: MediaRecorder? = null
+    private var voiceRecordingFileName: String? = null
+
     private var messagesListAdapter: MessagesListAdapter<Message>? = null
     private var messagesListViewReachBottomListener: MessagesListViewReachBottomListener? = null
 
+    private var voiceRecordingPermissionGranted: Boolean = false
+
     private var messageLoadMoreBefore: Date = Date()
     private var messageSubscriptionRetryCount = 0
+
     private var mNeverAskAgain = false
     private var mCameraPhotoUri: Uri? = null
 
@@ -170,6 +189,12 @@ class ConversationFragment :
         this.messagesListAdapter?.setOnMessageClickListener(this)
 
         // TODO: setup typing indicator subscription
+
+        this.voiceRecordingPermissionGranted = ConversationFragment.VOICE_RECORDING_PERMISSIONS.map { permission ->
+            ActivityCompat.checkSelfPermission(this@ConversationFragment.activity, permission)
+        }.none {
+            it != PackageManager.PERMISSION_GRANTED
+        }
 
         return view
     }
@@ -390,7 +415,29 @@ class ConversationFragment :
             it?.visibility = View.INVISIBLE
         }
 
-        // TODO: Start recording
+        // check permission
+        if (!this.voiceRecordingPermissionGranted) {
+            this.requestPermissions(
+                    ConversationFragment.VOICE_RECORDING_PERMISSIONS,
+                    ConversationFragment.REQUEST_VOICE_RECORDING_PERMISSIONS
+            )
+            this.voiceButtonHolder?.cancel()
+            return
+        }
+
+        // start recording
+        val fileDir = this.activity.cacheDir.absolutePath
+        val fileName = "voice-${Date().time}.m4a"
+        this.voiceRecordingFileName = "$fileDir/$fileName"
+
+        this.voiceRecorder = MediaRecorder()
+        this.voiceRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
+        this.voiceRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+        this.voiceRecorder?.setOutputFile(voiceRecordingFileName)
+        this.voiceRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+
+        this.voiceRecorder?.prepare()
+        this.voiceRecorder?.start()
     }
 
     fun onVoiceRecordingButtonPressedUp(isCancel: Boolean) {
@@ -399,7 +446,54 @@ class ConversationFragment :
             it?.visibility = View.VISIBLE
         }
 
-        // TODO: Finish recording
+        // finish recording
+        this.voiceRecorder?.stop()
+        this.voiceRecorder?.release()
+        this.voiceRecorder = null
+
+        if (isCancel) {
+            File(this.voiceRecordingFileName!!).delete()
+            this.voiceRecordingFileName = null
+            return
+        }
+
+        val mmr = MediaMetadataRetriever()
+        mmr.setDataSource(this.voiceRecordingFileName!!)
+
+        val duration = Integer.parseInt(
+                mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))
+
+        val voiceRecordingFile = File(this.voiceRecordingFileName!!)
+        val bytes =  ByteArray(voiceRecordingFile.length().toInt())
+        val stream = BufferedInputStream(FileInputStream(voiceRecordingFile))
+        stream.read(bytes, 0, bytes.size)
+        stream.close()
+
+        this.conversation?.let { conv ->
+            val fileName = this@ConversationFragment.voiceRecordingFileName!!.split("/").last()
+            val asset = Asset(fileName, "audio/m4a", bytes)
+            val meta = JSONObject()
+            meta.put("length", duration)
+
+            this.skygearChat?.sendMessage(
+                    conv.chatConversation,
+                    null,
+                    asset,
+                    meta,
+                    object: SaveCallback<ChatMessage> {
+                        override fun onSucc(chatMsg: ChatMessage?) {
+                            voiceRecordingFile.delete()
+                        }
+
+                        override fun onFail(failReason: String?) {
+                            Log.e(
+                                    ConversationFragment.TAG,
+                                    "Failed to send voice message: $failReason"
+                            )
+                        }
+                    }
+            )
+        }
     }
 
     fun onSendMessage(input: String): Boolean {
@@ -472,16 +566,27 @@ class ConversationFragment :
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CAMERA_PERMISSION) {
-            if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                takePhotoFromCameraIntent();
-            } else {
-                var neverAskAgain = !ActivityCompat.shouldShowRequestPermissionRationale(
-                        activity, Manifest.permission.CAMERA) ||
-                        !ActivityCompat.shouldShowRequestPermissionRationale(
-                                activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                if (neverAskAgain) {
-                    mNeverAskAgain = true;
+        when (requestCode) {
+            ConversationFragment.REQUEST_VOICE_RECORDING_PERMISSIONS -> {
+                this@ConversationFragment.voiceRecordingPermissionGranted =
+                    grantResults.isNotEmpty() &&
+                            grantResults[0] == PackageManager.PERMISSION_GRANTED
+            }
+            ConversationFragment.REQUEST_CAMERA_PERMISSION -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    takePhotoFromCameraIntent()
+                } else {
+                    val cameraPermissionShouldRequest =
+                            ActivityCompat.shouldShowRequestPermissionRationale(
+                                    activity,
+                                    Manifest.permission.CAMERA
+                            )
+                    val writeExternalStroagePermissionShouldRequest =
+                            ActivityCompat.shouldShowRequestPermissionRationale(
+                                    activity,
+                                    Manifest.permission.CAMERA
+                            )
+                    this.mNeverAskAgain = !cameraPermissionShouldRequest || !writeExternalStroagePermissionShouldRequest
                 }
             }
         }
@@ -494,8 +599,8 @@ class ConversationFragment :
             return
         }
         this.conversation?.chatConversation?.let { conv ->
-            var imageByteArray = bitmapToByteArray(imageData.image)
-            var thumbByteArray = bitmapToByteArray(imageData.thumbnail)
+            val imageByteArray = bitmapToByteArray(imageData.image)
+            val thumbByteArray = bitmapToByteArray(imageData.thumbnail)
 
             val meta = JSONObject()
             val encoded = Base64.encodeToString(thumbByteArray, Base64.DEFAULT)
@@ -563,7 +668,7 @@ class ConversationFragment :
                     getString(warningText),
                     Toast.LENGTH_SHORT).show()
         } else {
-            var permissionsShouldAsk = ArrayList<String>()
+            val permissionsShouldAsk = ArrayList<String>()
             if (!isPermissionCameraGranted) {
                 permissionsShouldAsk.add(Manifest.permission.CAMERA)
             }
