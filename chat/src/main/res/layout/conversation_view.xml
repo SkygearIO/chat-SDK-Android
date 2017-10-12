@@ -12,43 +12,40 @@
 
         <ImageButton
             android:id="@+id/add_attachment_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/message_input_btn_width"
+            android:layout_height="@dimen/message_input_btn_height"
             android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:background="@color/transparent"
             android:src="@drawable/ic_add_attachment" />
 
         <ImageButton
             android:id="@+id/msg_send_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/message_input_btn_width"
+            android:layout_height="@dimen/message_input_btn_height"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
             android:visibility="invisible"
-            android:background="@color/transparent"
-            android:src="@drawable/ic_send"/>
+            android:src="@drawable/ic_plane"/>
 
         <EditText
             android:id="@+id/msg_edit_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="5dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginRight="20dp"
             android:layout_centerVertical="true"
             android:layout_toEndOf="@id/add_attachment_btn"
             android:layout_toRightOf="@id/add_attachment_btn"
             android:layout_toLeftOf="@id/msg_send_btn"
             android:layout_toStartOf="@id/msg_send_btn"
+            android:background="@android:color/transparent"
+            android:hint="@string/type_a_message"
             android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences"/>
 
         <com.dewarder.holdinglibrary.HoldingButtonLayout
@@ -79,18 +76,13 @@
                     android:text="@string/slide_to_cancel"
                     android:visibility="invisible" />
 
-                <ImageView
-                    android:id="@id/voice_recording_btn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                <ImageButton
+                    android:id="@+id/voice_recording_btn"
+                    android:layout_width="@dimen/message_input_btn_width"
+                    android:layout_height="@dimen/message_input_btn_height"
                     android:layout_alignParentEnd="true"
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
-                    android:paddingTop="5dp"
-                    android:paddingBottom="5dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:scaleType="center"
                     android:src="@drawable/ic_mic_black_24dp" />
 
             </RelativeLayout>
