@@ -30,6 +30,8 @@ import io.skygear.plugins.chat.ChatContainer
 import io.skygear.plugins.chat.GetCallback
 import io.skygear.plugins.chat.MessageSubscriptionCallback
 import io.skygear.plugins.chat.R
+import io.skygear.plugins.chat.ui.holder.CustomOutcomingImageMessageViewHolder
+import io.skygear.plugins.chat.ui.holder.CustomOutcomingTextMessageViewHolder
 import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.ImageMessage
 import io.skygear.plugins.chat.ui.model.Message
@@ -108,7 +110,10 @@ class ConversationFragment : Fragment(),
         this.activity.title = this.conversation?.dialogName
 
         val messageHolder = MessageHolders()
+                .setOutcomingTextHolder(CustomOutcomingTextMessageViewHolder::class.java)
+                .setOutcomingImageHolder(CustomOutcomingImageMessageViewHolder::class.java)
                 .setOutcomingImageLayout(R.layout.item_custom_outcoming_image_message)
+                .setOutcomingTextLayout(R.layout.item_custom_outcoming_text_message)
 
         this.messagesListAdapter = MessagesListAdapter(
                 this.skygear?.auth?.currentUser?.id,

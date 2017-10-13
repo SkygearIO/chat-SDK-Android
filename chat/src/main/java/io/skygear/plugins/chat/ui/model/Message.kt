@@ -31,4 +31,6 @@ open class Message: IMessage{
     override fun getUser(): User? = this.author
 
     override fun getText(): String? = this.chatMessage.body
+
+    fun getStatus(): String? = this.chatMessage.status?.getName()
 }
