@@ -36,6 +36,7 @@ import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.ImageMessage
 import io.skygear.plugins.chat.ui.model.Message
 import io.skygear.plugins.chat.ui.model.MessageFactory
+import io.skygear.plugins.chat.ui.model.User
 import io.skygear.plugins.chat.ui.utils.*
 import io.skygear.skygear.Asset
 import io.skygear.skygear.Container
@@ -71,6 +72,7 @@ class ConversationFragment : Fragment(),
     private var skygear: Container? = null
     private var skygearChat: ChatContainer? = null
     private var userCache: UserCache? = null
+    private var messageIDs: HashSet<String> = HashSet<String>()
     private var messagesListAdapter: MessagesListAdapter<Message>? = null
     private var messagesListViewReachBottomListener: MessagesListViewReachBottomListener? = null
 
@@ -203,6 +205,15 @@ class ConversationFragment : Fragment(),
         }
     }
 
+    private fun addMessagesToBottom(msgs: List<Message>) {
+        var needScrollToBottom = false
+        if (this.messagesListViewReachBottomListener?.isReachEnd == true) {
+            needScrollToBottom = true
+        }
+
+        this.addMessages(msgs, isScrollToBottom = needScrollToBottom)
+    }
+
     private fun addMessages(msgs: List<Message>,
                             isAddToTop: Boolean = false,
                             isScrollToBottom: Boolean = false
@@ -212,25 +223,33 @@ class ConversationFragment : Fragment(),
         }
 
         // fetch user if needed
-        val userIDs = msgs.map { it.chatMessage.record.ownerId }
+        val userIDs = msgs.map { it.author?.id ?: it.chatMessage.record.ownerId }
         this.userCache?.let { cache ->
             cache.getUsers(userIDs) { userMap ->
                 msgs.forEach { msg ->
-                    msg.author = userMap[msg.chatMessage.record.ownerId]
+                    msg.author = msg.author ?: userMap[msg.chatMessage.record.ownerId]
                 }
 
                 if (isAddToTop) {
                     this.messagesListAdapter?.addToEnd(msgs, false)
                 } else {
                     msgs.forEach { msg ->
-                        this@ConversationFragment.messagesListAdapter?.addToStart(
-                                msg,
-                                isScrollToBottom
-                        )
+                        if (messageIDs.contains(msg.id)) {
+                            this@ConversationFragment.messagesListAdapter?.update(msg)
+                        } else {
+                            this@ConversationFragment.messagesListAdapter?.addToStart(
+                                    msg,
+                                    isScrollToBottom
+                            )
+                        }
                     }
                 }
 
             }
+        }
+
+        msgs.forEach { msg ->
+            messageIDs.add(msg.id)
         }
 
         // mark last read message
@@ -291,12 +310,7 @@ class ConversationFragment : Fragment(),
     }
 
     private fun onReceiveChatMessage(msg: Message) {
-        var needScrollToBottom = false
-        if (this.messagesListViewReachBottomListener?.isReachEnd == true) {
-            needScrollToBottom = true
-        }
-
-        this.addMessages(listOf(msg), isScrollToBottom = needScrollToBottom)
+        this.addMessagesToBottom(listOf(msg))
     }
 
     private fun onUpdateChatMessage(msg: Message) {
@@ -317,13 +331,14 @@ class ConversationFragment : Fragment(),
     // implement MessageInput.InputListener
     override fun onSubmit(input: CharSequence?): Boolean {
         this.conversation?.chatConversation?.let { conv ->
-            this.skygearChat?.sendMessage(
-                    conv,
-                    input?.toString()?.trim(),
-                    null,
-                    null,
-                    null
-            )
+            val message = ChatMessage()
+            message.body = input?.toString()?.trim()
+
+            val msg = Message(message)
+            msg.author = User(this.skygear?.auth?.currentUser!!)
+            this.addMessagesToBottom(listOf(msg))
+
+            this.skygearChat?.addMessage(message, conv, null)
         }
 
         return true
