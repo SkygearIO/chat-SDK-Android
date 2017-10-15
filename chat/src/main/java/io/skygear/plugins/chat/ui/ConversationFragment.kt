@@ -49,6 +49,7 @@ import java.io.IOException
 import io.skygear.plugins.chat.*
 import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.Message
+import io.skygear.plugins.chat.ui.model.VoiceMessage
 import io.skygear.plugins.chat.ui.utils.ImageLoader
 import io.skygear.plugins.chat.ui.utils.UserCache
 import java.io.BufferedInputStream
@@ -75,6 +76,7 @@ class ConversationFragment :
     }
 
     var conversation: Conversation? = null
+    var messageContentTypeChecker: ConversationFragment.ContentTypeChecker? = null
 
     private var messagesListView: MessagesList? = null
     private var addAttachmentButton: ImageButton? = null
@@ -164,11 +166,18 @@ class ConversationFragment :
 
         this.activity.title = this.conversation?.dialogName
 
+        this.messageContentTypeChecker = ConversationFragment.ContentTypeChecker()
         val messageHolder = MessageHolders()
                 .setOutcomingTextHolder(CustomOutcomingTextMessageViewHolder::class.java)
                 .setOutcomingImageHolder(CustomOutcomingImageMessageViewHolder::class.java)
                 .setOutcomingImageLayout(R.layout.item_custom_outcoming_image_message)
                 .setOutcomingTextLayout(R.layout.item_custom_outcoming_text_message)
+                .registerContentType(
+                        ConversationFragment.ContentTypeChecker.VoiceMessageType,
+                        IncomingVoiceMessageView::class.java, R.layout.item_incoming_voice_message,
+                        OutgoingVoiceMessageView::class.java, R.layout.item_outgoing_voice_message,
+                        this.messageContentTypeChecker as ConversationFragment.ContentTypeChecker
+                )
 
         this.messagesListAdapter = MessagesListAdapter(
                 this.skygear?.auth?.currentUser?.id,
@@ -282,14 +291,20 @@ class ConversationFragment :
         val userIDs = msgs.map { it.author?.id ?: it.chatMessage.record.ownerId }
         this.userCache?.let { cache ->
             cache.getUsers(userIDs) { userMap ->
-                msgs.forEach { msg ->
-                    msg.author = msg.author ?: userMap[msg.chatMessage.record.ownerId]
+                val multiTypedMessages = msgs.map { originalMsg ->
+                    var msg = originalMsg
+                    if (VoiceMessage.isVoiceMessage(originalMsg)) {
+                        msg = VoiceMessage(originalMsg.chatMessage)
+                    }
+
+                    msg.author = userMap[msg.chatMessage.record.ownerId]
+                    msg
                 }
 
                 if (isAddToTop) {
-                    this.messagesListAdapter?.addToEnd(msgs, false)
+                    this.messagesListAdapter?.addToEnd(multiTypedMessages, false)
                 } else {
-                    msgs.forEach { msg ->
+                    multiTypedMessages.forEach { msg ->
                         if (messageIDs.contains(msg.id)) {
                             this@ConversationFragment.messagesListAdapter?.update(msg)
                         } else {
@@ -323,7 +338,13 @@ class ConversationFragment :
         val userIDs = msgs.map { it.chatMessage.record.ownerId }
         this.userCache?.let { cache ->
             cache.getUsers(userIDs) { userMap ->
-                msgs.forEach { msg ->
+                msgs.map { msg ->
+                    if (VoiceMessage.isVoiceMessage(msg)) {
+                        VoiceMessage(msg.chatMessage)
+                    } else {
+                        msg
+                    }
+                }.forEach { msg ->
                     msg.author = userMap[msg.chatMessage.record.ownerId]
                     this@ConversationFragment.messagesListAdapter?.update(msg)
                 }
@@ -427,14 +448,14 @@ class ConversationFragment :
 
         // start recording
         val fileDir = this.activity.cacheDir.absolutePath
-        val fileName = "voice-${Date().time}.m4a"
+        val fileName = "voice-${Date().time}.${VoiceMessage.FILE_EXTENSION_NAME}"
         this.voiceRecordingFileName = "$fileDir/$fileName"
 
         this.voiceRecorder = MediaRecorder()
         this.voiceRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-        this.voiceRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+        this.voiceRecorder?.setOutputFormat(VoiceMessage.MEDIA_FORMAT)
         this.voiceRecorder?.setOutputFile(voiceRecordingFileName)
-        this.voiceRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+        this.voiceRecorder?.setAudioEncoder(VoiceMessage.MEDIA_ENCODING)
 
         this.voiceRecorder?.prepare()
         this.voiceRecorder?.start()
@@ -445,6 +466,8 @@ class ConversationFragment :
         listOf(this.addAttachmentButton, this.messageEditText).map {
             it?.visibility = View.VISIBLE
         }
+
+        this.messageEditText?.requestFocus()
 
         // finish recording
         this.voiceRecorder?.stop()
@@ -471,9 +494,9 @@ class ConversationFragment :
 
         this.conversation?.let { conv ->
             val fileName = this@ConversationFragment.voiceRecordingFileName!!.split("/").last()
-            val asset = Asset(fileName, "audio/m4a", bytes)
+            val asset = Asset(fileName, VoiceMessage.MIME_TYPE, bytes)
             val meta = JSONObject()
-            meta.put("length", duration)
+            meta.put(VoiceMessage.DurationMatadataName, duration)
 
             this.skygearChat?.sendMessage(
                     conv.chatConversation,
@@ -683,6 +706,21 @@ class ConversationFragment :
         }
         return false
     }
+
+    class ContentTypeChecker: MessageHolders.ContentChecker<Message> {
+        companion object {
+            val VoiceMessageType: Byte = 1
+        }
+
+        override fun hasContentFor(message: Message?, type: Byte): Boolean {
+            if (message == null) return false
+
+            return when (type) {
+                ContentTypeChecker.VoiceMessageType -> VoiceMessage.isVoiceMessage(message)
+                else -> false
+            }
+        }
+    }
 }
 
 private class MessagesListViewReachBottomListener(
@@ -720,3 +758,4 @@ private abstract class TextBaseWatcher: TextWatcher {
 
     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 }
+
