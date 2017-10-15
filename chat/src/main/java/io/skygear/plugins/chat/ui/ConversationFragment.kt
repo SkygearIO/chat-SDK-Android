@@ -31,7 +31,9 @@ import io.skygear.plugins.chat.GetCallback
 import io.skygear.plugins.chat.MessageSubscriptionCallback
 import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.ui.model.Conversation
+import io.skygear.plugins.chat.ui.model.ImageMessage
 import io.skygear.plugins.chat.ui.model.Message
+import io.skygear.plugins.chat.ui.model.MessageFactory
 import io.skygear.plugins.chat.ui.utils.*
 import io.skygear.skygear.Asset
 import io.skygear.skygear.Container
@@ -166,7 +168,7 @@ class ConversationFragment : Fragment(),
             complete: ((msgs: List<Message>?, error: String?) -> Unit)? = null
     ) {
         val successCallback = fun (chatMsgs: List<ChatMessage>?) {
-            val msgs = chatMsgs?.map { chatMsg -> Message(chatMsg) }
+            val msgs = chatMsgs?.map { chatMsg -> MessageFactory.getMessage(chatMsg) }
             msgs?.let { this@ConversationFragment.addMessages(it, isAddToTop = true) }
             msgs?.map { it.createdAt }?.min()?.let { newBefore ->
                 // update load more cursor
@@ -264,9 +266,9 @@ class ConversationFragment : Fragment(),
                         ) {
                             when (eventType) {
                                 EVENT_TYPE_CREATE ->
-                                    this@ConversationFragment.onReceiveChatMessage(Message(message))
+                                    this@ConversationFragment.onReceiveChatMessage(MessageFactory.getMessage(message))
                                 EVENT_TYPE_UPDATE ->
-                                    this@ConversationFragment.onUpdateChatMessage(Message(message))
+                                    this@ConversationFragment.onUpdateChatMessage(MessageFactory.getMessage(message))
                             }
                         }
 
@@ -323,9 +325,11 @@ class ConversationFragment : Fragment(),
     }
 
     override fun onMessageClick(message: Message?) {
-        message?.imageUrl?.let {
-            var intent = ImagePreviewActivity.newIntent(activity, it)
-            startActivity(intent)
+        if (message is ImageMessage) {
+            message?.imageUrl?.let {
+                var intent = ImagePreviewActivity.newIntent(activity, it)
+                startActivity(intent)
+            }
         }
     }
 
