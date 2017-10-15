@@ -377,7 +377,7 @@ class ConversationFragment : Fragment(),
                 if(clipData == null){
                     // selected one image
                     var uri = data?.getData()
-                    val imageData = uri?.let { sendImageMessage(it) }
+                    uri?.let { sendImageMessage(it) }
                 }else{
                     // selected multiple images
                     var i = 0
@@ -430,13 +430,15 @@ class ConversationFragment : Fragment(),
             meta.put("height", imageData.image.height)
             meta.put("width", imageData.image.width)
 
-            this.skygearChat?.sendMessage(
-                    conv,
-                    null,
-                    Asset("image.jpg", "image/jpeg", imageByteArray),
-                    meta,
-                    null
-            )
+            val message = ChatMessage()
+            message.asset = Asset("test.jpg", "image/jpeg", imageByteArray)
+            message.metadata = meta
+
+            val msg = ImageMessage(message, imageUri.toString())
+            msg.author = User(this.skygear?.auth?.currentUser!!)
+            this.addMessagesToBottom(listOf(msg))
+
+            this.skygearChat?.addMessage(message, conv, null)
         }
     }
 
