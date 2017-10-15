@@ -30,6 +30,12 @@ class IncomingVoiceMessageView(view: View):
 
             this@IncomingVoiceMessageView.timeTextView?.text =
                     DateFormatter.format(msg.createdAt, DateFormatter.Template.TIME)
+
+            val actionButtonIcon = when(msg.state) {
+                VoiceMessage.State.PLAYING -> R.drawable.ic_pause
+                else -> R.drawable.ic_play
+            }
+            this@IncomingVoiceMessageView.actionButton?.setImageResource(actionButtonIcon)
         }
     }
 }

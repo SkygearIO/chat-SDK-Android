@@ -6,11 +6,11 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.MediaMetadataRetriever
+import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.media.MediaMetadataRetriever
-import android.media.MediaRecorder
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
@@ -33,36 +33,33 @@ import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesList
 import com.stfalcon.chatkit.messages.MessagesListAdapter
-import io.skygear.plugins.chat.ChatContainer
-import io.skygear.plugins.chat.GetCallback
-import io.skygear.plugins.chat.MessageSubscriptionCallback
-import io.skygear.plugins.chat.R
+import io.skygear.plugins.chat.*
 import io.skygear.plugins.chat.ui.holder.CustomOutcomingImageMessageViewHolder
 import io.skygear.plugins.chat.ui.holder.CustomOutcomingTextMessageViewHolder
-import io.skygear.plugins.chat.ui.model.*
+import io.skygear.plugins.chat.ui.model.Conversation
+import io.skygear.plugins.chat.ui.model.ImageMessage
+import io.skygear.plugins.chat.ui.model.Message
+import io.skygear.plugins.chat.ui.model.MessageFactory
+import io.skygear.plugins.chat.ui.model.User
+import io.skygear.plugins.chat.ui.model.VoiceMessage
 import io.skygear.plugins.chat.ui.utils.*
 import io.skygear.skygear.Asset
 import io.skygear.skygear.Container
 import org.json.JSONObject
-import java.io.File
-import java.io.IOException
-import io.skygear.plugins.chat.*
-import io.skygear.plugins.chat.ui.model.Conversation
-import io.skygear.plugins.chat.ui.model.Message
-import io.skygear.plugins.chat.ui.model.VoiceMessage
-import io.skygear.plugins.chat.ui.utils.ImageLoader
-import io.skygear.plugins.chat.ui.utils.UserCache
 import java.io.BufferedInputStream
+import java.io.File
 import java.io.FileInputStream
+import java.io.IOException
 import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
 class ConversationFragment :
         Fragment(),
+        DialogInterface.OnClickListener,
         MessagesListAdapter.OnLoadMoreListener,
         MessagesListAdapter.OnMessageClickListener<Message>,
-        DialogInterface.OnClickListener
+        VoiceMessagePlayer.OnMessageStateChangeListener
 {
     companion object {
         val ConversationBundleKey = "CONVERSATION"
@@ -93,6 +90,7 @@ class ConversationFragment :
 
     private var voiceRecorder: MediaRecorder? = null
     private var voiceRecordingFileName: String? = null
+    private var voicePlayer: VoiceMessagePlayer? = null
 
     private var messagesListAdapter: MessagesListAdapter<Message>? = null
     private var messagesListViewReachBottomListener: MessagesListViewReachBottomListener? = null
@@ -114,6 +112,8 @@ class ConversationFragment :
                 this.skygear as Container,
                 this.skygearChat as ChatContainer
         )
+        this.voicePlayer = VoiceMessagePlayer()
+        this.voicePlayer?.messageStateChangeListener = this
     }
 
     override fun onCreateView(
@@ -194,6 +194,7 @@ class ConversationFragment :
         }
 
         this.messagesListAdapter?.setLoadMoreListener(this)
+        this.messagesListAdapter?.setOnMessageClickListener(this)
 
         this.messagesListAdapter?.setOnMessageClickListener(this)
 
@@ -398,6 +399,25 @@ class ConversationFragment :
         this.fetchMessages(before = this.messageLoadMoreBefore)
     }
 
+    fun onVoiceMessageClick(voiceMessage: VoiceMessage) {
+        if (voiceMessage.state == VoiceMessage.State.PLAYING) {
+            this.voicePlayer?.pause()
+            return
+        }
+
+        if (this.voicePlayer?.message != voiceMessage) {
+            this.voicePlayer?.stop()
+            this.voicePlayer?.message = voiceMessage
+        }
+
+        this.voicePlayer?.play()
+    }
+
+    override fun onVoiceMessageStateChanged(voiceMessage: VoiceMessage) {
+        Log.i(TAG, "Voice Message State Changed: ${voiceMessage.state}")
+        this.messagesListAdapter?.update(voiceMessage)
+    }
+
     fun onAddAttachmentButtonClick() {
         // TODO: add attachment
         AlertDialog.Builder(activity)
@@ -470,8 +490,12 @@ class ConversationFragment :
         this.messageEditText?.requestFocus()
 
         // finish recording
-        this.voiceRecorder?.stop()
-        this.voiceRecorder?.release()
+        try {
+            this.voiceRecorder?.stop()
+            this.voiceRecorder?.release()
+        } catch (e: RuntimeException) {
+            Log.w(ConversationFragment.TAG, "Some errors occurs in voice recorder: $e")
+        }
         this.voiceRecorder = null
 
         if (isCancel) {
@@ -535,10 +559,17 @@ class ConversationFragment :
     }
 
     override fun onMessageClick(message: Message?) {
-        if (message is ImageMessage) {
-            message?.imageUrl?.let {
-                var intent = ImagePreviewActivity.newIntent(activity, it)
-                startActivity(intent)
+        message?.let { msg ->
+            when (msg) {
+                is ImageMessage -> {
+                    msg.imageUrl
+                            ?.let { url -> ImagePreviewActivity.newIntent(activity, url) }
+                            ?.let { intent -> this@ConversationFragment.startActivity(intent) }
+                }
+                is VoiceMessage -> this@ConversationFragment.onVoiceMessageClick(msg)
+                else -> {
+                    // Do nothing
+                }
             }
         }
     }

@@ -45,11 +45,17 @@ open class VoiceMessage(record: Record): Message(record), MessageContentType {
     val duration
         get() = this.chatMessage.metadata!!.getInt(VoiceMessage.DurationMatadataName)
 
+    var state = VoiceMessage.State.INITIAL
+
     constructor(chatMsg: ChatMessage): this(chatMsg.record)
 
     init {
         if (!VoiceMessage.isVoiceMessage(record)) {
             throw IllegalArgumentException("Not compatible skygear record")
         }
+    }
+
+    enum class State {
+        INITIAL, PLAYING, PAUSED
     }
 }
