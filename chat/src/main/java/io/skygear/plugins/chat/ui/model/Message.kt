@@ -6,10 +6,11 @@ import org.json.JSONException
 import java.util.*
 import io.skygear.plugins.chat.Message as ChatMessage
 
-class Message: IMessage {
+open class Message: IMessage{
 
     val chatMessage: ChatMessage
     var author: User? = null
+
 
     constructor(record: Record) {
         try {
@@ -25,9 +26,11 @@ class Message: IMessage {
 
     override fun getId(): String = this.chatMessage.id
 
-    override fun getCreatedAt(): Date = this.chatMessage.record.createdAt
+    override fun getCreatedAt(): Date = this.chatMessage.record.createdAt ?: Date()
 
     override fun getUser(): User? = this.author
 
     override fun getText(): String? = this.chatMessage.body
+
+    fun getStatus(): String? = this.chatMessage.status?.getName() ?: "Delivering"
 }

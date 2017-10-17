@@ -767,6 +767,29 @@ public final class ChatContainer {
     }
 
     /**
+     * Add Message to conversation
+     *
+     * @param message the message to be edited
+     * @param conversation the conversation
+     * @param callback save callback
+     */
+
+    public void addMessage(@NonNull Message message,
+                           @NonNull final Conversation conversation,
+                           @Nullable final SaveCallback<Message> callback)
+    {
+        Record record = message.getRecord();
+        Reference reference = new Reference("conversation", conversation.getId());
+        record.set("conversation", reference);
+
+        if (message.getAsset() == null) {
+            this.saveMessageRecord(record, callback);
+        } else {
+            this.saveMessageRecord(record, message.getAsset(), callback);
+        }
+    }
+
+    /**
      * Edit Message
      *
      * @param message the message to be edited

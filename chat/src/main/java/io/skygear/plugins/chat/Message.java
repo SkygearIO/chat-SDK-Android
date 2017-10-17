@@ -28,6 +28,13 @@ public class Message {
     final Record record;
 
     /**
+     * Instantiates a new Message with new Skygear Record.
+     */
+    public Message() {
+        this.record = new Record("message");
+    }
+
+    /**
      * Instantiates a new Message from a Skygear Record.
      *
      * @param record the record
@@ -76,6 +83,16 @@ public class Message {
     }
 
     /**
+     * Sets metadata.
+     *
+     * @param
+     */
+    @Nullable
+    public void setMetadata(JSONObject metadata) {
+        record.set(METADATA_KEY, metadata);
+    }
+
+    /**
      * Gets metadata.
      *
      * @return the metadata
@@ -117,6 +134,16 @@ public class Message {
     @NonNull
     public Date getUpdatedTime() {
         return this.record.getUpdatedAt();
+    }
+
+    /**
+     * Sets metadata.
+     *
+     * @param
+     */
+    @Nullable
+    public void setAsset(Asset asset) {
+        record.set(ATTACHMENT_KEY, asset);
     }
 
     /**
