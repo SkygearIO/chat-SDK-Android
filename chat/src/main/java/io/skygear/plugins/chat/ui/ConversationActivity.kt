@@ -9,7 +9,7 @@ import io.skygear.plugins.chat.Conversation as ChatConversation
 class ConversationActivity : AppCompatActivity() {
 
     companion object {
-        val ConversationIntentKey = "CONVERSATION"
+        @JvmField open val ConversationIntentKey = "CONVERSATION"
         private val TAG = "ConversationActivity"
     }
 
