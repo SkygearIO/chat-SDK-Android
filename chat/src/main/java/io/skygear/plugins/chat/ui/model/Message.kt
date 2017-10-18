@@ -32,5 +32,10 @@ open class Message: IMessage{
 
     override fun getText(): String? = this.chatMessage.body
 
-    fun getStatus(): String? = this.chatMessage.status?.getName() ?: "Delivering"
+    fun getStatus(): String {
+        this.chatMessage.status?.getName()?.let {
+            return it.replace("_", " ", true).capitalize()
+        }
+        return "Delivering"
+    }
 }
