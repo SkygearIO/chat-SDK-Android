@@ -26,6 +26,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ProgressBar
 import android.widget.Toast
 import com.dewarder.holdinglibrary.HoldingButtonLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
@@ -79,6 +80,7 @@ class ConversationFragment :
     private var messageEditText: EditText? = null
     private var voiceButtonHolderHint: View? = null
     private var voiceButtonHolder: HoldingButtonLayout? = null
+    private var progressBar: ProgressBar? = null
 
     private var skygear: Container? = null
     private var skygearChat: ChatContainer? = null
@@ -155,6 +157,7 @@ class ConversationFragment :
                 this@ConversationFragment.onVoiceRecordingButtonPressedUp(isCancel)
             }
         })
+        this.progressBar = view?.findViewById(R.id.progressBar) as ProgressBar?
 
         this.arguments?.let { args ->
             args.getString(ConversationBundleKey)?.let { convJson ->
@@ -270,6 +273,7 @@ class ConversationFragment :
             complete: ((msgs: List<Message>?, error: String?) -> Unit)? = null
     ) {
         val successCallback = fun(chatMsgs: List<ChatMessage>?) {
+            this.progressBar?.visibility = View.GONE
             val msgs = chatMsgs?.map { chatMsg -> MessageFactory.getMessage(chatMsg) }
             msgs?.let { this@ConversationFragment.addMessages(it, isAddToTop = true) }
             msgs?.map { it.createdAt }?.min()?.let { newBefore ->
