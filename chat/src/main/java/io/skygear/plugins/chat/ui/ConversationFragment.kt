@@ -35,6 +35,8 @@ import com.stfalcon.chatkit.messages.MessagesListAdapter
 import io.skygear.plugins.chat.*
 import io.skygear.plugins.chat.ui.holder.OutgoingTextMessageView
 import io.skygear.plugins.chat.ui.holder.OutgoingImageMessageView
+import io.skygear.plugins.chat.ui.holder.IncomingTextMessageView
+import io.skygear.plugins.chat.ui.holder.IncomingImageMessageView
 import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.Message
@@ -165,6 +167,10 @@ class ConversationFragment :
 
         this.messageContentTypeChecker = ConversationFragment.ContentTypeChecker()
         val messageHolder = MessageHolders()
+                .setIncomingTextHolder(IncomingTextMessageView::class.java)
+                .setIncomingImageHolder(IncomingImageMessageView::class.java)
+                .setIncomingTextLayout(R.layout.item_incoming_text_message)
+                .setIncomingImageLayout(R.layout.item_incoming_image_message)
                 .setOutcomingTextHolder(OutgoingTextMessageView::class.java)
                 .setOutcomingImageHolder(OutgoingImageMessageView::class.java)
                 .setOutcomingImageLayout(R.layout.item_outgoing_image_message)
