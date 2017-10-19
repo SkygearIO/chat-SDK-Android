@@ -1,15 +1,18 @@
 package io.skygear.plugins.chat.ui.utils
 
+import android.content.Context
 import android.media.MediaPlayer
+import android.media.MediaPlayer.*
 import io.skygear.plugins.chat.ui.model.VoiceMessage
 
-class VoiceMessagePlayer {
+class VoiceMessagePlayer(val context: Context) {
     companion object {
         private val TAG = VoiceMessagePlayer::class.java.canonicalName
     }
     private var mediaPlayer: MediaPlayer? = null
 
     var messageStateChangeListener: OnMessageStateChangeListener? = null
+    var playerErrorListener: OnPlayerErrorListener? = null
     var message: VoiceMessage? = null
 
     fun play() {
@@ -29,11 +32,23 @@ class VoiceMessagePlayer {
                 this.messageStateChangeListener?.onVoiceMessageStateChanged(msg)
             }
 
-            this.mediaPlayer?.prepare()
-            this.mediaPlayer?.start()
+            this.mediaPlayer?.setOnErrorListener { mp, what, extra ->
+                this@VoiceMessagePlayer.playerErrorListener?.let { listener ->
+                    when (what) {
+                        MEDIA_ERROR_SERVER_DIED -> Error(MEDIA_ERROR_SERVER_DIED, "Server Error")
+                        else -> Error(MEDIA_ERROR_UNKNOWN, "Unknown Error")
+                    }.let { listener.onVoiceMessagePlayerError(it) }
+                }
 
-            msg.state = VoiceMessage.State.PLAYING
-            this.messageStateChangeListener?.onVoiceMessageStateChanged(msg)
+                false
+            }
+
+            this.mediaPlayer?.setOnPreparedListener { player ->
+                player.start()
+                msg.state = VoiceMessage.State.PLAYING
+                this@VoiceMessagePlayer.messageStateChangeListener?.onVoiceMessageStateChanged(msg)
+            }
+            this.mediaPlayer?.prepareAsync()
         }
     }
 
@@ -59,7 +74,13 @@ class VoiceMessagePlayer {
         this.message = null
     }
 
+    class Error(val code: Int, message: String): java.lang.Error(message)
+
     interface OnMessageStateChangeListener {
         fun onVoiceMessageStateChanged(voiceMessage: VoiceMessage)
+    }
+
+    interface OnPlayerErrorListener {
+        fun onVoiceMessagePlayerError(error: Error)
     }
 }

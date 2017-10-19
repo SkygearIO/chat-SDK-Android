@@ -54,7 +54,9 @@ class ConversationFragment :
         Fragment(),
         MessagesListAdapter.OnLoadMoreListener,
         MessagesListAdapter.OnMessageClickListener<Message>,
-        VoiceMessagePlayer.OnMessageStateChangeListener {
+        VoiceMessagePlayer.OnMessageStateChangeListener,
+        VoiceMessagePlayer.OnPlayerErrorListener
+{
     companion object {
         val ConversationBundleKey = "CONVERSATION"
         private val TAG = "ConversationFragment"
@@ -106,7 +108,8 @@ class ConversationFragment :
                 this.skygear as Container,
                 this.skygearChat as ChatContainer
         )
-        this.voicePlayer = VoiceMessagePlayer()
+        this.voicePlayer = VoiceMessagePlayer(this.activity)
+        this.voicePlayer?.playerErrorListener = this
         this.voicePlayer?.messageStateChangeListener = this
     }
 
@@ -443,6 +446,10 @@ class ConversationFragment :
     override fun onVoiceMessageStateChanged(voiceMessage: VoiceMessage) {
         Log.i(TAG, "Voice Message State Changed: ${voiceMessage.state}")
         this.messagesListAdapter?.update(voiceMessage)
+    }
+
+    override fun onVoiceMessagePlayerError(error: VoiceMessagePlayer.Error) {
+        Toast.makeText(this.activity, error.message, Toast.LENGTH_SHORT).show()
     }
 
     fun onAddAttachmentButtonClick() {
