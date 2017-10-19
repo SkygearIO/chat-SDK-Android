@@ -3,7 +3,6 @@ package io.skygear.plugins.chat.ui
 import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaMetadataRetriever
@@ -36,12 +35,9 @@ import com.stfalcon.chatkit.messages.MessagesListAdapter
 import io.skygear.plugins.chat.*
 import io.skygear.plugins.chat.ui.holder.CustomOutcomingImageMessageViewHolder
 import io.skygear.plugins.chat.ui.holder.CustomOutcomingTextMessageViewHolder
+import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.model.Conversation
-import io.skygear.plugins.chat.ui.model.ImageMessage
 import io.skygear.plugins.chat.ui.model.Message
-import io.skygear.plugins.chat.ui.model.MessageFactory
-import io.skygear.plugins.chat.ui.model.User
-import io.skygear.plugins.chat.ui.model.VoiceMessage
 import io.skygear.plugins.chat.ui.utils.*
 import io.skygear.skygear.Asset
 import io.skygear.skygear.Container
@@ -56,11 +52,9 @@ import io.skygear.plugins.chat.Message as ChatMessage
 
 class ConversationFragment :
         Fragment(),
-        DialogInterface.OnClickListener,
         MessagesListAdapter.OnLoadMoreListener,
         MessagesListAdapter.OnMessageClickListener<Message>,
-        VoiceMessagePlayer.OnMessageStateChangeListener
-{
+        VoiceMessagePlayer.OnMessageStateChangeListener {
     companion object {
         val ConversationBundleKey = "CONVERSATION"
         private val TAG = "ConversationFragment"
@@ -68,7 +62,7 @@ class ConversationFragment :
         private val REQUEST_PICK_IMAGES = 5001
         private val REQUEST_IMAGE_CAPTURE = 5002
         private val REQUEST_CAMERA_PERMISSION = 5003
-        private val REQUEST_VOICE_RECORDING_PERMISSIONS = 5004
+        private val REQUEST_VOICE_RECORDING_PERMISSION = 5004
         private val VOICE_RECORDING_PERMISSIONS = arrayOf(Manifest.permission.RECORD_AUDIO)
     }
 
@@ -95,13 +89,13 @@ class ConversationFragment :
     private var messagesListAdapter: MessagesListAdapter<Message>? = null
     private var messagesListViewReachBottomListener: MessagesListViewReachBottomListener? = null
 
-    private var voiceRecordingPermissionGranted: Boolean = false
-
     private var messageLoadMoreBefore: Date = Date()
     private var messageSubscriptionRetryCount = 0
 
-    private var mNeverAskAgain = false
     private var mCameraPhotoUri: Uri? = null
+
+    private var takePhotoPermissionManager: PermissionManager? = null
+    private var voiceRecordingPermissionManager: PermissionManager? = null
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
@@ -136,7 +130,7 @@ class ConversationFragment :
         }
 
         this.messageEditText = view?.findViewById(R.id.msg_edit_text) as EditText?
-        this.messageEditText?.addTextChangedListener(object: TextBaseWatcher() {
+        this.messageEditText?.addTextChangedListener(object : TextBaseWatcher() {
             override fun afterTextChanged(s: Editable?) {
                 super.afterTextChanged(s)
                 this@ConversationFragment.onMessageEditTextChanged()
@@ -145,7 +139,7 @@ class ConversationFragment :
 
         this.voiceButtonHolderHint = view?.findViewById(R.id.voice_recording_btn_holder_hint)
         this.voiceButtonHolder = view?.findViewById(R.id.voice_recording_btn_holder) as HoldingButtonLayout?
-        this.voiceButtonHolder?.addListener(object: HoldingButtonLayoutBaseListener() {
+        this.voiceButtonHolder?.addListener(object : HoldingButtonLayoutBaseListener() {
             override fun onExpand() {
                 super.onExpand()
                 this@ConversationFragment.onVoiceRecordingButtonPressedDown()
@@ -200,10 +194,35 @@ class ConversationFragment :
 
         // TODO: setup typing indicator subscription
 
-        this.voiceRecordingPermissionGranted = ConversationFragment.VOICE_RECORDING_PERMISSIONS.map { permission ->
-            ActivityCompat.checkSelfPermission(this@ConversationFragment.activity, permission)
-        }.none {
-            it != PackageManager.PERMISSION_GRANTED
+        this.takePhotoPermissionManager = object: PermissionManager(
+                this.activity,
+                listOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                permissionGrantedHandler = { this.takePhotoFromCameraIntent() },
+                permissionDeniedHandler = { permissionsDenied, _ ->
+                    this@ConversationFragment.takePhotoPermissionsDenied(permissionsDenied)
+                }
+        ) {
+            override fun request(permissions: List<String>) {
+                this@ConversationFragment.requestPermissions(
+                        permissions.toTypedArray(),
+                        ConversationFragment.REQUEST_CAMERA_PERMISSION
+                )
+            }
+        }
+
+        this.voiceRecordingPermissionManager = object: PermissionManager(
+                this.activity,
+                listOf(Manifest.permission.RECORD_AUDIO),
+                permissionDeniedHandler = { _, _ ->
+                    this@ConversationFragment.voiceRecordingPermissionDenied()
+                }
+        ) {
+            override fun request(permissions: List<String>) {
+                this@ConversationFragment.requestPermissions(
+                        permissions.toTypedArray(),
+                        ConversationFragment.REQUEST_VOICE_RECORDING_PERMISSION
+                )
+            }
         }
 
         return view
@@ -240,7 +259,7 @@ class ConversationFragment :
             before: Date? = null,
             complete: ((msgs: List<Message>?, error: String?) -> Unit)? = null
     ) {
-        val successCallback = fun (chatMsgs: List<ChatMessage>?) {
+        val successCallback = fun(chatMsgs: List<ChatMessage>?) {
             val msgs = chatMsgs?.map { chatMsg -> MessageFactory.getMessage(chatMsg) }
             msgs?.let { this@ConversationFragment.addMessages(it, isAddToTop = true) }
             msgs?.map { it.createdAt }?.min()?.let { newBefore ->
@@ -293,13 +312,21 @@ class ConversationFragment :
         this.userCache?.let { cache ->
             cache.getUsers(userIDs) { userMap ->
                 val multiTypedMessages = msgs.map { originalMsg ->
-                    var msg = originalMsg
                     if (VoiceMessage.isVoiceMessage(originalMsg)) {
-                        msg = VoiceMessage(originalMsg.chatMessage)
+                        VoiceMessage(originalMsg.chatMessage)
+                    } else {
+                        originalMsg
                     }
-
-                    msg.author = userMap[msg.chatMessage.record.ownerId]
-                    msg
+                }.let {
+                    it.forEach { msg ->
+                        if (msg.chatMessage.record.ownerId != null) {
+                            msg.author = userMap[msg.chatMessage.record.ownerId]
+                        } else {
+                            msg.author = User(this.skygear?.auth?.currentUser!!)
+                        }
+                        msg
+                    }
+                    it
                 }
 
                 if (isAddToTop) {
@@ -419,9 +446,24 @@ class ConversationFragment :
     }
 
     fun onAddAttachmentButtonClick() {
-        // TODO: add attachment
-        AlertDialog.Builder(activity)
-                .setItems(R.array.attachment_options, this)
+        AlertDialog.Builder(this.activity)
+                .setItems(R.array.attachment_options) { _, option ->
+                    when (option) {
+                        0 -> this@ConversationFragment.takePhotoFromCameraIntent()
+                        1 -> {
+                            val intent = Intent()
+
+                            intent.type = "image/*"
+                            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                            intent.action = Intent.ACTION_GET_CONTENT
+
+                            this@ConversationFragment.startActivityForResult(
+                                    Intent.createChooser(intent, "Select Photos"),
+                                    REQUEST_PICK_IMAGES
+                            )
+                        }
+                    }
+                }
                 .show()
     }
 
@@ -456,29 +498,20 @@ class ConversationFragment :
             it?.visibility = View.INVISIBLE
         }
 
-        // check permission
-        if (!this.voiceRecordingPermissionGranted) {
-            this.requestPermissions(
-                    ConversationFragment.VOICE_RECORDING_PERMISSIONS,
-                    ConversationFragment.REQUEST_VOICE_RECORDING_PERMISSIONS
-            )
-            this.voiceButtonHolder?.cancel()
-            return
-        }
-
-        // start recording
         val fileDir = this.activity.cacheDir.absolutePath
         val fileName = "voice-${Date().time}.${VoiceMessage.FILE_EXTENSION_NAME}"
         this.voiceRecordingFileName = "$fileDir/$fileName"
 
-        this.voiceRecorder = MediaRecorder()
-        this.voiceRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-        this.voiceRecorder?.setOutputFormat(VoiceMessage.MEDIA_FORMAT)
-        this.voiceRecorder?.setOutputFile(voiceRecordingFileName)
-        this.voiceRecorder?.setAudioEncoder(VoiceMessage.MEDIA_ENCODING)
+        this.voiceRecordingPermissionManager?.runIfPermissionGranted {
+            this.voiceRecorder = MediaRecorder()
+            this.voiceRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
+            this.voiceRecorder?.setOutputFormat(VoiceMessage.MEDIA_FORMAT)
+            this.voiceRecorder?.setOutputFile(voiceRecordingFileName)
+            this.voiceRecorder?.setAudioEncoder(VoiceMessage.MEDIA_ENCODING)
 
-        this.voiceRecorder?.prepare()
-        this.voiceRecorder?.start()
+            this.voiceRecorder?.prepare()
+            this.voiceRecorder?.start()
+        }
     }
 
     fun onVoiceRecordingButtonPressedUp(isCancel: Boolean) {
@@ -488,6 +521,10 @@ class ConversationFragment :
         }
 
         this.messageEditText?.requestFocus()
+
+        if (this.voiceRecordingPermissionManager?.permissionsGranted() != true) {
+            return
+        }
 
         // finish recording
         try {
@@ -511,7 +548,7 @@ class ConversationFragment :
                 mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))
 
         val voiceRecordingFile = File(this.voiceRecordingFileName!!)
-        val bytes =  ByteArray(voiceRecordingFile.length().toInt())
+        val bytes = ByteArray(voiceRecordingFile.length().toInt())
         val stream = BufferedInputStream(FileInputStream(voiceRecordingFile))
         stream.read(bytes, 0, bytes.size)
         stream.close()
@@ -527,7 +564,7 @@ class ConversationFragment :
                     null,
                     asset,
                     meta,
-                    object: SaveCallback<ChatMessage> {
+                    object : SaveCallback<ChatMessage> {
                         override fun onSucc(chatMsg: ChatMessage?) {
                             voiceRecordingFile.delete()
                         }
@@ -574,76 +611,34 @@ class ConversationFragment :
         }
     }
 
-    // implement DialogInterface.OnClickListener
-    override fun onClick(dialogInterface: DialogInterface, i: Int) {
-        when (i) {
-            0 -> {
-                takePhotoFromCameraIntent()
-            }
-            1 -> {
-                val intent = Intent()
-                intent.type = "image/*"
-                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                intent.action = Intent.ACTION_GET_CONTENT
-                startActivityForResult(
-                        Intent.createChooser(intent, "Select Photos"), REQUEST_PICK_IMAGES)
-            }
-        }
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_PICK_IMAGES && resultCode == Activity.RESULT_OK) {
-            var clipData = data?.getClipData()
-                if(clipData == null){
-                    // selected one image
-                    var uri = data?.getData()
-                    uri?.let { sendImageMessage(it) }
-                }else{
-                    // selected multiple images
-                    var i = 0
-                    var total = clipData.getItemCount()
-                    while (i < total) {
-                        var item = clipData.getItemAt(i)
-                        var uri = item.uri
-                        sendImageMessage(uri)
-                        i++
-                    }
-                }
-        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
-            mCameraPhotoUri?.let {
-                sendImageMessage(it)
+            val clipData = data?.clipData
+            if (clipData == null) {
+                // selected one image
+                data?.data?.let { this@ConversationFragment.sendImageMessage(it) }
+            } else {
+                // selected multiple images
+                IntRange(0, clipData.itemCount - 1)
+                        .map { idx -> clipData.getItemAt(idx).uri }
+                        .forEach { uri -> this@ConversationFragment.sendImageMessage(uri) }
             }
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
+            mCameraPhotoUri?.let { this@ConversationFragment.sendImageMessage(it) }
             mCameraPhotoUri = null
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            ConversationFragment.REQUEST_VOICE_RECORDING_PERMISSIONS -> {
-                this@ConversationFragment.voiceRecordingPermissionGranted =
-                    grantResults.isNotEmpty() &&
-                            grantResults[0] == PackageManager.PERMISSION_GRANTED
-            }
-            ConversationFragment.REQUEST_CAMERA_PERMISSION -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    takePhotoFromCameraIntent()
-                } else {
-                    val cameraPermissionShouldRequest =
-                            ActivityCompat.shouldShowRequestPermissionRationale(
-                                    activity,
-                                    Manifest.permission.CAMERA
-                            )
-                    val writeExternalStroagePermissionShouldRequest =
-                            ActivityCompat.shouldShowRequestPermissionRationale(
-                                    activity,
-                                    Manifest.permission.CAMERA
-                            )
-                    this.mNeverAskAgain = !cameraPermissionShouldRequest || !writeExternalStroagePermissionShouldRequest
-                }
-            }
-        }
+        (when (requestCode) {
+            ConversationFragment.REQUEST_VOICE_RECORDING_PERMISSION ->
+                this@ConversationFragment.voiceRecordingPermissionManager
+            ConversationFragment.REQUEST_CAMERA_PERMISSION ->
+                this@ConversationFragment.takePhotoPermissionManager
+            else -> null
+        })?.notifyRequestResult(permissions.toList(), grantResults.toList())
     }
 
     fun sendImageMessage(imageUri: Uri) {
@@ -675,7 +670,7 @@ class ConversationFragment :
     }
 
     private fun takePhotoFromCameraIntent() {
-        if (checkOrRequestTakingPhotoPermissions()) {
+        this.takePhotoPermissionManager?.runIfPermissionGranted {
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             if (intent.resolveActivity(activity.packageManager) != null) {
                 var photoFile: File? = null
@@ -700,45 +695,30 @@ class ConversationFragment :
         }
     }
 
-    private fun checkOrRequestTakingPhotoPermissions() : Boolean {
-        var isPermissionWriteStorageGranted = ContextCompat.checkSelfPermission(
-                activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        var isPermissionCameraGranted = ContextCompat.checkSelfPermission(
-                activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-        if (isPermissionCameraGranted && isPermissionWriteStorageGranted) {
-            return true;
+    private fun takePhotoPermissionsDenied(permissionsDenied: List<String>) {
+        when {
+            permissionsDenied.size > 1 ->
+                R.string.please_turn_on_camera_and_write_external_storage_permissions
+            permissionsDenied.contains(Manifest.permission.CAMERA) ->
+                R.string.please_turn_on_camera_permission
+            permissionsDenied.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE) ->
+                R.string.please_turn_on_write_external_storage_permissions
+            else -> null
+        }?.let { msgId ->
+            Toast.makeText(this.activity, msgId, Toast.LENGTH_SHORT).show()
         }
-
-        if (mNeverAskAgain) {
-            var warningText = R.string.please_turn_on_camera_and_write_external_storage_permissions
-            if (isPermissionWriteStorageGranted) {
-                warningText = R.string.please_turn_on_camera_permission
-            }
-            if (isPermissionCameraGranted) {
-                warningText = R.string.please_turn_on_write_external_storage_permissions
-            }
-            Toast.makeText(
-                    activity,
-                    getString(warningText),
-                    Toast.LENGTH_SHORT).show()
-        } else {
-            val permissionsShouldAsk = ArrayList<String>()
-            if (!isPermissionCameraGranted) {
-                permissionsShouldAsk.add(Manifest.permission.CAMERA)
-            }
-            if (!isPermissionWriteStorageGranted) {
-                permissionsShouldAsk.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            }
-
-            requestPermissions(
-                    permissionsShouldAsk.toTypedArray(),
-                    REQUEST_CAMERA_PERMISSION
-            )
-        }
-        return false
     }
 
-    class ContentTypeChecker: MessageHolders.ContentChecker<Message> {
+    private fun voiceRecordingPermissionDenied() {
+        this.voiceButtonHolder?.cancel()
+        Toast.makeText(
+                this.activity,
+                R.string.please_turn_on_audio_recording_permission,
+                Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    class ContentTypeChecker : MessageHolders.ContentChecker<Message> {
         companion object {
             val VoiceMessageType: Byte = 1
         }
@@ -756,8 +736,7 @@ class ConversationFragment :
 
 private class MessagesListViewReachBottomListener(
         private val layoutManager: LinearLayoutManager
-) : RecyclerView.OnScrollListener()
-{
+) : RecyclerView.OnScrollListener() {
     companion object {
         private val BOTTOM_ITEM_THRESHOLD = 5
     }
@@ -782,7 +761,7 @@ private abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutList
     override fun onCollapse(isCancel: Boolean) {}
 }
 
-private abstract class TextBaseWatcher: TextWatcher {
+private abstract class TextBaseWatcher : TextWatcher {
     override fun afterTextChanged(s: Editable?) {}
 
     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -790,3 +769,66 @@ private abstract class TextBaseWatcher: TextWatcher {
     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 }
 
+/**
+ * PermissionManager encapsulates the complicated permission request flow
+ */
+private abstract class PermissionManager(
+        val activityContext: Activity,
+        val permissions: List<String>,
+        val permissionGrantedHandler: (() -> Unit)? = null,
+        val permissionDeniedHandler: ((
+                permissionsDenied: List<String>,
+                neverAskAgain: Boolean
+        ) -> Unit)? = null
+) {
+    private var permissionsNeverAskAgain = false
+
+    abstract fun request(permissions: List<String>)
+
+    private val deniedPermissions: List<String>
+        get() = this.permissions.filter {
+            ContextCompat.checkSelfPermission(this.activityContext, it) ==
+                    PackageManager.PERMISSION_DENIED
+        }
+
+    fun notifyRequestResult(
+            permissions: List<String>,
+            grantResults: List<Int>
+    ) {
+        val granted = grantResults.isNotEmpty() &&
+                grantResults.first() == PackageManager.PERMISSION_GRANTED
+        if (granted) {
+            this.permissionGrantedHandler?.invoke()
+        } else {
+            this.permissionsNeverAskAgain = permissions.filter {
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                        this@PermissionManager.activityContext,
+                        it
+                ).not()
+            }.any()
+            this.permissionDeniedHandler?.invoke(
+                    permissions,
+                    this.permissionsNeverAskAgain
+            )
+        }
+    }
+
+    fun permissionsGranted() = this.deniedPermissions.isEmpty()
+
+    fun runIfPermissionGranted(toRun: () -> Unit) {
+        val permissionsDenied = this.deniedPermissions
+
+        when {
+            permissionsDenied.isEmpty() -> toRun()
+            this.permissionsNeverAskAgain ->
+                this.permissionDeniedHandler
+                        ?.invoke(
+                                permissionsDenied,
+                                this.permissionsNeverAskAgain
+                        )
+            else -> this.request(permissionsDenied)
+        }
+
+
+    }
+}
