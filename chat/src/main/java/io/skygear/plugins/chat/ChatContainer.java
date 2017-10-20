@@ -94,7 +94,12 @@ public final class ChatContainer {
                                    @Nullable final Map<Conversation.OptionKey, Object> options,
                                    @Nullable final SaveCallback<Conversation> callback) {
         this.skygear.callLambdaFunction("chat:create_conversation",
-                new Object[]{new JSONArray(participantIds), title, metadata == null ? null : new JSONObject(metadata), options == null ? null : new JSONObject(options)},
+                new Object[] {
+                        new JSONArray(participantIds),
+                        title,
+                        metadata == null ? null : new JSONObject(metadata),
+                        options == null ? null : new JSONObject(convertOptionsMap(options))
+                },
                 new LambdaResponseHandler(){
                     @Override
                     public void onLambdaSuccess(JSONObject result){
@@ -140,6 +145,14 @@ public final class ChatContainer {
         Map<Conversation.OptionKey, Object> options = new HashMap<>();
         options.put(Conversation.OptionKey.DISTINCT_BY_PARTICIPANTS, true);
         createConversation(participantIds, title, metadata, options, callback);
+    }
+
+    private Map<String, Object> convertOptionsMap(Map<Conversation.OptionKey, Object> options) {
+        HashMap<String, Object> newOptions = new HashMap<String, Object>();
+        for (Map.Entry<Conversation.OptionKey, Object> option: options.entrySet()) {
+            newOptions.put(option.getKey().getValue(), option.getValue());
+        }
+        return newOptions;
     }
 
 
