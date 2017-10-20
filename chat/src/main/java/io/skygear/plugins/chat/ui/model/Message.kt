@@ -6,7 +6,7 @@ import org.json.JSONException
 import java.util.*
 import io.skygear.plugins.chat.Message as ChatMessage
 
-open class Message: IMessage{
+open class Message: IMessage {
 
     val chatMessage: ChatMessage
     var author: User? = null
