@@ -262,7 +262,7 @@ public class Conversation {
      */
     public enum OptionKey {
         ADMIN_IDS("admin_ids"),
-        DISTINCT_BY_PARTICIPANTS("distinct_by_participant");
+        DISTINCT_BY_PARTICIPANTS("distinctByParticipants");
 
         private final String value;
 
