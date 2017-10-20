@@ -666,7 +666,7 @@ class ConversationFragment :
             meta.put("width", imageData.image.width)
 
             val message = ChatMessage()
-            message.asset = Asset("test.jpg", "image/jpeg", imageByteArray)
+            message.asset = Asset("image.jpg", "image/jpeg", imageByteArray)
             message.metadata = meta
 
             val msg = ImageMessage(message, imageUri.toString())
