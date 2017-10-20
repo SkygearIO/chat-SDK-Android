@@ -128,6 +128,7 @@ class ConversationFragment : Fragment(),
             this.messagesListViewReachBottomListener = MessagesListViewReachBottomListener(
                     this.messagesListView?.layoutManager as LinearLayoutManager
             )
+            (this.messagesListView?.layoutManager as LinearLayoutManager).isAutoMeasureEnabled = false
             this.messagesListView?.addOnScrollListener(this.messagesListViewReachBottomListener)
         }
 
