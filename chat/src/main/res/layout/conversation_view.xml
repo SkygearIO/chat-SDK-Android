@@ -4,24 +4,105 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <RelativeLayout
+        android:id="@+id/message_input_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <ImageButton
+            android:id="@+id/add_attachment_btn"
+            android:layout_width="@dimen/message_input_btn_width"
+            android:layout_height="@dimen/message_input_btn_height"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_add_attachment" />
+
+        <ImageButton
+            android:id="@+id/msg_send_btn"
+            android:layout_width="@dimen/message_input_btn_width"
+            android:layout_height="@dimen/message_input_btn_height"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:visibility="invisible"
+            android:src="@drawable/ic_plane"/>
+
+        <EditText
+            android:id="@+id/msg_edit_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@id/add_attachment_btn"
+            android:layout_toRightOf="@id/add_attachment_btn"
+            android:layout_toLeftOf="@id/msg_send_btn"
+            android:layout_toStartOf="@id/msg_send_btn"
+            android:background="@android:color/transparent"
+            android:hint="@string/type_a_message"
+            android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences"/>
+
+        <com.dewarder.holdinglibrary.HoldingButtonLayout
+            android:id="@+id/voice_recording_btn_holder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            app:hbl_radius="40dp"
+            app:hbl_second_radius="15dp"
+            app:hbl_icon="@drawable/ic_mic_black_24dp"
+            app:hbl_cancel_icon="@drawable/ic_close_black_24dp"
+            app:hbl_cancel_offset="0.5"
+            app:hbl_holding_view="@+id/voice_recording_btn">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/voice_recording_btn_holder_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:layout_centerInParent="true"
+                    android:textColor="@color/warm_grey"
+                    android:text="@string/slide_to_cancel"
+                    android:visibility="invisible" />
+
+                <ImageButton
+                    android:id="@+id/voice_recording_btn"
+                    android:layout_width="@dimen/message_input_btn_width"
+                    android:layout_height="@dimen/message_input_btn_height"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/ic_mic_black_24dp" />
+
+            </RelativeLayout>
+
+        </com.dewarder.holdinglibrary.HoldingButtonLayout>
+
+    </RelativeLayout>
+
     <com.stfalcon.chatkit.messages.MessagesList
         android:id="@+id/messages_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_above="@+id/message_input" />
+        android:layout_above="@id/message_input_wrapper"
+        android:layout_marginBottom="5dp" />
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_above="@+id/message_input"
+        android:layout_height="2dp"
+        android:layout_above="@id/message_input_wrapper"
         android:background="@color/gray_light" />
-
-    <com.stfalcon.chatkit.messages.MessageInput
-        android:id="@id/message_input"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        app:showAttachmentButton="true" />
 
 </RelativeLayout>
