@@ -13,7 +13,7 @@ class User : IUser {
         /**
          * The field name for display name of the user
          */
-        var DisplayNameField = "name"
+        var DisplayNameField = "username"
 
         /**
          * The default display name when user's name field is absent.
