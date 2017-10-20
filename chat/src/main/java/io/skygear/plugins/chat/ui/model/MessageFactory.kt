@@ -20,12 +20,13 @@ class MessageFactory {
         }
 
         fun getMessage(m: ChatMessage) : Message {
-            if (m.asset?.mimeType != null
-                    && m.asset?.mimeType!!.startsWith("image")) {
-                return ImageMessage(m)
+            return m.asset?.mimeType.let {
+                when {
+                    it?.startsWith("image") == true -> ImageMessage(m)
+                    it?.equals(VoiceMessage.MIME_TYPE) == true -> VoiceMessage(m)
+                    else -> Message(m)
+                }
             }
-
-            return Message(m)
         }
     }
 }
