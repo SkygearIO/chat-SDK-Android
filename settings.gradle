@@ -1,1 +1,1 @@
-include ':chat_example', ':chat'
+include ':chat_example', ':chat', ':photoview'
