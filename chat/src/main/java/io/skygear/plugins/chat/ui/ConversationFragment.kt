@@ -33,8 +33,10 @@ import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesList
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import io.skygear.plugins.chat.*
-import io.skygear.plugins.chat.ui.holder.CustomOutcomingImageMessageViewHolder
-import io.skygear.plugins.chat.ui.holder.CustomOutcomingTextMessageViewHolder
+import io.skygear.plugins.chat.ui.holder.OutgoingTextMessageView
+import io.skygear.plugins.chat.ui.holder.OutgoingImageMessageView
+import io.skygear.plugins.chat.ui.holder.IncomingTextMessageView
+import io.skygear.plugins.chat.ui.holder.IncomingImageMessageView
 import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.Message
@@ -165,10 +167,14 @@ class ConversationFragment :
 
         this.messageContentTypeChecker = ConversationFragment.ContentTypeChecker()
         val messageHolder = MessageHolders()
-                .setOutcomingTextHolder(CustomOutcomingTextMessageViewHolder::class.java)
-                .setOutcomingImageHolder(CustomOutcomingImageMessageViewHolder::class.java)
-                .setOutcomingImageLayout(R.layout.item_custom_outcoming_image_message)
-                .setOutcomingTextLayout(R.layout.item_custom_outcoming_text_message)
+                .setIncomingTextHolder(IncomingTextMessageView::class.java)
+                .setIncomingImageHolder(IncomingImageMessageView::class.java)
+                .setIncomingTextLayout(R.layout.item_incoming_text_message)
+                .setIncomingImageLayout(R.layout.item_incoming_image_message)
+                .setOutcomingTextHolder(OutgoingTextMessageView::class.java)
+                .setOutcomingImageHolder(OutgoingImageMessageView::class.java)
+                .setOutcomingImageLayout(R.layout.item_outgoing_image_message)
+                .setOutcomingTextLayout(R.layout.item_outgoing_text_message)
                 .registerContentType(
                         ConversationFragment.ContentTypeChecker.VoiceMessageType,
                         IncomingVoiceMessageView::class.java, R.layout.item_incoming_voice_message,
