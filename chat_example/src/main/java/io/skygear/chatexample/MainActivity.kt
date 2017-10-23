@@ -18,8 +18,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mSignUpBtn = findViewById(R.id.sign_up_btn) as Button?
-        mLogInBtn = findViewById(R.id.log_in_btn) as Button?
+        mSignUpBtn = findViewById<Button>(R.id.sign_up_btn)
+        mLogInBtn = findViewById<Button>(R.id.log_in_btn)
 
         mSignUpBtn?.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))

@@ -34,10 +34,10 @@ import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesList
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import io.skygear.plugins.chat.*
-import io.skygear.plugins.chat.ui.holder.OutgoingTextMessageView
-import io.skygear.plugins.chat.ui.holder.OutgoingImageMessageView
-import io.skygear.plugins.chat.ui.holder.IncomingTextMessageView
 import io.skygear.plugins.chat.ui.holder.IncomingImageMessageView
+import io.skygear.plugins.chat.ui.holder.IncomingTextMessageView
+import io.skygear.plugins.chat.ui.holder.OutgoingImageMessageView
+import io.skygear.plugins.chat.ui.holder.OutgoingTextMessageView
 import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.Message
@@ -124,19 +124,19 @@ class ConversationFragment :
     ): View? {
         val view = inflater?.inflate(R.layout.conversation_view, container, false)
 
-        this.messagesListView = view?.findViewById(R.id.messages_list) as MessagesList?
+        this.messagesListView = view?.findViewById<MessagesList>(R.id.messages_list)
 
-        this.addAttachmentButton = view?.findViewById(R.id.add_attachment_btn) as ImageButton?
+        this.addAttachmentButton = view?.findViewById<ImageButton>(R.id.add_attachment_btn)
         this.addAttachmentButton?.setOnClickListener {
             this@ConversationFragment.onAddAttachmentButtonClick()
         }
 
-        this.messageSendButton = view?.findViewById(R.id.msg_send_btn) as ImageButton?
+        this.messageSendButton = view?.findViewById<ImageButton>(R.id.msg_send_btn)
         this.messageSendButton?.setOnClickListener {
             this@ConversationFragment.onSendMessageButtonClick()
         }
 
-        this.messageEditText = view?.findViewById(R.id.msg_edit_text) as EditText?
+        this.messageEditText = view?.findViewById<EditText>(R.id.msg_edit_text)
         this.messageEditText?.addTextChangedListener(object : TextBaseWatcher() {
             override fun afterTextChanged(s: Editable?) {
                 super.afterTextChanged(s)
@@ -145,7 +145,7 @@ class ConversationFragment :
         })
 
         this.voiceButtonHolderHint = view?.findViewById(R.id.voice_recording_btn_holder_hint)
-        this.voiceButtonHolder = view?.findViewById(R.id.voice_recording_btn_holder) as HoldingButtonLayout?
+        this.voiceButtonHolder = view?.findViewById<HoldingButtonLayout>(R.id.voice_recording_btn_holder)
         this.voiceButtonHolder?.addListener(object : HoldingButtonLayoutBaseListener() {
             override fun onExpand() {
                 super.onExpand()
@@ -157,7 +157,7 @@ class ConversationFragment :
                 this@ConversationFragment.onVoiceRecordingButtonPressedUp(isCancel)
             }
         })
-        this.progressBar = view?.findViewById(R.id.progressBar) as ProgressBar?
+        this.progressBar = view?.findViewById<ProgressBar>(R.id.progressBar)
 
         this.arguments?.let { args ->
             args.getString(ConversationBundleKey)?.let { convJson ->

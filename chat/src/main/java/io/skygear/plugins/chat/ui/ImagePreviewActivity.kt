@@ -2,14 +2,13 @@ package io.skygear.plugins.chat.ui
 
 import android.content.Context
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.view.Menu
+import android.view.MenuItem
 import android.widget.ImageView
 import com.squareup.picasso.Picasso
-
 import io.skygear.plugins.chat.R
-import android.view.MenuItem
 
 
 class ImagePreviewActivity : AppCompatActivity() {
@@ -30,7 +29,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 
         setTitle("")
 
-        val photoView = findViewById(R.id.iv_photo) as ImageView
+        val photoView = findViewById<ImageView>(R.id.iv_photo)
 
         var url = intent.getStringExtra(ImageURLIntentKey)
 

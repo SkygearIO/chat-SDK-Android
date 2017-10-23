@@ -56,7 +56,7 @@ class UserIdsAdapter(val currentUserId: String?) : RecyclerView.Adapter<UserIdsA
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val idCb = view.findViewById(R.id.user_id_cb) as AppCompatCheckBox
-        var idTv = view.findViewById(R.id.user_id_tv) as TextView
+        val idCb = view.findViewById<AppCompatCheckBox>(R.id.user_id_cb)
+        var idTv = view.findViewById<TextView>(R.id.user_id_tv)
     }
 }

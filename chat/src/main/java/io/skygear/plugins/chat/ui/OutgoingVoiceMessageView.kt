@@ -16,9 +16,9 @@ class OutgoingVoiceMessageView(view: View):
     var timeTextView: TextView? = null
 
     init {
-        this.actionButton = view.findViewById(R.id.action_button) as ImageView?
-        this.durationTextView = view.findViewById(R.id.duration) as TextView?
-        this.timeTextView = view.findViewById(R.id.time) as TextView?
+        this.actionButton = view.findViewById<ImageView>(R.id.action_button)
+        this.durationTextView = view.findViewById<TextView>(R.id.duration)
+        this.timeTextView = view.findViewById<TextView>(R.id.time)
     }
 
     override fun onBind(message: VoiceMessage?) {

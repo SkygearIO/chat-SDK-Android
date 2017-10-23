@@ -30,8 +30,8 @@ class CreateConversationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_conversation)
 
-        mUserIdsRv = findViewById(R.id.chat_users_rv) as RecyclerView
-        mCreateBtn = findViewById(R.id.create_conversation_btn) as Button
+        mUserIdsRv = findViewById<RecyclerView>(R.id.chat_users_rv)
+        mCreateBtn = findViewById<Button>(R.id.create_conversation_btn)
         mUserIdsRv?.adapter = mAdapter
         mUserIdsRv?.layoutManager = LinearLayoutManager(this)
 

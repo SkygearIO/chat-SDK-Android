@@ -5,7 +5,6 @@ import android.widget.TextView
 import com.stfalcon.chatkit.messages.MessageHolders
 import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.ui.model.ImageMessage
-import io.skygear.plugins.chat.ui.model.Message
 
 
 /**
@@ -16,7 +15,7 @@ class IncomingImageMessageView(itemView: View) : MessageHolders.IncomingImageMes
     protected var username: TextView? = null
 
     init {
-        username = itemView.findViewById(R.id.usernameText) as TextView
+        username = itemView.findViewById<TextView>(R.id.usernameText)
     }
 
     override fun onBind(message: ImageMessage) {

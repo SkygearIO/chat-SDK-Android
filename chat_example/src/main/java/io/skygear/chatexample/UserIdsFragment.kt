@@ -55,18 +55,18 @@ class UserIdsFragment : DialogFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        mUserIdsRv = view?.findViewById(R.id.user_ids_rv) as RecyclerView
+        mUserIdsRv = view?.findViewById<RecyclerView>(R.id.user_ids_rv)
         mAdapter = UserIdsAdapter(mSkygear.auth.currentUser?.id)
         mUserIdsRv?.adapter = mAdapter
         mUserIdsRv?.layoutManager = LinearLayoutManager(activity)
 
-        val titleTv: TextView? = view?.findViewById(R.id.title_tv) as TextView
+        val titleTv: TextView? = view?.findViewById<TextView>(R.id.title_tv)
         val title: String? = arguments?.getString(TITLE_KEY)
         if (title != null && !title.isNullOrEmpty()) {
             titleTv?.text = SpannableStringBuilder(title)
         }
 
-        val okBtn: Button? = view?.findViewById(R.id.ok_btn) as Button
+        val okBtn: Button? = view?.findViewById<Button>(R.id.ok_btn)
         okBtn?.setOnClickListener {
             mListener(mAdapter!!.getSelectedIds())
             dismiss()

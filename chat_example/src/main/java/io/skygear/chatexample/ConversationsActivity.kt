@@ -36,7 +36,7 @@ class ConversationsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_conversations)
 
-        mConversationsRv = findViewById(R.id.conversations_rv) as RecyclerView
+        mConversationsRv = findViewById<RecyclerView>(R.id.conversations_rv)
         mConversationsRv?.adapter = mAdapter
         mConversationsRv?.layoutManager = LinearLayoutManager(this)
         mAdapter.setOnClickListener {

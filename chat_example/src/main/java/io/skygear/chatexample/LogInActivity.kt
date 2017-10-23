@@ -7,7 +7,10 @@ import android.support.v7.app.AppCompatActivity
 import android.text.Editable
 import android.widget.Button
 import android.widget.EditText
-import io.skygear.skygear.*
+import io.skygear.skygear.AuthResponseHandler
+import io.skygear.skygear.Container
+import io.skygear.skygear.Error
+import io.skygear.skygear.Record
 
 class LogInActivity : AppCompatActivity() {
     private val LOG_TAG: String = "LogInActivity"
@@ -21,9 +24,9 @@ class LogInActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log_in)
 
-        mUsernameEt = findViewById(R.id.username_et) as EditText?
-        mPasswordEt = findViewById(R.id.password_et) as EditText?
-        mLogInBtn = findViewById(R.id.log_in_btn) as Button?
+        mUsernameEt = findViewById<EditText>(R.id.username_et)
+        mPasswordEt = findViewById<EditText>(R.id.password_et)
+        mLogInBtn = findViewById<Button>(R.id.log_in_btn)
         mLogInBtn?.setOnClickListener {
             login(mUsernameEt?.text, mPasswordEt?.text)
         }

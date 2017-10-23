@@ -37,15 +37,15 @@ class MetaFragment : DialogFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val titleTv: TextView? = view?.findViewById(R.id.unread_count_tv) as TextView
+        val titleTv: TextView? = view?.findViewById<TextView>(R.id.unread_count_tv)
         val unread: String? = arguments?.getString(UNREAD_CNT)
         titleTv?.text = unread
 
-        val lastMsgTv: TextView? = view?.findViewById(R.id.last_read_message_tv) as TextView
+        val lastMsgTv: TextView? = view?.findViewById<TextView>(R.id.last_read_message_tv)
         val lasMsg: String? = arguments?.getString(LAST_READ_MESSAGE)
         lastMsgTv?.text = lasMsg
 
-        val okBtn: Button? = view?.findViewById(R.id.ok_btn) as Button
+        val okBtn: Button? = view?.findViewById<Button>(R.id.ok_btn)
         okBtn?.setOnClickListener {
             dismiss()
         }

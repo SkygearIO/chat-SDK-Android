@@ -70,9 +70,9 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view)  {
-        val nameTv = view.findViewById(R.id.conversation_name_tv) as TextView
-        val idTv = view.findViewById(R.id.conversation_id_tv) as TextView
-        val lastMsgTv = view.findViewById(R.id.conversation_last_msg_tv) as TextView
+        val nameTv = view.findViewById<TextView>(R.id.conversation_name_tv)
+        val idTv = view.findViewById<TextView>(R.id.conversation_id_tv)
+        val lastMsgTv = view.findViewById<TextView>(R.id.conversation_last_msg_tv)
         val container: View = view.findViewById(R.id.conversation_item_view)
     }
 }

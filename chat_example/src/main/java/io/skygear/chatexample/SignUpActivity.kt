@@ -22,9 +22,9 @@ class SignUpActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_up)
 
-        mUsernameEt = findViewById(R.id.username_et) as EditText?
-        mPasswordEt = findViewById(R.id.password_et) as EditText?
-        mSignUpBtn = findViewById(R.id.sign_up_btn) as Button?
+        mUsernameEt = findViewById<EditText>(R.id.username_et)
+        mPasswordEt = findViewById<EditText>(R.id.password_et)
+        mSignUpBtn = findViewById<Button>(R.id.sign_up_btn)
         mSignUpBtn?.setOnClickListener {
             signup(mUsernameEt?.text, mPasswordEt?.text)
         }

@@ -15,7 +15,7 @@ class IncomingTextMessageView(itemView: View) : MessageHolders.IncomingTextMessa
     protected var username: TextView? = null
 
     init {
-        username = itemView.findViewById(R.id.usernameText) as TextView
+        username = itemView.findViewById<TextView>(R.id.usernameText)
     }
 
     override fun onBind(message: Message) {

@@ -1,7 +1,6 @@
 package io.skygear.chatexample
 
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -107,8 +106,8 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view)  {
-        val bodyTv = view.findViewById(R.id.message_body_tv) as TextView
-        val statusIv = view.findViewById(R.id.message_status_iv) as ImageView
-        val assetIv = view.findViewById(R.id.message_asset_iv) as ImageView
+        val bodyTv = view.findViewById<TextView>(R.id.message_body_tv)
+        val statusIv = view.findViewById<ImageView>(R.id.message_status_iv)
+        val assetIv = view.findViewById<ImageView>(R.id.message_asset_iv)
     }
 }

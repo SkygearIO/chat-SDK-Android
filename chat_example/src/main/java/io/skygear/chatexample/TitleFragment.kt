@@ -35,14 +35,14 @@ class TitleFragment : DialogFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val titleEt: EditText? = view?.findViewById(R.id.title_et) as EditText
+        val titleEt: EditText? = view?.findViewById<EditText>(R.id.title_et)
         val def: String? = arguments?.getString(DEF_INPUT_KEY)
         if (def != null && !def.isNullOrEmpty()) {
             titleEt?.text = SpannableStringBuilder(def)
             titleEt?.setSelection(def.length)
         }
 
-        val okBtn: Button? = view?.findViewById(R.id.ok_btn) as Button
+        val okBtn: Button? = view?.findViewById<Button>(R.id.ok_btn)
         okBtn?.setOnClickListener {
             mListener(titleEt?.text.toString())
             dismiss()
