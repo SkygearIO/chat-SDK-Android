@@ -41,6 +41,7 @@ android {
 
 dependencies {
     compile 'com.android.support:support-annotations:26.1.0'
+    compile 'com.android.support:design:26.1.0'
     compile 'joda-time:joda-time:2.9.4'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.github.stfalcon:chatkit:0.2.2'
