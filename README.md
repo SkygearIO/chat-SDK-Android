@@ -1,32 +1,125 @@
 # Skygear Chat Plugin for Android
 
-Skygear Server is a cloud backend for making the web and mobile app development easier. [https://skygear.io](https://skygear.io)
+[![CI Status](https://img.shields.io/travis/SkygearIO/chat-SDK-Android.svg?style=flat)](https://travis-ci.org/SkygearIO/chat-SDK-Android)
+[![License](https://img.shields.io/github/license/skygeario/chat-SDK-Android.svg)](https://bintray.com/skygeario/maven/skygear-chat-android)
 
-And the Chat Plugin make Skygear group conversation possible.
+## Using Skygear Chat Android SDK
 
-The Skygear Chat Plugin for Android helps your app work with Skygear Chat Plugin.
+Please reference to Skygear Chat Quick Start guide for how to use the Skygear Chat Android SDK:
+https://docs.skygear.io/guides/chat/quick-start/android/
 
-## Getting Started
+The Chat Plugin doc is at [https://docs.skygear.io/android/plugins/chat/reference/](https://docs.skygear.io/android/plugins/chat/reference/). Check `ChatContainer` for how things work.
 
-To get started, checkout [Skygear Chat Plugin](https://github.com/SkygearIO/chat), and have the Chat Plugin running by `docker-compose up -d && docker-compose scale plugin=2`.
+## Using Skygear Chat Android UIKit
 
-You can also sign up Skygear Developer Portal at [https://portal.skygear.io](https://portal.skygear.io) and use `git push` the Chat Plugin to your portal cloud code endpoint (Refer detail on [https://docs.skygear.io/guides/#Cloud%20Functions](https://docs.skygear.io/guides/#Cloud%20Functions) or [https://github.com/skygear-demo/skygear-catapi](https://github.com/skygear-demo/skygear-catapi) for an example).
+To use the UIKit comes with Skygear Android, follow these steps:
 
-After the Chat Plugin is running, remember to initialize Chat Plugin by `curl http://<SKYGEAR ENDPOINT>/chat-plugin-init`.
+### 1. Configure Android Chat SDK as mentioned in Quick start
 
-## Some modifications
+That meant include these in `build.gradle` of the project:
 
-The sample app needs some modification before it works, update the `endpoint` and `key` at `chat_example/src/main/java/io/skygear/chatexample/MainApp.kt` to the correct value of endpoint and api key.
+```
+allprojects {
+    repositories {
+        jcenter()
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
 
-## Now you are ready
+And include these dependency in `build.gradle` of the module:
 
-The sampe app now is ready, try to sign up some users, make them chat in a conversation group.
+```
+dependencies {
+    // other dependencies
+    compile 'io.skygear:skygear:+'
+    compile 'io.skygear.plugins:chat:+'
+}
+```
 
-## Documentation
+And configure Skygear Application Endpoint / API Key like these:
 
-The full documentation for Skygear is available on our [docs](https://docs.skygear.io/) site. The Android SDK get started guide is a good place to get started [https://docs.skygear.io/android/guide](https://docs.skygear.io/android/guide).
+```java
+public class MyApplication extends SkygearApplication {
+    @Override
+    public String getSkygearEndpoint() {
+        return "change me with endpoint URL";
+    }
 
-The Chat Plugin doc is at [https://docs.skygear.io/android/plugins/chat/reference/](https://docs.skygear.io/android/plugins/chat/reference/). Check `ChatContainer` to get the full view of the plugin.
+    @Override
+    public String getApiKey() {
+        return "change me with API Key";
+    }
+}
+```
+
+### 2. Add Activity in your app manifest
+
+In your app manifest, include these lines for UIKit Activities:
+
+```xml
+<activity android:name="io.skygear.plugins.chat.ui.ConversationActivity" />
+```
+
+### 3. Start the conversation view
+
+Currently Android UIKit only have the conversation view, you can use it after getting the
+conversation object from Chat API:
+
+```java
+Intent i = new Intent(context, ConversationActivity.class);
+i.putExtra(
+    ConversationActivity.ConversationIntentKey,
+    conversation.toJson().toString() // conversation object create from chat sdk
+);
+context.startActivity(i)
+```
+
+### Bare minimal sample
+
+A bare minimal apps. assume you have done the configuration above, got SkygearApplication configured
+or configured manually with your application class, Here is an MainActivity as the launcher activity
+to start a Conversation View with a hard-coded user:
+
+```java
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        final Container skygear = Container.defaultContainer(this);
+        skygear.getAuth().signupAnonymously(new AuthResponseHandler() {
+            @Override
+            public void onAuthSuccess(Record user) {
+                ChatContainer chatContainer = ChatContainer.getInstance(skygear);
+                chatContainer.createDirectConversation("7cd03660-f82f-4619-9fae-3b0c87fec7e9", "Chat Demo", null, new SaveCallback<Conversation>() {
+                    @Override
+                    public void onSucc(@Nullable Conversation conversation) {
+                        Intent i = new Intent(getApplicationContext(), ConversationActivity.class);
+                        i.putExtra(ConversationActivity.ConversationIntentKey, conversation.toJson().toString());
+                        getApplicationContext().startActivity(i);
+                    }
+                    @Override
+                    public void onFail(@Nullable String s) {
+
+                    }
+                });
+            }
+
+            @Override
+            public void onAuthFail(Error error) {
+
+            }
+        });
+    }
+}
+
+```
 
 ## Support
 
