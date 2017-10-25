@@ -75,8 +75,8 @@ class SignUpActivity : AppCompatActivity() {
                         override fun onAuthSuccess(user: Record)
                                 = authSuccess(user, username.toString())
 
-                        override fun onAuthFail(reason: Error)
-                                = authFail(reason)
+                        override fun onAuthFail(error: Error)
+                                = authFail(error)
                     })
         }
     }

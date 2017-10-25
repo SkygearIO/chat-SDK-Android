@@ -33,6 +33,7 @@ import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesList
 import com.stfalcon.chatkit.messages.MessagesListAdapter
+import io.skygear.skygear.Error
 import io.skygear.plugins.chat.*
 import io.skygear.plugins.chat.ui.holder.IncomingImageMessageView
 import io.skygear.plugins.chat.ui.holder.IncomingTextMessageView
@@ -293,12 +294,13 @@ class ConversationFragment :
                     before,
                     null,
                     object : GetCallback<List<ChatMessage>> {
-                        override fun onSucc(chatMsgs: List<ChatMessage>?)
-                                = successCallback(chatMsgs)
+                        override fun onSucc(chatMsgs: List<ChatMessage>?){
+                            successCallback(chatMsgs)
+                        }
 
-                        override fun onFail(failReason: String?) {
-                            Log.w(TAG, "Failed to get message: %s".format(failReason))
-                            complete?.let { it(null, failReason) }
+                        override fun onFail(error: Error) {
+                            Log.w(TAG, "Failed to get message: %s".format(error.message))
+                            complete?.let { it(null, error.message) }
                         }
                     })
         }
@@ -415,7 +417,7 @@ class ConversationFragment :
                             }
                         }
 
-                        override fun onSubscriptionFail(reason: String?) {
+                        override fun onSubscriptionFail(error: Error) {
                             this@ConversationFragment.subscribeMessage()
                         }
                     })
@@ -587,10 +589,10 @@ class ConversationFragment :
                             voiceRecordingFile.delete()
                         }
 
-                        override fun onFail(failReason: String?) {
+                        override fun onFail(error: Error) {
                             Log.e(
                                     ConversationFragment.TAG,
-                                    "Failed to send voice message: $failReason"
+                                    "Failed to send voice message: ${error.message}"
                             )
                         }
                     }
