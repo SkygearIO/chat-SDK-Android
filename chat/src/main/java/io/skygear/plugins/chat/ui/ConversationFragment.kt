@@ -571,17 +571,24 @@ class ConversationFragment :
         stream.read(bytes, 0, bytes.size)
         stream.close()
 
-        this.conversation?.let { conv ->
+        this.conversation?.chatConversation?.let { conv ->
             val fileName = this@ConversationFragment.voiceRecordingFileName!!.split("/").last()
             val asset = Asset(fileName, VoiceMessage.MIME_TYPE, bytes)
             val meta = JSONObject()
             meta.put(VoiceMessage.DurationMatadataName, duration)
 
-            this.skygearChat?.sendMessage(
-                    conv.chatConversation,
-                    null,
-                    asset,
-                    meta,
+            val message = ChatMessage()
+            message.asset = asset
+            message.metadata = meta
+
+            val msg = VoiceMessage(message)
+            msg.author = User(this.skygear?.auth?.currentUser!!)
+
+            this.addMessagesToBottom(listOf(msg))
+            
+            this.skygearChat?.addMessage(
+                    message,
+                    conv,
                     object : SaveCallback<ChatMessage> {
                         override fun onSucc(chatMsg: ChatMessage?) {
                             voiceRecordingFile.delete()
