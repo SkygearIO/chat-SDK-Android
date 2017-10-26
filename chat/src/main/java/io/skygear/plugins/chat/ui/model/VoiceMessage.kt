@@ -6,7 +6,7 @@ import io.skygear.skygear.Asset
 import io.skygear.skygear.Record
 import io.skygear.plugins.chat.Message as ChatMessage
 
-open class VoiceMessage(record: Record): Message(record), MessageContentType {
+open class VoiceMessage: Message, MessageContentType {
 
     companion object {
         /**
@@ -47,10 +47,10 @@ open class VoiceMessage(record: Record): Message(record), MessageContentType {
 
     var state = VoiceMessage.State.INITIAL
 
-    constructor(chatMsg: ChatMessage): this(chatMsg.record)
+    constructor(chatMsg: ChatMessage): super(chatMsg)
 
     init {
-        if (!VoiceMessage.isVoiceMessage(record)) {
+        if (!VoiceMessage.isVoiceMessage(this.chatMessage)) {
             throw IllegalArgumentException("Not compatible skygear record")
         }
     }
