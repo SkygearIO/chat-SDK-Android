@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import io.skygear.plugins.chat.error.TotalUnreadError;
 import io.skygear.skygear.Asset;
 import io.skygear.skygear.AssetPostRequest;
 import io.skygear.skygear.AuthenticationException;
@@ -38,6 +39,8 @@ import io.skygear.skygear.RecordSaveResponseHandler;
 import io.skygear.skygear.Reference;
 import io.skygear.plugins.chat.error.JSONError;
 import io.skygear.plugins.chat.error.ConversationNotFoundError;
+import io.skygear.plugins.chat.error.ConversationOperationError;
+import io.skygear.plugins.chat.error.MessageOperationError;
 import io.skygear.plugins.chat.error.InvalidMessageError;
 import io.skygear.plugins.chat.error.AuthenticationError;
 
@@ -121,7 +124,7 @@ public final class ChatContainer {
                     public void onLambdaFail(Error error) {
 
                         if (callback != null) {
-                            callback.onFail(error);
+                            callback.onFail(new ConversationOperationError(error));
                         }
                     }
         });
@@ -253,7 +256,7 @@ public final class ChatContainer {
                     public void onLambdaFail(Error error) {
 
                         if (callback != null) {
-                            callback.onFail(error);
+                            callback.onFail(new ConversationOperationError(error));
                         }
                     }
                 });
@@ -430,7 +433,7 @@ public final class ChatContainer {
                     @Override
                     public void onLambdaFail(Error error) {
                         if (callback != null) {
-                            callback.onFail(error);
+                            callback.onFail(new ConversationOperationError(error));
                         }
                     }
                 });
@@ -447,8 +450,8 @@ public final class ChatContainer {
                                    @NonNull final Map<String, Object> updates,
                                    @Nullable final SaveCallback<Conversation> callback) {
         final Database publicDB = this.skygear.getPublicDatabase();
-
-        this.getConversation(conversation.getId(), true, new GetCallback<Conversation>() {
+        final String conversationId = conversation.getId();
+        this.getConversation(conversationId, true, new GetCallback<Conversation>() {
             @Override
             public void onSucc(@Nullable final Conversation conversation) {
                 if (callback == null) {
@@ -457,7 +460,7 @@ public final class ChatContainer {
                 }
 
                 if (conversation == null) {
-                    callback.onFail(new ConversationNotFoundError(conversation.getId()));
+                    callback.onFail(new ConversationNotFoundError(conversationId));
                     return;
                 }
 
@@ -476,7 +479,7 @@ public final class ChatContainer {
             @Override
             public void onFail(Error error) {
                 if (callback != null) {
-                    callback.onFail(error);
+                    callback.onFail(new ConversationOperationError(error));
                 }
             }
         });
@@ -517,7 +520,7 @@ public final class ChatContainer {
             @Override
             public void onLambdaFail(Error error) {
                 if (callback != null) {
-                    callback.onFail(error);
+                    callback.onFail(new TotalUnreadError(error));
                 }
             }
         });
@@ -558,7 +561,7 @@ public final class ChatContainer {
                     public void onLambdaFail(Error error) {
 
                         if (callback != null) {
-                            callback.onFail(error);
+                            callback.onFail(new ConversationNotFoundError(conversationId));
                         }
                     }
                 });
@@ -601,7 +604,7 @@ public final class ChatContainer {
                     public void onLambdaFail(Error error) {
 
                         if (callback != null) {
-                            callback.onFail(error);
+                            callback.onFail(new ConversationOperationError(error));
                         }
                     }
                 });
@@ -659,7 +662,7 @@ public final class ChatContainer {
             @Override
             public void onLambdaFail(Error error) {
                 if (callback != null) {
-                    callback.onFail(error);
+                    callback.onFail(new MessageOperationError(error));
                 }
             }
         });
@@ -845,7 +848,7 @@ public final class ChatContainer {
                     @Override
                     public void onLambdaFail(Error error) {
                         if (callback != null) {
-                            callback.onFail(error);
+                            callback.onFail(new MessageOperationError(error));
                         }
                     }
                 }
@@ -922,7 +925,7 @@ public final class ChatContainer {
                     @Override
                     public void onLambdaFail(Error error) {
                         if (callback != null) {
-                            callback.onFail(error);
+                            callback.onFail(new MessageOperationError(error));
                         }
                     }
                 }
