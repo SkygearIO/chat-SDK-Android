@@ -1,4 +1,4 @@
-package io.skygear.plugins.chat.ui
+package io.skygear.plugins.chat.ui.holder
 
 import android.view.View
 import android.widget.ImageView
