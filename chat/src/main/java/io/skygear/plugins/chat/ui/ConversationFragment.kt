@@ -9,6 +9,7 @@ import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
@@ -30,14 +31,13 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import com.dewarder.holdinglibrary.HoldingButtonLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
+import com.stfalcon.chatkit.messages.SkygearChatMessageHolders
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesList
 import com.stfalcon.chatkit.messages.MessagesListAdapter
+import com.stfalcon.chatkit.messages.VoiceMessageOnClickListener
 import io.skygear.plugins.chat.*
-import io.skygear.plugins.chat.ui.holder.IncomingImageMessageView
-import io.skygear.plugins.chat.ui.holder.IncomingTextMessageView
-import io.skygear.plugins.chat.ui.holder.OutgoingImageMessageView
-import io.skygear.plugins.chat.ui.holder.OutgoingTextMessageView
+import io.skygear.plugins.chat.ui.holder.*
 import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.Message
@@ -102,6 +102,7 @@ class ConversationFragment :
 
     private var takePhotoPermissionManager: PermissionManager? = null
     private var voiceRecordingPermissionManager: PermissionManager? = null
+    private var voiceMessageOnClickListener: VoiceMessageOnClickListener? = null
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
@@ -157,6 +158,14 @@ class ConversationFragment :
                 this@ConversationFragment.onVoiceRecordingButtonPressedUp(isCancel)
             }
         })
+
+        this.voiceMessageOnClickListener = object: VoiceMessageOnClickListener {
+            override fun onClick(message: VoiceMessage) {
+                this@ConversationFragment.onVoiceMessageClick(message)
+            }
+        }
+
+
         this.progressBar = view?.findViewById<ProgressBar>(R.id.progressBar)
 
         this.arguments?.let { args ->
@@ -169,7 +178,7 @@ class ConversationFragment :
         this.activity.title = this.conversation?.dialogName
 
         this.messageContentTypeChecker = ConversationFragment.ContentTypeChecker()
-        val messageHolder = MessageHolders()
+        val messageHolder = SkygearChatMessageHolders(this.voiceMessageOnClickListener)
                 .setIncomingTextHolder(IncomingTextMessageView::class.java)
                 .setIncomingImageHolder(IncomingImageMessageView::class.java)
                 .setIncomingTextLayout(R.layout.item_incoming_text_message)
@@ -460,7 +469,14 @@ class ConversationFragment :
     }
 
     override fun onVoiceMessagePlayerError(error: VoiceMessagePlayer.Error) {
-        Toast.makeText(this.activity, error.message, Toast.LENGTH_SHORT).show()
+        // Using handle to avoid "sending message to a Handler on a dead thread"
+        val activity = this.activity
+        val handler = Handler(activity.mainLooper)
+        handler.post { object: Runnable {
+            override fun run() {
+                Toast.makeText(activity, error.message, Toast.LENGTH_SHORT).show()
+            }
+        } }
     }
 
     fun onAddAttachmentButtonClick() {
@@ -577,11 +593,18 @@ class ConversationFragment :
             val meta = JSONObject()
             meta.put(VoiceMessage.DurationMatadataName, duration)
 
-            this.skygearChat?.sendMessage(
-                    conv.chatConversation,
-                    null,
-                    asset,
-                    meta,
+            val message = ChatMessage()
+            message.asset = asset
+            message.metadata = meta
+
+            val msg = VoiceMessage(message)
+            msg.author = User(this.skygear?.auth?.currentUser!!)
+
+            this.addMessagesToBottom(listOf(msg))
+
+            this.skygearChat?.addMessage(
+                    message,
+                    conv,
                     object : SaveCallback<ChatMessage> {
                         override fun onSucc(chatMsg: ChatMessage?) {
                             voiceRecordingFile.delete()
