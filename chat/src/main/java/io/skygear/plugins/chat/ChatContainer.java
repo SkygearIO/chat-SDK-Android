@@ -40,6 +40,7 @@ import io.skygear.skygear.Reference;
 import io.skygear.plugins.chat.error.JSONError;
 import io.skygear.plugins.chat.error.ConversationNotFoundError;
 import io.skygear.plugins.chat.error.ConversationOperationError;
+import io.skygear.plugins.chat.error.ConversationAlreadyExistsError;
 import io.skygear.plugins.chat.error.MessageOperationError;
 import io.skygear.plugins.chat.error.InvalidMessageError;
 import io.skygear.plugins.chat.error.AuthenticationError;
@@ -50,6 +51,7 @@ import io.skygear.plugins.chat.error.AuthenticationError;
 public final class ChatContainer {
     private static final int GET_MESSAGES_DEFAULT_LIMIT = 50; // default value
     private static final String TAG = "SkygearChatContainer";
+
 
     private static ChatContainer sharedInstance;
 
@@ -122,9 +124,16 @@ public final class ChatContainer {
 
                     @Override
                     public void onLambdaFail(Error error) {
-
                         if (callback != null) {
-                            callback.onFail(new ConversationOperationError(error));
+                            if (ConversationAlreadyExistsError.hasConversationId(error)) {
+                                try {
+                                    callback.onFail(new ConversationAlreadyExistsError(error));
+                                } catch (JSONException e) {
+                                    callback.onFail(new JSONError());
+                                }
+                            } else {
+                                callback.onFail(new ConversationOperationError(error));
+                            }
                         }
                     }
         });
