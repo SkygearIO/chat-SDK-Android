@@ -601,7 +601,6 @@ class ConversationFragment :
             msg.author = User(this.skygear?.auth?.currentUser!!)
 
             this.addMessagesToBottom(listOf(msg))
-
             this.skygearChat?.addMessage(
                     message,
                     conv,

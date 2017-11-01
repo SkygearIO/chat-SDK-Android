@@ -24,6 +24,12 @@ class SkygearChatMessageHolders : MessageHolders {
                       onMessageLongClickListener: View.OnLongClickListener?,
                       dateHeadersFormatter: DateFormatter.Formatter?,
                       clickListenersArray: SparseArray<MessagesListAdapter.OnMessageViewClickListener<IMessage>>?) {
+
+        /*
+            bind() is to assign listeners parameters to holder.itemView and its children.
+            Override bind() and set voiceMessageOnClickListener to action_button
+            Source: https://github.com/stfalcon-studio/ChatKit/blob/master/chatkit/src/main/java/com/stfalcon/chatkit/messages/MessageHolders.java#L351
+         */
         super.bind(holder, item, isSelected, imageLoader, onMessageClickListener, onMessageLongClickListener, dateHeadersFormatter, clickListenersArray)
         if (item is VoiceMessage) {
             val button = holder?.itemView?.findViewById<ImageButton>(R.id.action_button)
