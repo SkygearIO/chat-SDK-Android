@@ -15,6 +15,7 @@ import io.skygear.plugins.chat.ChatContainer
 import io.skygear.plugins.chat.ChatUser
 import io.skygear.plugins.chat.GetCallback
 import io.skygear.skygear.Container
+import io.skygear.skygear.Error
 import java.util.*
 
 class UserIdsFragment : DialogFragment() {
@@ -85,7 +86,7 @@ class UserIdsFragment : DialogFragment() {
                 mAdapter?.setUserIds(list, arguments.getStringArrayList(SELECT_IDS_KEY))
             }
 
-            override fun onFail(failReason: String?) {
+            override fun onFail(error: Error) {
 
             }
         })

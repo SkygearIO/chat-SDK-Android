@@ -31,14 +31,14 @@ final class DeleteResponseAdapter extends RecordDeleteResponseHandler {
     }
 
     @Override
-    public void onDeletePartialSuccess(String[] ids, Map<String, Error> reasons) {
+    public void onDeletePartialSuccess(String[] ids, Map<String, Error> errors) {
 
     }
 
     @Override
-    public void onDeleteFail(Error reason) {
+    public void onDeleteFail(Error error) {
         if (callback != null) {
-            callback.onFail(reason.getMessage());
+            callback.onFail(error);
         }
     }
 }

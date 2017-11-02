@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.Toast
 import io.skygear.plugins.chat.*
 import io.skygear.skygear.Container
+import io.skygear.skygear.Error
 import java.util.*
 
 class CreateConversationActivity : AppCompatActivity() {
@@ -51,7 +52,7 @@ class CreateConversationActivity : AppCompatActivity() {
                 mAdapter.setChatUsers(list);
             }
 
-            override fun onFail(failReason: String?) {
+            override fun onFail(error: Error) {
 
             }
         })
@@ -82,10 +83,10 @@ class CreateConversationActivity : AppCompatActivity() {
                     finish()
                 }
 
-                override fun onFail(failReason: String?) {
+                override fun onFail(error: Error) {
                     loading.dismiss()
-                    if (failReason != null) {
-                        toast(failReason)
+                    if (error.message != null) {
+                        toast(error.message.toString())
                     }
                 }
             })

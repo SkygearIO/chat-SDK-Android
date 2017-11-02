@@ -47,7 +47,7 @@ class LogInActivity : AppCompatActivity() {
                     loginSuccess()
                 }
 
-                override fun onAuthFail(reason: Error) {
+                override fun onAuthFail(error: Error) {
                     loading.dismiss()
 
                     loginFail()

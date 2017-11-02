@@ -74,7 +74,7 @@ class ConversationsActivity : AppCompatActivity() {
                 mAdapter.setConversations(list)
             }
 
-            override fun onFail(failReason: String?) {
+            override fun onFail(error: Error) {
 
             }
         })
@@ -101,7 +101,7 @@ class ConversationsActivity : AppCompatActivity() {
                 logoutSuccess()
             }
 
-            override fun onLogoutFail(reason: Error) {
+            override fun onLogoutFail(error: Error) {
                 loading.dismiss()
 
                 logoutFail()
@@ -158,7 +158,7 @@ class ConversationsActivity : AppCompatActivity() {
                 mAdapter.updateConversation(c, new)
             }
 
-            override fun onFail(failReason: String?) {
+            override fun onFail(error: Error) {
 
             }
         })
@@ -178,8 +178,8 @@ class ConversationsActivity : AppCompatActivity() {
                 .setNeutralButton(R.string.dismiss, null)
                 .create()
         mChatContainer.leaveConversation(c, object : LambdaResponseHandler() {
-            override fun onLambdaFail(reason: Error?) {
-                val alertMessage = "Fail to leave the conversation: ${reason?.message}"
+            override fun onLambdaFail(error: Error?) {
+                val alertMessage = "Fail to leave the conversation: ${error?.message}"
                 Log.w(LOG_TAG, alertMessage)
                 failAlert.setMessage(alertMessage)
                 failAlert.show()
@@ -206,8 +206,8 @@ class ConversationsActivity : AppCompatActivity() {
                 .setNeutralButton(R.string.dismiss, null)
                 .create()
         mChatContainer.deleteConversation(c, object : DeleteCallback<Boolean> {
-            override fun onFail(reason: String?) {
-                val alertMessage = "Fail to delete the conversation: " + reason
+            override fun onFail(error: Error) {
+                val alertMessage = "Fail to delete the conversation: " + error.message
                 Log.w(LOG_TAG, alertMessage)
                 failAlert.setMessage(alertMessage)
                 failAlert.show()
@@ -229,7 +229,7 @@ class ConversationsActivity : AppCompatActivity() {
                     mAdapter.updateConversation(c, new)
                 }
 
-                override fun onFail(failReason: String?) {
+                override fun onFail(error: Error) {
 
                 }
             })
@@ -245,7 +245,7 @@ class ConversationsActivity : AppCompatActivity() {
                     mAdapter.updateConversation(c, new)
                 }
 
-                override fun onFail(failReason: String?) {
+                override fun onFail(error: Error) {
 
                 }
             })

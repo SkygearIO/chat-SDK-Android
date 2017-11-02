@@ -45,14 +45,14 @@ abstract class SaveResponseAdapter<T> extends RecordSaveResponseHandler {
 
     @Override
     public void onPartiallySaveSuccess(Map<String, Record> successRecords,
-                                       Map<String, Error> reasons) {
+                                       Map<String, Error> errors) {
 
     }
 
     @Override
-    public void onSaveFail(Error reason) {
+    public void onSaveFail(Error error) {
         if (callback != null) {
-            callback.onFail(reason.getMessage());
+            callback.onFail(error);
         }
     }
 }

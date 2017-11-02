@@ -1,7 +1,7 @@
 package io.skygear.plugins.chat;
 
-
-import android.support.annotation.Nullable;
+import io.skygear.skygear.Error;
+import android.support.annotation.NonNull;
 
 /**
  * The callback interface for deleting objects.
@@ -19,7 +19,7 @@ public interface DeleteCallback<T> {
     /**
      * Fail callback
      *
-     * @param failReason the fail reason
+     * @param error the fail reason
      */
-    void onFail(@Nullable String failReason);
+    void onFail(@NonNull Error error);
 }

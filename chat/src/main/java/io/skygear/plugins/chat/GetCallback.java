@@ -1,6 +1,8 @@
 package io.skygear.plugins.chat;
 
 
+import io.skygear.skygear.Error;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 /**
@@ -19,7 +21,7 @@ public interface GetCallback<T> {
     /**
      * Fail callback
      *
-     * @param failReason the fail reason
+     * @param error the fail reason
      */
-    void onFail(@Nullable String failReason);
+    void onFail(@NonNull Error error);
 }

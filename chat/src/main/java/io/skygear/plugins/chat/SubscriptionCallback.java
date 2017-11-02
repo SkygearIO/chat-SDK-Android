@@ -1,6 +1,6 @@
 package io.skygear.plugins.chat;
 
-
+import io.skygear.skygear.Error;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -29,7 +29,7 @@ public interface SubscriptionCallback {
     /**
      * Subscription fail callback.
      *
-     * @param reason the fail reason
+     * @param error the fail reason
      */
-    void onSubscriptionFail(@Nullable String reason);
+    void onSubscriptionFail(@NonNull Error error);
 }

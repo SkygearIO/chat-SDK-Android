@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.joda.time.DateTime;
-import org.joda.time.convert.Converter;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.json.JSONArray;
@@ -24,21 +23,27 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import io.skygear.plugins.chat.error.TotalUnreadError;
 import io.skygear.skygear.Asset;
 import io.skygear.skygear.AssetPostRequest;
-import io.skygear.skygear.AssetSerializer;
 import io.skygear.skygear.AuthenticationException;
 import io.skygear.skygear.Container;
 import io.skygear.skygear.Database;
 import io.skygear.skygear.Error;
 import io.skygear.skygear.LambdaResponseHandler;
 import io.skygear.skygear.PubsubContainer;
-import io.skygear.skygear.PubsubHandler;
 import io.skygear.skygear.Query;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordQueryResponseHandler;
 import io.skygear.skygear.RecordSaveResponseHandler;
 import io.skygear.skygear.Reference;
+import io.skygear.plugins.chat.error.JSONError;
+import io.skygear.plugins.chat.error.ConversationNotFoundError;
+import io.skygear.plugins.chat.error.ConversationOperationError;
+import io.skygear.plugins.chat.error.ConversationAlreadyExistsError;
+import io.skygear.plugins.chat.error.MessageOperationError;
+import io.skygear.plugins.chat.error.InvalidMessageError;
+import io.skygear.plugins.chat.error.AuthenticationError;
 
 /**
  * The Container for Chat Plugin
@@ -46,6 +51,7 @@ import io.skygear.skygear.Reference;
 public final class ChatContainer {
     private static final int GET_MESSAGES_DEFAULT_LIMIT = 50; // default value
     private static final String TAG = "SkygearChatContainer";
+
 
     private static ChatContainer sharedInstance;
 
@@ -111,16 +117,23 @@ public final class ChatContainer {
                         } catch (JSONException e)
                         {
                             if (callback != null) {
-                                callback.onFail(e.getMessage());
+                                callback.onFail(new JSONError());
                             }
                         }
                     }
 
                     @Override
                     public void onLambdaFail(Error error) {
-
                         if (callback != null) {
-                            callback.onFail(error.getMessage());
+                            if (ConversationAlreadyExistsError.hasConversationId(error)) {
+                                try {
+                                    callback.onFail(new ConversationAlreadyExistsError(error));
+                                } catch (JSONException e) {
+                                    callback.onFail(new JSONError());
+                                }
+                            } else {
+                                callback.onFail(new ConversationOperationError(error));
+                            }
                         }
                     }
         });
@@ -189,9 +202,9 @@ public final class ChatContainer {
                     }
 
                     @Override
-                    public void onFail(@Nullable String failReason) {
+                    public void onFail(@NonNull Error error) {
                         if (callback != null) {
-                            callback.onFail(failReason);
+                            callback.onFail(error);
                         }
                     }
                 });
@@ -243,7 +256,7 @@ public final class ChatContainer {
                         } catch (JSONException e)
                         {
                             if (callback != null) {
-                                callback.onFail(e.getMessage());
+                                callback.onFail(new JSONError());
                             }
                         }
                     }
@@ -252,7 +265,7 @@ public final class ChatContainer {
                     public void onLambdaFail(Error error) {
 
                         if (callback != null) {
-                            callback.onFail(error.getMessage());
+                            callback.onFail(new ConversationOperationError(error));
                         }
                     }
                 });
@@ -427,9 +440,9 @@ public final class ChatContainer {
                     }
 
                     @Override
-                    public void onLambdaFail(Error reason) {
+                    public void onLambdaFail(Error error) {
                         if (callback != null) {
-                            callback.onFail(reason.getMessage());
+                            callback.onFail(new ConversationOperationError(error));
                         }
                     }
                 });
@@ -446,8 +459,8 @@ public final class ChatContainer {
                                    @NonNull final Map<String, Object> updates,
                                    @Nullable final SaveCallback<Conversation> callback) {
         final Database publicDB = this.skygear.getPublicDatabase();
-
-        this.getConversation(conversation.getId(), true, new GetCallback<Conversation>() {
+        final String conversationId = conversation.getId();
+        this.getConversation(conversationId, true, new GetCallback<Conversation>() {
             @Override
             public void onSucc(@Nullable final Conversation conversation) {
                 if (callback == null) {
@@ -456,7 +469,7 @@ public final class ChatContainer {
                 }
 
                 if (conversation == null) {
-                    callback.onFail("Cannot find the conversation");
+                    callback.onFail(new ConversationNotFoundError(conversationId));
                     return;
                 }
 
@@ -473,9 +486,9 @@ public final class ChatContainer {
             }
 
             @Override
-            public void onFail(@Nullable String failReason) {
+            public void onFail(Error error) {
                 if (callback != null) {
-                    callback.onFail(failReason);
+                    callback.onFail(new ConversationOperationError(error));
                 }
             }
         });
@@ -508,15 +521,15 @@ public final class ChatContainer {
                     }
                 } catch (JSONException e) {
                     if (callback != null) {
-                        callback.onFail(e.getMessage());
+                        callback.onFail(new JSONError());
                     }
                 }
             }
 
             @Override
-            public void onLambdaFail(Error reason) {
+            public void onLambdaFail(Error error) {
                 if (callback != null) {
-                    callback.onFail(reason.getMessage());
+                    callback.onFail(new TotalUnreadError(error));
                 }
             }
         });
@@ -548,7 +561,7 @@ public final class ChatContainer {
                         } catch (JSONException e)
                         {
                             if (callback != null) {
-                                callback.onFail(e.getMessage());
+                                callback.onFail(new JSONError());
                             }
                         }
                     }
@@ -557,7 +570,7 @@ public final class ChatContainer {
                     public void onLambdaFail(Error error) {
 
                         if (callback != null) {
-                            callback.onFail(error.getMessage());
+                            callback.onFail(new ConversationNotFoundError(conversationId));
                         }
                     }
                 });
@@ -591,7 +604,7 @@ public final class ChatContainer {
                             }
                         } catch (JSONException e) {
                             if (callback != null) {
-                                callback.onFail(e.getMessage());
+                                callback.onFail(new JSONError());
                             }
                         }
                     }
@@ -600,7 +613,7 @@ public final class ChatContainer {
                     public void onLambdaFail(Error error) {
 
                         if (callback != null) {
-                            callback.onFail(error.getMessage());
+                            callback.onFail(new ConversationOperationError(error));
                         }
                     }
                 });
@@ -656,9 +669,9 @@ public final class ChatContainer {
             }
 
             @Override
-            public void onLambdaFail(Error reason) {
+            public void onLambdaFail(Error error) {
                 if (callback != null) {
-                    callback.onFail(reason.getMessage());
+                    callback.onFail(new MessageOperationError(error));
                 }
             }
         });
@@ -696,7 +709,7 @@ public final class ChatContainer {
             }
         } else {
             if (callback != null) {
-                callback.onFail("Please provide either body, asset or metadata");
+                callback.onFail(new InvalidMessageError());
             }
         }
     }
@@ -734,8 +747,8 @@ public final class ChatContainer {
                     }
 
                     @Override
-                    public void onLambdaFail(Error reason) {
-                        Log.w(TAG, "Fail to mark messages as read: " + reason.getMessage());
+                    public void onLambdaFail(Error error) {
+                        Log.w(TAG, "Fail to mark messages as read: " + error.getMessage());
                     }
                 });
     }
@@ -773,8 +786,8 @@ public final class ChatContainer {
                     }
 
                     @Override
-                    public void onLambdaFail(Error reason) {
-                        Log.w(TAG, "Fail to mark messages as delivered: " + reason.getMessage());
+                    public void onLambdaFail(Error error) {
+                        Log.w(TAG, "Fail to mark messages as delivered: " + error.getMessage());
                     }
                 });
     }
@@ -842,9 +855,9 @@ public final class ChatContainer {
                     }
 
                     @Override
-                    public void onLambdaFail(Error reason) {
+                    public void onLambdaFail(Error error) {
                         if (callback != null) {
-                            callback.onFail(reason.getMessage());
+                            callback.onFail(new MessageOperationError(error));
                         }
                     }
                 }
@@ -876,8 +889,8 @@ public final class ChatContainer {
             }
 
             @Override
-            public void onPostFail(Asset asset, Error reason) {
-                Log.w(TAG, "Fail to upload asset: " + reason.getMessage());
+            public void onPostFail(Asset asset, Error error) {
+                Log.w(TAG, "Fail to upload asset: " + error.getMessage());
                 ChatContainer.this.saveMessageRecord(message, callback);
             }
         });
@@ -914,14 +927,14 @@ public final class ChatContainer {
 
                             callback.onSucc(receiptList);
                         } catch (JSONException e) {
-                            callback.onFail("Fail to parse the result: " + e.getMessage());
+                            callback.onFail(new JSONError());
                         }
                     }
 
                     @Override
-                    public void onLambdaFail(Error reason) {
+                    public void onLambdaFail(Error error) {
                         if (callback != null) {
-                            callback.onFail(reason.getMessage());
+                            callback.onFail(new MessageOperationError(error));
                         }
                     }
                 }
@@ -948,8 +961,8 @@ public final class ChatContainer {
             }
 
             @Override
-            public void onLambdaFail(Error reason) {
-                Log.i(TAG, "Fail to send typing indicator: " + reason.getMessage());
+            public void onLambdaFail(Error error) {
+                Log.i(TAG, "Fail to send typing indicator: " + error.getMessage());
             }
         });
     }
@@ -981,10 +994,10 @@ public final class ChatContainer {
                 }
 
                 @Override
-                public void onFail(@Nullable String failReason) {
-                    Log.w(TAG, "Fail to subscribe typing indicator: " + failReason);
+                public void onFail(@NonNull Error error) {
+                    Log.w(TAG, "Fail to subscribe typing indicator: " + error.getMessage());
                     if (callback != null) {
-                        callback.onSubscriptionFail(failReason);
+                        callback.onSubscriptionFail(error);
                     }
                 }
             });
@@ -1060,10 +1073,10 @@ public final class ChatContainer {
                 }
 
                 @Override
-                public void onFail(@Nullable String failReason) {
-                    Log.w(TAG, "Fail to subscribe conversation message: " + failReason);
+                public void onFail(@NonNull Error error) {
+                    Log.w(TAG, "Fail to subscribe conversation message: " + error.getMessage());
                     if (callback != null) {
-                        callback.onSubscriptionFail(failReason);
+                        callback.onSubscriptionFail(error);
                     }
                 }
             });
@@ -1103,15 +1116,15 @@ public final class ChatContainer {
                 }
 
                 @Override
-                public void onQueryError(Error reason) {
+                public void onQueryError(Error error) {
                     if (callback != null) {
-                        callback.onFail(reason.getMessage());
+                        callback.onFail(error);
                     }
                 }
             });
         } catch (AuthenticationException e) {
             if (callback != null) {
-                callback.onFail(e.getMessage());
+                callback.onFail(new AuthenticationError(e.getMessage()));
             }
         }
     }
@@ -1133,14 +1146,14 @@ public final class ChatContainer {
                 @Override
                 public void onPartiallySaveSuccess(
                         Map<String, Record> successRecords,
-                        Map<String, Error> reasons) {
+                        Map<String, Error> errors) {
 
                 }
 
                 @Override
-                public void onSaveFail(Error reason) {
+                public void onSaveFail(Error error) {
                     if (callback != null) {
-                        callback.onFail(reason.getMessage());
+                        callback.onFail(error);
                     }
                 }
             };
@@ -1148,7 +1161,7 @@ public final class ChatContainer {
             Database db = this.skygear.getPrivateDatabase();
             db.save(conversation, handler);
         } catch (AuthenticationException e) {
-            callback.onFail(e.getMessage());
+            callback.onFail(new AuthenticationError(e.getMessage()));
         }
     }
 

@@ -41,9 +41,9 @@ abstract class QueryResponseAdapter<T> extends RecordQueryResponseHandler {
     }
 
     @Override
-    public void onQueryError(Error reason) {
+    public void onQueryError(Error error) {
         if (callback != null) {
-            callback.onFail(reason.getMessage());
+            callback.onFail(error);
         }
     }
 }
