@@ -10,12 +10,7 @@ class ConversationActivity : AppCompatActivity() {
 
     companion object {
         @JvmField open val ConversationIntentKey = "CONVERSATION"
-        private val TAG = "ConversationActivity"
     }
-
-    var conversationFragment: ConversationFragment? = null
-
-    private var conversation: Conversation? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

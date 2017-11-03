@@ -4,41 +4,22 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
-import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.ProgressBar
 import android.widget.Toast
-import com.dewarder.holdinglibrary.HoldingButtonLayout
-import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
-import com.stfalcon.chatkit.messages.MessageHolders
-import com.stfalcon.chatkit.messages.MessagesList
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import io.skygear.skygear.Error
 import io.skygear.plugins.chat.*
-import io.skygear.plugins.chat.ui.holder.IncomingImageMessageView
-import io.skygear.plugins.chat.ui.holder.IncomingTextMessageView
-import io.skygear.plugins.chat.ui.holder.OutgoingImageMessageView
-import io.skygear.plugins.chat.ui.holder.OutgoingTextMessageView
 import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.Message
@@ -54,8 +35,8 @@ import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
-class ConversationFragment :
-        Fragment(),
+open class ConversationFragment :
+        Fragment,
         MessagesListAdapter.OnLoadMoreListener,
         MessagesListAdapter.OnMessageClickListener<Message>,
         VoiceMessagePlayer.OnMessageStateChangeListener,
@@ -73,28 +54,16 @@ class ConversationFragment :
     }
 
     var conversation: Conversation? = null
-    var messageContentTypeChecker: ConversationFragment.ContentTypeChecker? = null
-
-    private var messagesListView: MessagesList? = null
-    private var addAttachmentButton: ImageButton? = null
-    private var messageSendButton: ImageButton? = null
-    private var messageEditText: EditText? = null
-    private var voiceButtonHolderHint: View? = null
-    private var voiceButtonHolder: HoldingButtonLayout? = null
-    private var progressBar: ProgressBar? = null
 
     private var skygear: Container? = null
     private var skygearChat: ChatContainer? = null
 
-    private var userCache: UserCache? = null
     private var messageIDs: HashSet<String> = HashSet()
 
     private var voiceRecorder: MediaRecorder? = null
     private var voiceRecordingFileName: String? = null
     private var voicePlayer: VoiceMessagePlayer? = null
 
-    private var messagesListAdapter: MessagesListAdapter<Message>? = null
-    private var messagesListViewReachBottomListener: MessagesListViewReachBottomListener? = null
 
     private var messageLoadMoreBefore: Date = Date()
     private var messageSubscriptionRetryCount = 0
@@ -104,62 +73,24 @@ class ConversationFragment :
     private var takePhotoPermissionManager: PermissionManager? = null
     private var voiceRecordingPermissionManager: PermissionManager? = null
 
+    protected  var layoutResID: Int
+
+    constructor(layoutResID: Int = R.layout.conversation_fragment): super() {
+        this.layoutResID = layoutResID
+    }
+
     override fun onAttach(context: Context?) {
         super.onAttach(context)
 
         this.skygear = Container.defaultContainer(context)
         this.skygearChat = ChatContainer.getInstance(this.skygear as Container)
-        this.userCache = UserCache.getInstance(
-                this.skygear as Container,
-                this.skygearChat as ChatContainer
-        )
         this.voicePlayer = VoiceMessagePlayer(this.activity)
         this.voicePlayer?.playerErrorListener = this
         this.voicePlayer?.messageStateChangeListener = this
     }
 
-    override fun onCreateView(
-            inflater: LayoutInflater?,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater?.inflate(R.layout.conversation_view, container, false)
 
-        this.messagesListView = view?.findViewById<MessagesList>(R.id.messages_list)
-
-        this.addAttachmentButton = view?.findViewById<ImageButton>(R.id.add_attachment_btn)
-        this.addAttachmentButton?.setOnClickListener {
-            this@ConversationFragment.onAddAttachmentButtonClick()
-        }
-
-        this.messageSendButton = view?.findViewById<ImageButton>(R.id.msg_send_btn)
-        this.messageSendButton?.setOnClickListener {
-            this@ConversationFragment.onSendMessageButtonClick()
-        }
-
-        this.messageEditText = view?.findViewById<EditText>(R.id.msg_edit_text)
-        this.messageEditText?.addTextChangedListener(object : TextBaseWatcher() {
-            override fun afterTextChanged(s: Editable?) {
-                super.afterTextChanged(s)
-                this@ConversationFragment.onMessageEditTextChanged()
-            }
-        })
-
-        this.voiceButtonHolderHint = view?.findViewById(R.id.voice_recording_btn_holder_hint)
-        this.voiceButtonHolder = view?.findViewById<HoldingButtonLayout>(R.id.voice_recording_btn_holder)
-        this.voiceButtonHolder?.addListener(object : HoldingButtonLayoutBaseListener() {
-            override fun onExpand() {
-                super.onExpand()
-                this@ConversationFragment.onVoiceRecordingButtonPressedDown()
-            }
-
-            override fun onCollapse(isCancel: Boolean) {
-                super.onCollapse(isCancel)
-                this@ConversationFragment.onVoiceRecordingButtonPressedUp(isCancel)
-            }
-        })
-        this.progressBar = view?.findViewById<ProgressBar>(R.id.progressBar)
-
+    fun initializeConversation() {
         this.arguments?.let { args ->
             args.getString(ConversationBundleKey)?.let { convJson ->
                 val conv = ChatConversation.fromJson(JSONObject(convJson))
@@ -167,49 +98,11 @@ class ConversationFragment :
             }
         }
 
-        this.activity.title = this.conversation?.dialogName
+    }
 
-        this.messageContentTypeChecker = ConversationFragment.ContentTypeChecker()
-        val messageHolder = MessageHolders()
-                .setIncomingTextHolder(IncomingTextMessageView::class.java)
-                .setIncomingImageHolder(IncomingImageMessageView::class.java)
-                .setIncomingTextLayout(R.layout.item_incoming_text_message)
-                .setIncomingImageLayout(R.layout.item_incoming_image_message)
-                .setOutcomingTextHolder(OutgoingTextMessageView::class.java)
-                .setOutcomingImageHolder(OutgoingImageMessageView::class.java)
-                .setOutcomingImageLayout(R.layout.item_outgoing_image_message)
-                .setOutcomingTextLayout(R.layout.item_outgoing_text_message)
-                .registerContentType(
-                        ConversationFragment.ContentTypeChecker.VoiceMessageType,
-                        IncomingVoiceMessageView::class.java, R.layout.item_incoming_voice_message,
-                        OutgoingVoiceMessageView::class.java, R.layout.item_outgoing_voice_message,
-                        this.messageContentTypeChecker as ConversationFragment.ContentTypeChecker
-                )
-
-        this.messagesListAdapter = MessagesListAdapter(
-                this.skygear?.auth?.currentUser?.id,
-                messageHolder,
-                ImageLoader(this.activity)
-        )
-        this.messagesListView?.setAdapter(this.messagesListAdapter)
-
-        if (this.messagesListView?.layoutManager is LinearLayoutManager) {
-            this.messagesListViewReachBottomListener = MessagesListViewReachBottomListener(
-                    this.messagesListView?.layoutManager as LinearLayoutManager
-            )
-            (this.messagesListView?.layoutManager as LinearLayoutManager).isAutoMeasureEnabled = false
-            this.messagesListView?.addOnScrollListener(this.messagesListViewReachBottomListener)
-        }
-
-        this.messagesListAdapter?.setLoadMoreListener(this)
-        this.messagesListAdapter?.setOnMessageClickListener(this)
-
-        this.messagesListAdapter?.setOnMessageClickListener(this)
-
-        // TODO: setup typing indicator subscription
-
-        this.takePhotoPermissionManager = object: PermissionManager(
-                this.activity,
+    private fun createPhotoPermissionManager(activity: Activity): PermissionManager {
+        return object: PermissionManager(
+                activity,
                 listOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE),
                 permissionGrantedHandler = { this.takePhotoFromCameraIntent() },
                 permissionDeniedHandler = { permissionsDenied, _ ->
@@ -223,9 +116,11 @@ class ConversationFragment :
                 )
             }
         }
+    }
 
-        this.voiceRecordingPermissionManager = object: PermissionManager(
-                this.activity,
+    private  fun createRecordingPermissionManager(activity: Activity): PermissionManager {
+        return object: PermissionManager(
+                activity,
                 listOf(Manifest.permission.RECORD_AUDIO),
                 permissionDeniedHandler = { _, _ ->
                     this@ConversationFragment.voiceRecordingPermissionDenied()
@@ -238,23 +133,57 @@ class ConversationFragment :
                 )
             }
         }
+    }
+
+
+    protected fun createConversationView(inflater: LayoutInflater?, container: ViewGroup?): ConversationView {
+        val view = inflater?.inflate(layoutResID, container, false) as ConversationView
+
+        view.setAddAttachmentButtonOnClickListener{ view -> this@ConversationFragment.onAddAttachmentButtonClick(view) }
+
+        view.setVoiceButtonHolderListener(object : HoldingButtonLayoutBaseListener() {
+            override fun onExpand() {
+                super.onExpand()
+                this@ConversationFragment.onVoiceRecordingButtonPressedDown()
+            }
+
+            override fun onCollapse(isCancel: Boolean) {
+                super.onCollapse(isCancel)
+                this@ConversationFragment.onVoiceRecordingButtonPressedUp(isCancel)
+            }
+        })
+
+        view.setSendTextMessageListener { msg -> this@ConversationFragment.onSendMessage(msg)}
+        view.setOnMessageClickListener(this)
+        view.setLoadMoreListener(this)
+        return view
+    }
+
+    fun conversationView() : ConversationView {
+        return this.view as ConversationView
+    }
+
+    override fun onCreateView(
+            inflater: LayoutInflater?,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+    ): View? {
+        this.initializeConversation()
+        this.activity.title = this.conversation?.dialogName
+
+        val view = createConversationView(inflater, container)
+        // TODO: setup typing indicator subscription
+
+        this.takePhotoPermissionManager = createPhotoPermissionManager(this.activity)
+        this.voiceRecordingPermissionManager = createRecordingPermissionManager(this.activity)
 
         return view
     }
 
     override fun onResume() {
         super.onResume()
-
-        if (this.messagesListAdapter?.itemCount == 0) {
-            this.conversation?.let { conv ->
-                if (conv.userList.isEmpty()) {
-                    conv.chatConversation.participantIds?.let { userIDs ->
-                        this.userCache?.getUsers(userIDs.toList()) { users ->
-                            conv.userList = users.values.toList()
-                        }
-                    }
-                }
-
+        if (conversationView().itemCount() == 0) {
+            this.conversation?.let {
                 this.fetchMessages()
             }
         }
@@ -271,20 +200,19 @@ class ConversationFragment :
 
     private fun fetchMessages(
             before: Date? = null,
-            complete: ((msgs: List<Message>?, error: String?) -> Unit)? = null
+            complete: ((msgs: List<ChatMessage>?, error: String?) -> Unit)? = null
     ) {
         val successCallback = fun(chatMsgs: List<ChatMessage>?) {
-            this.progressBar?.visibility = View.GONE
-            val msgs = chatMsgs?.map { chatMsg -> MessageFactory.getMessage(chatMsg) }
-            msgs?.let { this@ConversationFragment.addMessages(it, isAddToTop = true) }
-            msgs?.map { it.createdAt }?.min()?.let { newBefore ->
+            conversationView().hideProgress()
+            chatMsgs?.let { this@ConversationFragment.addMessages(it, isAddToTop = true) }
+            chatMsgs?.map { it.createdTime }?.min()?.let { newBefore ->
                 // update load more cursor
                 if (newBefore.before(this@ConversationFragment.messageLoadMoreBefore)) {
                     this@ConversationFragment.messageLoadMoreBefore = newBefore
                 }
             }
 
-            complete?.let { it(msgs, null) }
+            complete?.let { it(chatMsgs, null) }
         }
 
         this.conversation?.let { conv ->
@@ -306,94 +234,46 @@ class ConversationFragment :
         }
     }
 
-    private fun addMessagesToBottom(msgs: List<Message>) {
-        var needScrollToBottom = false
-        if (this.messagesListViewReachBottomListener?.isReachEnd == true) {
-            needScrollToBottom = true
-        }
-
-        this.addMessages(msgs, isScrollToBottom = needScrollToBottom)
+    private fun addMessagesToBottom(messages: List<ChatMessage>) {
+        this.addMessages(messages, isScrollToBottom = conversationView().needToScrollToBottom())
     }
 
-    private fun addMessages(msgs: List<Message>,
+    private fun addMessages(messages: List<ChatMessage>,
                             isAddToTop: Boolean = false,
                             isScrollToBottom: Boolean = false
     ) {
-        if (msgs.isEmpty()) {
+        if (messages.isEmpty()) {
             return
         }
 
-        // fetch user if needed
-        val userIDs = msgs.map { it.author?.id ?: it.chatMessage.record.ownerId }
-        this.userCache?.let { cache ->
-            cache.getUsers(userIDs) { userMap ->
-                val multiTypedMessages = msgs.map { originalMsg ->
-                    if (VoiceMessage.isVoiceMessage(originalMsg)) {
-                        VoiceMessage(originalMsg.chatMessage)
-                    } else {
-                        originalMsg
-                    }
-                }.let {
-                    it.forEach { msg ->
-                        if (msg.chatMessage.record.ownerId != null) {
-                            msg.author = userMap[msg.chatMessage.record.ownerId]
-                        } else {
-                            msg.author = User(this.skygear?.auth?.currentUser!!)
-                        }
-                        msg
-                    }
-                    it
-                }
-
-                if (isAddToTop) {
-                    this.messagesListAdapter?.addToEnd(multiTypedMessages, false)
+        val view = conversationView()
+        if (isAddToTop) {
+            view.addMessagesToEnd(messages, false)
+        } else {
+            messages.forEach { msg ->
+                if (messageIDs.contains(msg.id)) {
+                    view.updateMessage(msg)
                 } else {
-                    multiTypedMessages.forEach { msg ->
-                        if (messageIDs.contains(msg.id)) {
-                            this@ConversationFragment.messagesListAdapter?.update(msg)
-                        } else {
-                            this@ConversationFragment.messagesListAdapter?.addToStart(
-                                    msg,
-                                    isScrollToBottom
-                            )
-                        }
-                    }
+                    view.addMessageToStart(
+                            msg,
+                            isScrollToBottom
+                    )
                 }
-
             }
         }
 
-        msgs.forEach { msg ->
+        messages.forEach { msg ->
             messageIDs.add(msg.id)
         }
 
         // mark last read message
         this.conversation?.chatConversation?.let { conv ->
-            val lastChatMsg = msgs.last().chatMessage
+            val lastChatMsg = messages.last()
             this.skygearChat?.markConversationLastReadMessage(conv, lastChatMsg)
         }
 
-        // mark messages as read
-        val chatMsgs = msgs.map { it.chatMessage }
-        this.skygearChat?.markMessagesAsRead(chatMsgs)
-    }
 
-    private fun updateMessages(msgs: List<Message>) {
-        val userIDs = msgs.map { it.chatMessage.record.ownerId }
-        this.userCache?.let { cache ->
-            cache.getUsers(userIDs) { userMap ->
-                msgs.map { msg ->
-                    if (VoiceMessage.isVoiceMessage(msg)) {
-                        VoiceMessage(msg.chatMessage)
-                    } else {
-                        msg
-                    }
-                }.forEach { msg ->
-                    msg.author = userMap[msg.chatMessage.record.ownerId]
-                    this@ConversationFragment.messagesListAdapter?.update(msg)
-                }
-            }
-        }
+        this.skygearChat?.markMessagesAsRead(messages)
     }
 
     private fun subscribeMessage() {
@@ -411,9 +291,9 @@ class ConversationFragment :
                         ) {
                             when (eventType) {
                                 EVENT_TYPE_CREATE ->
-                                    this@ConversationFragment.onReceiveChatMessage(MessageFactory.getMessage(message))
+                                    this@ConversationFragment.onReceiveChatMessage(message)
                                 EVENT_TYPE_UPDATE ->
-                                    this@ConversationFragment.onUpdateChatMessage(MessageFactory.getMessage(message))
+                                    this@ConversationFragment.onUpdateChatMessage(message)
                             }
                         }
 
@@ -430,12 +310,12 @@ class ConversationFragment :
         }
     }
 
-    private fun onReceiveChatMessage(msg: Message) {
+    private fun onReceiveChatMessage(msg: ChatMessage) {
         this.addMessagesToBottom(listOf(msg))
     }
 
-    private fun onUpdateChatMessage(msg: Message) {
-        this.updateMessages(listOf(msg))
+    private fun onUpdateChatMessage(message: ChatMessage) {
+        conversationView().updateMessage(message)
     }
 
     override fun onLoadMore(page: Int, totalItemsCount: Int) {
@@ -458,14 +338,14 @@ class ConversationFragment :
 
     override fun onVoiceMessageStateChanged(voiceMessage: VoiceMessage) {
         Log.i(TAG, "Voice Message State Changed: ${voiceMessage.state}")
-        this.messagesListAdapter?.update(voiceMessage)
+        conversationView().updateMessage(voiceMessage.chatMessage)
     }
 
     override fun onVoiceMessagePlayerError(error: VoiceMessagePlayer.Error) {
         Toast.makeText(this.activity, error.message, Toast.LENGTH_SHORT).show()
     }
 
-    fun onAddAttachmentButtonClick() {
+    fun onAddAttachmentButtonClick(view: View?) {
         AlertDialog.Builder(this.activity)
                 .setItems(R.array.attachment_options) { _, option ->
                     when (option) {
@@ -487,36 +367,8 @@ class ConversationFragment :
                 .show()
     }
 
-    fun onSendMessageButtonClick() {
-        this.messageEditText?.text?.toString()?.let { msgContent ->
-            if (msgContent.isEmpty()) {
-                return
-            }
-
-            val success = this@ConversationFragment.onSendMessage(msgContent)
-            if (success) {
-                this@ConversationFragment.messageEditText?.setText("")
-            }
-        }
-    }
-
-    fun onMessageEditTextChanged() {
-        this.messageEditText?.text?.let { msgContent ->
-            if (msgContent.isEmpty()) {
-                this@ConversationFragment.voiceButtonHolder?.visibility = View.VISIBLE
-                this@ConversationFragment.messageSendButton?.visibility = View.INVISIBLE
-            } else {
-                this@ConversationFragment.voiceButtonHolder?.visibility = View.INVISIBLE
-                this@ConversationFragment.messageSendButton?.visibility = View.VISIBLE
-            }
-        }
-    }
-
     fun onVoiceRecordingButtonPressedDown() {
-        this.voiceButtonHolderHint?.visibility = View.VISIBLE
-        listOf(this.addAttachmentButton, this.messageEditText).map {
-            it?.visibility = View.INVISIBLE
-        }
+        conversationView().toggleVoiceButtonHint(true)
 
         val fileDir = this.activity.cacheDir.absolutePath
         val fileName = "voice-${Date().time}.${VoiceMessage.FILE_EXTENSION_NAME}"
@@ -535,16 +387,7 @@ class ConversationFragment :
     }
 
     fun onVoiceRecordingButtonPressedUp(isCancel: Boolean) {
-        this.voiceButtonHolderHint?.visibility = View.INVISIBLE
-        listOf(this.addAttachmentButton, this.messageEditText).map {
-            it?.visibility = View.VISIBLE
-        }
-
-        this.messageEditText?.requestFocus()
-
-        if (this.voiceRecordingPermissionManager?.permissionsGranted() != true) {
-            return
-        }
+        conversationView().toggleVoiceButtonHint(false)
 
         // finish recording
         try {
@@ -573,24 +416,17 @@ class ConversationFragment :
         stream.read(bytes, 0, bytes.size)
         stream.close()
 
-        this.conversation?.chatConversation?.let { conv ->
+        this.conversation?.let { conv ->
             val fileName = this@ConversationFragment.voiceRecordingFileName!!.split("/").last()
             val asset = Asset(fileName, VoiceMessage.MIME_TYPE, bytes)
             val meta = JSONObject()
             meta.put(VoiceMessage.DurationMatadataName, duration)
 
-            val message = ChatMessage()
-            message.asset = asset
-            message.metadata = meta
-
-            val msg = VoiceMessage(message)
-            msg.author = User(this.skygear?.auth?.currentUser!!)
-
-            this.addMessagesToBottom(listOf(msg))
-            
-            this.skygearChat?.addMessage(
-                    message,
-                    conv,
+            this.skygearChat?.sendMessage(
+                    conv.chatConversation,
+                    null,
+                    asset,
+                    meta,
                     object : SaveCallback<ChatMessage> {
                         override fun onSucc(chatMsg: ChatMessage?) {
                             voiceRecordingFile.delete()
@@ -611,11 +447,7 @@ class ConversationFragment :
         this.conversation?.chatConversation?.let { conv ->
             val message = ChatMessage()
             message.body = input.trim()
-
-            val msg = Message(message)
-            msg.author = User(this.skygear?.auth?.currentUser!!)
-            this.addMessagesToBottom(listOf(msg))
-
+            this.addMessagesToBottom(listOf(message))
             this.skygearChat?.addMessage(message, conv, null)
         }
 
@@ -674,25 +506,12 @@ class ConversationFragment :
             Log.w(TAG, "Failed to decode image from uri: %s".format(imageUri))
             return
         }
+
         this.conversation?.chatConversation?.let { conv ->
-            val imageByteArray = bitmapToByteArray(imageData.image)
-            val thumbByteArray = bitmapToByteArray(imageData.thumbnail)
-
-            val meta = JSONObject()
-            val encoded = Base64.encodeToString(thumbByteArray, Base64.DEFAULT)
-            meta.put("thumbnail", encoded)
-            meta.put("height", imageData.image.height)
-            meta.put("width", imageData.image.width)
-
-            val message = ChatMessage()
-            message.asset = Asset("image.jpg", "image/jpeg", imageByteArray)
-            message.metadata = meta
-
-            val msg = ImageMessage(message, imageUri.toString())
-            msg.author = User(this.skygear?.auth?.currentUser!!)
-            this.addMessagesToBottom(listOf(msg))
-
-            this.skygearChat?.addMessage(message, conv, null)
+            val user = User(this.skygear?.auth?.currentUser!!)
+            val imageMessage = MessageBuilder.createImageMessage(imageData)
+            this.addMessagesToBottom(listOf(imageMessage))
+            this.skygearChat?.addMessage(imageMessage, conv, null)
         }
     }
 
@@ -737,7 +556,8 @@ class ConversationFragment :
     }
 
     private fun voiceRecordingPermissionDenied() {
-        this.voiceButtonHolder?.cancel()
+        conversationView().cancelVoiceButton()
+
         Toast.makeText(
                 this.activity,
                 R.string.please_turn_on_audio_recording_permission,
@@ -745,117 +565,10 @@ class ConversationFragment :
         ).show()
     }
 
-    class ContentTypeChecker : MessageHolders.ContentChecker<Message> {
-        companion object {
-            val VoiceMessageType: Byte = 1
-        }
 
-        override fun hasContentFor(message: Message?, type: Byte): Boolean {
-            if (message == null) return false
-
-            return when (type) {
-                ContentTypeChecker.VoiceMessageType -> VoiceMessage.isVoiceMessage(message)
-                else -> false
-            }
-        }
-    }
 }
 
-private class MessagesListViewReachBottomListener(
-        private val layoutManager: LinearLayoutManager
-) : RecyclerView.OnScrollListener() {
-    companion object {
-        private val BOTTOM_ITEM_THRESHOLD = 5
-    }
-    var isReachEnd: Boolean = false
-        private set
-
-    override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-        val pastVisibleItems = this.layoutManager.findFirstVisibleItemPosition()
-        this.isReachEnd = pastVisibleItems < BOTTOM_ITEM_THRESHOLD
-    }
-}
-
-private abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
-    override fun onBeforeCollapse() {}
-
-    override fun onOffsetChanged(offset: Float, isCancel: Boolean) {}
-
-    override fun onBeforeExpand() {}
-
-    override fun onExpand() {}
-
-    override fun onCollapse(isCancel: Boolean) {}
-}
-
-private abstract class TextBaseWatcher : TextWatcher {
-    override fun afterTextChanged(s: Editable?) {}
-
-    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-}
-
-/**
- * PermissionManager encapsulates the complicated permission request flow
- */
-private abstract class PermissionManager(
-        val activityContext: Activity,
-        val permissions: List<String>,
-        val permissionGrantedHandler: (() -> Unit)? = null,
-        val permissionDeniedHandler: ((
-                permissionsDenied: List<String>,
-                neverAskAgain: Boolean
-        ) -> Unit)? = null
-) {
-    private var permissionsNeverAskAgain = false
-
-    abstract fun request(permissions: List<String>)
-
-    private val deniedPermissions: List<String>
-        get() = this.permissions.filter {
-            ContextCompat.checkSelfPermission(this.activityContext, it) ==
-                    PackageManager.PERMISSION_DENIED
-        }
-
-    fun notifyRequestResult(
-            permissions: List<String>,
-            grantResults: List<Int>
-    ) {
-        val granted = grantResults.isNotEmpty() &&
-                grantResults.first() == PackageManager.PERMISSION_GRANTED
-        if (granted) {
-            this.permissionGrantedHandler?.invoke()
-        } else {
-            this.permissionsNeverAskAgain = permissions.filter {
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                        this@PermissionManager.activityContext,
-                        it
-                ).not()
-            }.any()
-            this.permissionDeniedHandler?.invoke(
-                    permissions,
-                    this.permissionsNeverAskAgain
-            )
-        }
-    }
-
-    fun permissionsGranted() = this.deniedPermissions.isEmpty()
-
-    fun runIfPermissionGranted(toRun: () -> Unit) {
-        val permissionsDenied = this.deniedPermissions
-
-        when {
-            permissionsDenied.isEmpty() -> toRun()
-            this.permissionsNeverAskAgain ->
-                this.permissionDeniedHandler
-                        ?.invoke(
-                                permissionsDenied,
-                                this.permissionsNeverAskAgain
-                        )
-            else -> this.request(permissionsDenied)
-        }
 
 
-    }
-}
+
+
