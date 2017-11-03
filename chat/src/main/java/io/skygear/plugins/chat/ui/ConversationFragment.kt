@@ -21,7 +21,6 @@ import com.stfalcon.chatkit.messages.MessagesListAdapter
 import io.skygear.skygear.Error
 import io.skygear.plugins.chat.*
 import io.skygear.plugins.chat.ui.model.*
-import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.Message
 import io.skygear.plugins.chat.ui.utils.*
 import io.skygear.skygear.Asset
@@ -53,7 +52,7 @@ open class ConversationFragment :
         private val VOICE_RECORDING_PERMISSIONS = arrayOf(Manifest.permission.RECORD_AUDIO)
     }
 
-    var conversation: Conversation? = null
+    var conversation: ChatConversation? = null
 
     private var skygear: Container? = null
     private var skygearChat: ChatContainer? = null
@@ -93,8 +92,7 @@ open class ConversationFragment :
     fun initializeConversation() {
         this.arguments?.let { args ->
             args.getString(ConversationBundleKey)?.let { convJson ->
-                val conv = ChatConversation.fromJson(JSONObject(convJson))
-                this.conversation = Conversation(conv)
+                this.conversation = ChatConversation.fromJson(JSONObject(convJson))
             }
         }
 
@@ -169,7 +167,7 @@ open class ConversationFragment :
             savedInstanceState: Bundle?
     ): View? {
         this.initializeConversation()
-        this.activity.title = this.conversation?.dialogName
+        this.activity.title = this.conversation?.title
 
         val view = createConversationView(inflater, container)
         // TODO: setup typing indicator subscription
@@ -217,7 +215,7 @@ open class ConversationFragment :
 
         this.conversation?.let { conv ->
             this.skygearChat?.getMessages(
-                    conv.chatConversation,
+                    conv,
                     0,
                     before,
                     null,
@@ -267,7 +265,7 @@ open class ConversationFragment :
         }
 
         // mark last read message
-        this.conversation?.chatConversation?.let { conv ->
+        this.conversation?.let { conv ->
             val lastChatMsg = messages.last()
             this.skygearChat?.markConversationLastReadMessage(conv, lastChatMsg)
         }
@@ -282,7 +280,7 @@ open class ConversationFragment :
             return
         }
         this.messageSubscriptionRetryCount++
-        this.conversation?.chatConversation?.let { conv ->
+        this.conversation?.let { conv ->
             this.skygearChat?.subscribeConversationMessage(
                     conv,
                     object : MessageSubscriptionCallback(conv) {
@@ -305,7 +303,7 @@ open class ConversationFragment :
     }
 
     private fun unsubscribeMessage() {
-        this.conversation?.chatConversation?.let { conv ->
+        this.conversation?.let { conv ->
             this.skygearChat?.unsubscribeConversationMessage(conv)
         }
     }
@@ -423,7 +421,7 @@ open class ConversationFragment :
             meta.put(VoiceMessage.DurationMatadataName, duration)
 
             this.skygearChat?.sendMessage(
-                    conv.chatConversation,
+                    conv,
                     null,
                     asset,
                     meta,
@@ -444,7 +442,7 @@ open class ConversationFragment :
     }
 
     fun onSendMessage(input: String): Boolean {
-        this.conversation?.chatConversation?.let { conv ->
+        this.conversation?.let { conv ->
             val message = ChatMessage()
             message.body = input.trim()
             this.addMessagesToBottom(listOf(message))
@@ -507,8 +505,7 @@ open class ConversationFragment :
             return
         }
 
-        this.conversation?.chatConversation?.let { conv ->
-            val user = User(this.skygear?.auth?.currentUser!!)
+        this.conversation?.let { conv ->
             val imageMessage = MessageBuilder.createImageMessage(imageData)
             this.addMessagesToBottom(listOf(imageMessage))
             this.skygearChat?.addMessage(imageMessage, conv, null)

@@ -10,18 +10,11 @@ open class Message: IMessage {
 
     val chatMessage: ChatMessage
     var author: User? = null
+    var style: MessageStyle
 
-
-    constructor(record: Record) {
-        try {
-            this.chatMessage = ChatMessage.fromJson(record.toJson())
-        } catch (e: JSONException) {
-            throw IllegalArgumentException("Cannot serialize the skygear record")
-        }
-    }
-
-    constructor(m: ChatMessage) {
+    constructor(m: ChatMessage, style: MessageStyle) {
         this.chatMessage = m
+        this.style = style
     }
 
     override fun getId(): String = this.chatMessage.id

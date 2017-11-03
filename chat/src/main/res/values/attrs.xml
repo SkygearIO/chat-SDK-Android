@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ConversationView">
+        <attr name="avatarBackgroundColor" format="color" />
+        <attr name="avatarInitialTextColor" format="color" />
+        <attr name="avatarSenderTextColor" format="color" />
+        <attr name="avatarType" format="enum">
+            <enum name="initial" value="0"/>
+            <enum name="image" value="1"/>
+        </attr>
+        <attr name="avatarNameField" format="string" />
+        <attr name="avatarImageField" format="string" />
+        <attr name="avatarShowSender" format="boolean"/>
+        <attr name="avatarShowReceiver" format="boolean" />
+        <attr name="senderUserNameTextColor" format="color" />
+    </declare-styleable>
+</resources>

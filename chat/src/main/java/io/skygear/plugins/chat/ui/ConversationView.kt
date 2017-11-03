@@ -2,6 +2,7 @@ package io.skygear.plugins.chat.ui
 
 
 import android.content.Context
+import android.graphics.Color
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Editable
@@ -16,7 +17,6 @@ import android.widget.RelativeLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
 import com.stfalcon.chatkit.messages.MessageHolders
-import io.skygear.plugins.chat.ui.model.Message
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesList
 import io.skygear.plugins.chat.R
@@ -28,12 +28,12 @@ import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
 import com.stfalcon.chatkit.messages.MessagesListAdapter.OnMessageClickListener
 import com.stfalcon.chatkit.messages.MessagesListAdapter.OnLoadMoreListener
-import io.skygear.plugins.chat.ui.model.User
+import io.skygear.plugins.chat.ui.model.*
+import io.skygear.plugins.chat.ui.utils.AvatarBuilder
 import io.skygear.plugins.chat.Message as ChatMessage
-import io.skygear.plugins.chat.ui.model.VoiceMessage
 import io.skygear.plugins.chat.ui.utils.UserCache
 import io.skygear.skygear.Container
-import io.skygear.plugins.chat.ui.model.MessageFactory
+
 
 
 open abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
@@ -71,8 +71,25 @@ private class MessagesListViewReachBottomListener(
     }
 }
 
+enum class AvatarType(val value: Int) {
+    INITIAL(0),
+    IMAGE(1);
 
-class ConversationView: RelativeLayout{
+    companion object {
+        fun fromInt(value: Int): AvatarType {
+            values().forEach { type ->
+                if (type.value == value) {
+                    return type
+                }
+            }
+            throw IllegalArgumentException()
+        }
+
+    }
+}
+
+
+open class ConversationView: RelativeLayout{
     private var messagesListView: MessagesList? = null
     private var addAttachmentButton: ImageButton? = null
     private var messageSendButton: ImageButton? = null
@@ -86,7 +103,40 @@ class ConversationView: RelativeLayout{
     private var skygear: Container? = null
     private var userCache: UserCache? = null
 
+    private var senderUserNameTextColor: Int
+    private var avatarNameField: String
+    private var avatarImageField: String
+    private var avatarShowSender: Boolean
+    private var avatarShowReceiver: Boolean
+    private var avatarInitialTextColor: Int
+    private var avatarBackgroundColor: Int
+    private var avatarType: AvatarType
+    private var userBuilder: UserBuilder
+
+
+
+
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
+        val a = context.theme.obtainStyledAttributes(
+                attributeSet,
+                R.styleable.ConversationView,
+                0, 0);
+
+       try {
+           avatarNameField = a.getString(R.styleable.ConversationView_avatarNameField) ?: User.DefaultUsernameField
+           avatarImageField = a.getString(R.styleable.ConversationView_avatarImageField) ?: User.DefaultAvatarField
+           avatarShowSender = a.getBoolean(R.styleable.ConversationView_avatarShowSender, true)
+           avatarShowReceiver = a.getBoolean(R.styleable.ConversationView_avatarShowReceiver, false)
+           senderUserNameTextColor = a.getColor(R.styleable.ConversationView_senderUserNameTextColor, Color.BLACK)
+           avatarType = AvatarType.fromInt(a.getInt(R.styleable.ConversationView_avatarType, AvatarType.INITIAL.value))
+           avatarInitialTextColor = a.getColor(R.styleable.ConversationView_avatarInitialTextColor, Color.WHITE)
+           avatarBackgroundColor = a.getColor(R.styleable.ConversationView_avatarBackgroundColor, Color.BLUE)
+       } finally {
+           a.recycle()
+       }
+
+        this.userBuilder = UserBuilder(avatarNameField, avatarImageField, avatarType, avatarBackgroundColor , avatarInitialTextColor)
+
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
         inflater.inflate(R.layout.conversation_view, this, true)
@@ -134,7 +184,7 @@ class ConversationView: RelativeLayout{
                 }
         }
         this.skygear = Container.defaultContainer(context)
-        this.messageListAdapter = createMessageListAdapter(ImageLoader(context as Activity), this.skygear?.auth?.currentUser!!.id)
+        this.messageListAdapter = createMessageListAdapter(ImageLoader(context as Activity, AvatarBuilder()), this.skygear?.auth?.currentUser!!.id)
         this.messagesListView?.setAdapter(this.messageListAdapter)
 
         if (this.messagesListView?.layoutManager is LinearLayoutManager) {
@@ -145,7 +195,7 @@ class ConversationView: RelativeLayout{
             this.messagesListView?.addOnScrollListener(this.messagesListViewReachBottomListener)
         }
 
-        this.userCache = UserCache.getInstance(this.skygear!!)
+        this.userCache = UserCache.getInstance(this.skygear!!, this.userBuilder)
     }
 
     open fun setAddAttachmentButtonOnClickListener(action: (View) -> Unit) {
@@ -233,9 +283,13 @@ class ConversationView: RelativeLayout{
         }
     }
 
+    fun getMessageStyle(): MessageStyle {
+        return MessageStyle(this.avatarShowSender, this.avatarShowReceiver, this.senderUserNameTextColor)
+    }
+
     fun MessagesFromChatMessages(chatMessages: List<ChatMessage>, callback: ((messages: List<Message>) -> Unit)? ) {
         val userIDs = chatMessages.map { it.record.ownerId }.distinct()
-        val multitypeMessages = chatMessages.map { MessageFactory.getMessage(it) }
+        val multitypeMessages = chatMessages.map { MessageFactory.getMessage(it, getMessageStyle()) }
         this.userCache?.getUsers(userIDs) { userIDs ->
             multitypeMessages.forEach {
                 msg ->
@@ -243,7 +297,7 @@ class ConversationView: RelativeLayout{
                     if (ownerId != null && userIDs.containsKey(ownerId)) {
                         msg.author = userIDs[ownerId]
                     } else {
-                        msg.author = User(this.skygear?.auth?.currentUser!!)
+                        msg.author = userBuilder.createUser(this.skygear?.auth?.currentUser!!)
                     }
             }
             callback?.invoke(multitypeMessages)

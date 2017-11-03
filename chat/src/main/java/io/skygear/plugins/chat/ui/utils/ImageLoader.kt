@@ -16,8 +16,6 @@ class ImageLoader(
         val avatarBuilder: AvatarBuilder
 ): ImageLoader {
 
-    constructor(context: Context): this(context, AvatarBuilder.defaultBuilder())
-
     override fun loadImage(imageView: ImageView?, url: String?) {
         if (url == null) {
             return
