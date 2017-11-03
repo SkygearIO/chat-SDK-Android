@@ -7,14 +7,14 @@ import io.skygear.plugins.chat.ui.model.User
 import io.skygear.skygear.*
 import java.util.*
 
-class UserCache(val skygear: Container, val skygearChat: ChatContainer) {
+class UserCache(val skygear: Container) {
     companion object {
         private val TAG = UserCache::class.java.canonicalName
         private var sharedInstance: UserCache? = null
 
-        fun getInstance(skygear: Container, skygearChat: ChatContainer): UserCache {
+        fun getInstance(skygear: Container): UserCache {
             if (this.sharedInstance == null) {
-                this.sharedInstance = UserCache(skygear, skygearChat)
+                this.sharedInstance = UserCache(skygear)
             }
 
             return this.sharedInstance as UserCache
@@ -26,8 +26,6 @@ class UserCache(val skygear: Container, val skygearChat: ChatContainer) {
     private fun cache(user: User) {
         this.cacheMap[user.chatUser.record.id] = user
     }
-
-    private fun getUserFromCache(userID: String): User? = this.cacheMap[userID]
 
     fun getUsers(
             userIDs: List<String>,
@@ -66,9 +64,5 @@ class UserCache(val skygear: Container, val skygearChat: ChatContainer) {
             }
 
         })
-    }
-
-    fun getUser(userID: String, callback: ((user: User?) -> Unit)?) {
-        this.getUsers(listOf(userID)) { users -> callback?.invoke(users.get(userID)) }
     }
 }

@@ -10,40 +10,29 @@ import io.skygear.skygear.Record
 
 class User : IUser {
     companion object {
-        /**
-         * The field name for display name of the user
-         */
-        var DisplayNameField = "username"
-
-        /**
-         * The default display name when user's name field is absent.
-         */
         var DefaultDisplayName = "Unknown"
-
-        /**
-         * The field name for avatar of the user
-         */
-        var AvatarField = "avatar"
+        var DefaultUsernameField = "username"
+        var DefaultAvatarField = "Unknown"
     }
 
     val chatUser: ChatUser
+    val avatarField: String?
+    val displayNameField: String?
 
-    constructor(record: Record) {
-        try {
-            this.chatUser = ChatUser.fromJson(record.toJson())
-        } catch (e: JSONException) {
-            throw IllegalArgumentException("Cannot serialize the skygear record")
-        }
-    }
+    constructor(record: Record, displayNameField: String? = DefaultUsernameField, avatarField: String? = DefaultAvatarField):
+            this(ChatUser.fromJson(record.toJson()), displayNameField, avatarField)
 
-    constructor(u: ChatUser) {
+
+    constructor(u: ChatUser, displayNameField: String? = DefaultUsernameField, avatarField: String? = DefaultAvatarField) {
+        this.avatarField = avatarField
+        this.displayNameField = displayNameField
         this.chatUser = u
     }
 
     override fun getId() = this.chatUser.id
 
     override fun getName(): String {
-        val userName = this.chatUser.record.get(User.DisplayNameField) as String?
+        val userName = this.chatUser.record.get(this.displayNameField) as String?
         if (userName != null) {
             return userName
         }
@@ -52,14 +41,12 @@ class User : IUser {
     }
 
     override fun getAvatar(): String {
-        val avatarUrl = this.chatUser.record.get(User.AvatarField) as String?
+        val avatarUrl = this.chatUser.record.get(this.avatarField) as String?
         if (avatarUrl != null) {
             return avatarUrl
         }
 
-        val userName = this.chatUser.record.get(User.DisplayNameField) as String?
-        val userNameForAvatar = userName ?: ""
-        return AvatarBuilder.defaultBuilder().avatarUriForName(userNameForAvatar)
+        return AvatarBuilder.defaultBuilder().avatarUriForName(this.name)
     }
 
 
