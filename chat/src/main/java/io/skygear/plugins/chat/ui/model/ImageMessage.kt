@@ -15,21 +15,10 @@ class ImageMessage: Message,
 
     val chatMessageImageUrl: String?
 
-    constructor(record: Record) : super(record) {
-        this.chatMessageImageUrl = this.imageUrlFromChatMessage(
-                this.chatMessage.asset?.url,
-                this.chatMessage.metadata)
-    }
 
     constructor(m: ChatMessage) : super(m) {
         this.chatMessageImageUrl = this.imageUrlFromChatMessage(
                 this.chatMessage.asset?.url,
-                this.chatMessage.metadata)
-    }
-
-    constructor(m: ChatMessage, imageUrl: String) : super(m) {
-        this.chatMessageImageUrl = this.imageUrlFromChatMessage(
-                imageUrl,
                 this.chatMessage.metadata)
     }
 
