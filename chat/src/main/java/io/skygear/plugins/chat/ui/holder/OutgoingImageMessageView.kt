@@ -5,14 +5,18 @@ import com.stfalcon.chatkit.messages.MessageHolders
 import io.skygear.plugins.chat.ui.model.ImageMessage
 
 
-/**
- * Created by carmenlau on 10/13/17.
- */
 class OutgoingImageMessageView(itemView: View) : MessageHolders.OutcomingImageMessageViewHolder<ImageMessage>(itemView) {
+    var receiverAvatarMessageView: ReceiverAvatarMessageView? = null
+    var usernameMessageView: UsernameMessageView? = null
+
+    init {
+        receiverAvatarMessageView = ReceiverAvatarMessageView(itemView)
+        usernameMessageView = UsernameMessageView(itemView)
+    }
 
     override fun onBind(message: ImageMessage) {
         super.onBind(message)
-
-        time.setText(message.getStatus() + " " + time.text)
+        usernameMessageView?.onBind(message)
+        receiverAvatarMessageView?.onBind(message, this.imageLoader)
     }
 }

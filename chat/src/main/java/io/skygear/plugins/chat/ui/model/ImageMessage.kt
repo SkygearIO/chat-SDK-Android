@@ -2,13 +2,9 @@ package io.skygear.plugins.chat.ui.model
 
 import android.net.Uri
 import com.stfalcon.chatkit.commons.models.MessageContentType
-import io.skygear.skygear.Record
 import org.json.JSONObject
 import io.skygear.plugins.chat.Message as ChatMessage
 
-/**
- * Created by carmenlau on 10/15/17.
- */
 
 class ImageMessage: Message,
         MessageContentType.Image{
@@ -26,11 +22,11 @@ class ImageMessage: Message,
 
     fun imageUrlFromChatMessage(imageUrl: String?, meta: JSONObject?): String? {
         var url = imageUrl
-        if (url == null) {
-            return null
+        if (url != null) {
+            return imageUrl
         }
         meta?.let {
-            val builder = Uri.parse(url)
+            val builder = Uri.parse("image://image")
                     .buildUpon()
 
             if (it.has("thumbnail")) {

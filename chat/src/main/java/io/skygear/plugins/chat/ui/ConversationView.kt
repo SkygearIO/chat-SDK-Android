@@ -20,14 +20,11 @@ import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesList
 import io.skygear.plugins.chat.R
-import io.skygear.plugins.chat.ui.holder.IncomingImageMessageView
-import io.skygear.plugins.chat.ui.holder.IncomingTextMessageView
-import io.skygear.plugins.chat.ui.holder.OutgoingImageMessageView
-import io.skygear.plugins.chat.ui.holder.OutgoingTextMessageView
 import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
 import com.stfalcon.chatkit.messages.MessagesListAdapter.OnMessageClickListener
 import com.stfalcon.chatkit.messages.MessagesListAdapter.OnLoadMoreListener
+import io.skygear.plugins.chat.ui.holder.*
 import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.utils.AvatarBuilder
 import io.skygear.plugins.chat.Message as ChatMessage
@@ -112,8 +109,6 @@ open class ConversationView: RelativeLayout{
     private var avatarBackgroundColor: Int
     private var avatarType: AvatarType
     private var userBuilder: UserBuilder
-
-
 
 
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
