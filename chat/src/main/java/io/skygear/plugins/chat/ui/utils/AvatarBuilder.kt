@@ -4,6 +4,7 @@ import android.graphics.*
 import android.text.TextUtils
 import java.net.URI
 import java.util.*
+import io.skygear.plugins.chat.R
 
 class AvatarBuilder(
         val avatarWidth: Int,
@@ -81,7 +82,7 @@ class AvatarBuilder(
         )
         val canvas = Canvas(bm)
 
-        val backgroundColor = queries[BackgroundColorQueryKey]?.first()?.toInt() ?: Color.RED
+        val backgroundColor = queries[BackgroundColorQueryKey]?.first()?.toInt() !!
         val backgroundPaint = Paint()
         backgroundPaint.color = backgroundColor
         backgroundPaint.style = Paint.Style.FILL
@@ -89,7 +90,7 @@ class AvatarBuilder(
 
         // Draw the text
         val textPaint = Paint()
-        textPaint.color = queries[InitialTextColorQueryKey]?.first()?.toInt() ?: Color.WHITE
+        textPaint.color = queries[InitialTextColorQueryKey]?.first()?.toInt() !!
         textPaint.style = Paint.Style.FILL
         textPaint.textSize = this.avatarTextSize * 1.0f
         textPaint.flags = Paint.ANTI_ALIAS_FLAG

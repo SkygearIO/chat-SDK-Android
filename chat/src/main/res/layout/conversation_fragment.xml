@@ -2,13 +2,4 @@
 <io.skygear.plugins.chat.ui.ConversationView
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    uikit:avatarNameField="username"
-    uikit:avatarImageField="avatar"
-    uikit:avatarShowSender="true"
-    uikit:avatarShowReceiver="true"
-    uikit:senderUserNameTextColor="@color/cornflower_blue_light_40"
-    uikit:avatarBackgroundColor="@color/blue_1"
-    uikit:avatarInitialTextColor="@color/dark_gray"
-    uikit:avatarType="initial"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:uikit="http://schemas.android.com/apk/res-auto"/>
+    xmlns:android="http://schemas.android.com/apk/res/android" />

@@ -231,6 +231,13 @@ open class ConversationFragment :
         }
     }
 
+    private fun addMessage(message: ChatMessage, imageUri: Uri? = null) {
+        val view = conversationView()
+        view.addMessageToStart(message, conversationView().needToScrollToBottom(), imageUri)
+        messageIDs.add(message.id)
+        this.skygearChat?.markMessageAsRead(message)
+    }
+
     private fun addMessagesToBottom(messages: List<ChatMessage>) {
         this.addMessages(messages, isScrollToBottom = conversationView().needToScrollToBottom())
     }
@@ -508,7 +515,7 @@ open class ConversationFragment :
 
         this.conversation?.let { conv ->
             val imageMessage = MessageBuilder.createImageMessage(imageData, imageUri)
-            this.addMessagesToBottom(listOf(imageMessage))
+            this.addMessage(imageMessage, imageUri)
             this.skygearChat?.addMessage(imageMessage, conv, null)
         }
     }

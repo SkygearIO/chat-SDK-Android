@@ -3,6 +3,7 @@ package io.skygear.plugins.chat.ui
 
 import android.content.Context
 import android.graphics.Color
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Editable
@@ -22,6 +23,8 @@ import com.stfalcon.chatkit.messages.MessagesList
 import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
+import android.net.Uri
+import android.widget.*
 import com.stfalcon.chatkit.messages.MessagesListAdapter.OnMessageClickListener
 import com.stfalcon.chatkit.messages.MessagesListAdapter.OnLoadMoreListener
 import io.skygear.plugins.chat.ui.holder.*
@@ -125,7 +128,7 @@ open class ConversationView: RelativeLayout{
            senderUserNameTextColor = a.getColor(R.styleable.ConversationView_senderUserNameTextColor, Color.BLACK)
            avatarType = AvatarType.fromInt(a.getInt(R.styleable.ConversationView_avatarType, AvatarType.INITIAL.value))
            avatarInitialTextColor = a.getColor(R.styleable.ConversationView_avatarInitialTextColor, Color.WHITE)
-           avatarBackgroundColor = a.getColor(R.styleable.ConversationView_avatarBackgroundColor, Color.BLUE)
+           avatarBackgroundColor = a.getColor(R.styleable.ConversationView_avatarBackgroundColor, ContextCompat.getColor(context, R.color.blue_1))
        } finally {
            a.recycle()
        }
@@ -272,9 +275,9 @@ open class ConversationView: RelativeLayout{
         }
     }
 
-    open fun addMessageToStart(message: ChatMessage, scroll: Boolean) {
-        MessagesFromChatMessages(listOf(message)) {
-            msgs -> this.messageListAdapter?.addToStart(msgs.first(), scroll)
+    open fun addMessageToStart(message: ChatMessage, scroll: Boolean, imageUri: Uri? = null) {
+        MessageFromChatMessage(message, imageUri) {
+            message -> this.messageListAdapter?.addToStart(message, scroll)
         }
     }
 
@@ -299,6 +302,21 @@ open class ConversationView: RelativeLayout{
         }
     }
 
+    fun MessageFromChatMessage(chatMessage: ChatMessage, imageUri: Uri?, callback: ((messages: Message) -> Unit)? ) {
+
+        this.userCache?.getUsers(listOf(chatMessage.record.ownerId)) { userIDs ->
+                val ownerId = chatMessage.record.ownerId
+                var multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), imageUri)
+                if (ownerId != null && userIDs.containsKey(ownerId)) {
+                    multitypeMessage.author = userIDs[ownerId]
+                } else {
+                    multitypeMessage.author = userBuilder.createUser(this.skygear?.auth?.currentUser!!)
+                }
+                callback?.invoke(multitypeMessage)
+            }
+
+        }
+
     class ContentTypeChecker : MessageHolders.ContentChecker<Message> {
         companion object {
             val VoiceMessageType: Byte = 1
@@ -313,4 +331,6 @@ open class ConversationView: RelativeLayout{
             }
         }
     }
+
+
 }
