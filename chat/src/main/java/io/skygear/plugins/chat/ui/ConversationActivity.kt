@@ -17,11 +17,14 @@ class ConversationActivity : AppCompatActivity() {
         this.setContentView(R.layout.activity_conversation)
 
         if (savedInstanceState == null) {
-            val layoutId = this.intent?.getIntExtra(LayoutIntentKey, R.layout.conversation_fragment)
-            val fragment = ConversationFragment(layoutId)
+            val fragment = ConversationFragment()
             this.intent?.getStringExtra(ConversationActivity.ConversationIntentKey)?.let { convJson ->
                 val bundle = Bundle()
                 bundle.putString(ConversationFragment.ConversationBundleKey, convJson)
+                if (intent?.hasExtra(LayoutIntentKey) ?: false) {
+                    bundle.putInt(ConversationFragment.LayoutResIdBundleKey,
+                                  this.intent?.getIntExtra(LayoutIntentKey, -1) !!)
+                }
                 fragment.arguments = bundle
             }
 

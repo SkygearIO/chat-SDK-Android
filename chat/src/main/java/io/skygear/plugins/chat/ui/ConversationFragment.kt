@@ -34,8 +34,8 @@ import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
-open class ConversationFragment :
-        Fragment,
+open class ConversationFragment() :
+        Fragment(),
         MessagesListAdapter.OnLoadMoreListener,
         MessagesListAdapter.OnMessageClickListener<Message>,
         VoiceMessagePlayer.OnMessageStateChangeListener,
@@ -43,6 +43,7 @@ open class ConversationFragment :
 {
     companion object {
         val ConversationBundleKey = "CONVERSATION"
+        val LayoutResIdBundleKey = "LAYOUT"
         private val TAG = "ConversationFragment"
         private val MESSAGE_SUBSCRIPTION_MAX_RETRY = 10
         private val REQUEST_PICK_IMAGES = 5001
@@ -71,10 +72,15 @@ open class ConversationFragment :
     private var takePhotoPermissionManager: PermissionManager? = null
     private var voiceRecordingPermissionManager: PermissionManager? = null
 
-    protected  var layoutResID: Int
+    protected var layoutResID: Int = -1
 
-    constructor(layoutResID: Int? = null): super() {
-        this.layoutResID = layoutResID ?: R.layout.conversation_fragment
+    @Override
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        layoutResID = arguments.getInt(LayoutResIdBundleKey, R.layout.conversation_fragment)
+        arguments.getString(ConversationBundleKey)?.let { json ->
+            conversation = ChatConversation.fromJson(JSONObject(json))
+        }
     }
 
     override fun onAttach(context: Context?) {
@@ -87,15 +93,6 @@ open class ConversationFragment :
         this.voicePlayer?.messageStateChangeListener = this
     }
 
-
-    fun initializeConversation() {
-        this.arguments?.let { args ->
-            args.getString(ConversationBundleKey)?.let { convJson ->
-                this.conversation = ChatConversation.fromJson(JSONObject(convJson))
-            }
-        }
-
-    }
 
     private fun createPhotoPermissionManager(activity: Activity): PermissionManager {
         return object: PermissionManager(
@@ -134,7 +131,7 @@ open class ConversationFragment :
 
 
     protected fun createConversationView(inflater: LayoutInflater?, container: ViewGroup?): ConversationView {
-        val view = inflater?.inflate(layoutResID, container, false) as ConversationView
+        val view = inflater?.inflate(layoutResID !!, container, false) as ConversationView
 
         view.setAddAttachmentButtonOnClickListener{ view -> this@ConversationFragment.onAddAttachmentButtonClick(view) }
 
@@ -165,7 +162,6 @@ open class ConversationFragment :
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        this.initializeConversation()
         this.activity.title = this.conversation?.title
 
         val view = createConversationView(inflater, container)
