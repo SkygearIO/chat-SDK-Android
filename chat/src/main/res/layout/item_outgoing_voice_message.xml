@@ -7,14 +7,25 @@
     android:layout_marginRight="16dp"
     android:layout_marginTop="8dp">
 
+    <com.stfalcon.chatkit.utils.ShapeImageView
+        android:id="@id/messageUserAvatar"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp" />
+
     <LinearLayout
         android:id="@id/bubble"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
+        android:layout_toLeftOf="@id/messageUserAvatar"
+        android:layout_alignWithParentIfMissing="true"
         android:layout_marginLeft="40dp"
         android:layout_marginStart="40dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginRight="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -37,7 +48,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/time"
+        android:id="@id/messageTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignEnd="@id/bubble"

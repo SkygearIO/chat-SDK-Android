@@ -1,11 +1,10 @@
 package io.skygear.plugins.chat.ui.utils
 
 import android.graphics.*
-import android.graphics.Shader.TileMode
 import android.text.TextUtils
 import java.net.URI
 import java.util.*
-
+import io.skygear.plugins.chat.R
 
 class AvatarBuilder(
         val avatarWidth: Int,
@@ -16,19 +15,14 @@ class AvatarBuilder(
     companion object {
         private val Scheme = AvatarBuilder::class.java.canonicalName
         private val NameQueryKey = "name"
-        private var sharedInstance: AvatarBuilder? = null
-
+        private val BackgroundColorQueryKey = "backgroundColor"
+        private val InitialTextColorQueryKey = "initialTextColor"
         val DefaultAvatarWidth = 100
         val DefaultAvatarHeight = 100
         val DefaultAvatarTextSize = 50
+        open fun avatarUriForName(name: String, backgroundColor: Int, initialTextColor: Int)
+                = "${AvatarBuilder.Scheme}://user?name=$name&backgroundColor=${backgroundColor}&initialTextColor=${initialTextColor}"
 
-        fun defaultBuilder(): AvatarBuilder {
-            if (sharedInstance == null) {
-                sharedInstance = AvatarBuilder()
-            }
-
-            return sharedInstance as AvatarBuilder
-        }
     }
 
     constructor() : this(
@@ -81,44 +75,22 @@ class AvatarBuilder(
             return cachedBitmap
         }
 
-        val gradientColors = listOf(
-                Color.argb(255, 0, 121, 210),
-                Color.argb(255, 3, 184, 194)
-        )
         val bm = Bitmap.createBitmap(
                 this.avatarWidth,
                 this.avatarHeight,
                 Bitmap.Config.ARGB_8888
         )
         val canvas = Canvas(bm)
-        canvas.drawColor(gradientColors.first())
 
-        // Draw the gradient background
-        val gradient = LinearGradient(
-                this.avatarWidth * 0.5f,
-                this.avatarHeight * 0.0f,
-                this.avatarWidth * 0.5f,
-                this.avatarHeight * 1.0f,
-                gradientColors[0],
-                gradientColors[1],
-                TileMode.CLAMP
-        )
-
-        val gradientPaint = Paint()
-        gradientPaint.style = Paint.Style.FILL
-        gradientPaint.shader = gradient
-        gradientPaint.flags = Paint.ANTI_ALIAS_FLAG
-        canvas.drawRect(
-                0f,
-                0f,
-                this.avatarWidth * 1.0f,
-                this.avatarHeight * 1.0f,
-                gradientPaint
-        )
+        val backgroundColor = queries[BackgroundColorQueryKey]?.first()?.toInt() !!
+        val backgroundPaint = Paint()
+        backgroundPaint.color = backgroundColor
+        backgroundPaint.style = Paint.Style.FILL
+        canvas.drawPaint(backgroundPaint)
 
         // Draw the text
         val textPaint = Paint()
-        textPaint.color = Color.WHITE
+        textPaint.color = queries[InitialTextColorQueryKey]?.first()?.toInt() !!
         textPaint.style = Paint.Style.FILL
         textPaint.textSize = this.avatarTextSize * 1.0f
         textPaint.flags = Paint.ANTI_ALIAS_FLAG
@@ -135,8 +107,7 @@ class AvatarBuilder(
         return bm
     }
 
-    fun avatarUriForName(name: String)
-            = "${AvatarBuilder.Scheme}://user?name=$name"
+
 
     class AvatarCache(cacheSize: Int?) {
         companion object {

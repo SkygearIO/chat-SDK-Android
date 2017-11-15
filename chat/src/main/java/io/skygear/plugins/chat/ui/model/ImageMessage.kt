@@ -16,9 +16,9 @@ class ImageMessage: Message,
     val chatMessageImageUrl: String?
 
 
-    constructor(m: ChatMessage) : super(m) {
+    constructor(m: ChatMessage, imageUri: Uri?, style: MessageStyle) : super(m, style) {
         this.chatMessageImageUrl = this.imageUrlFromChatMessage(
-                this.chatMessage.asset?.url,
+                this.chatMessage.asset?.url ?: imageUri?.toString(),
                 this.chatMessage.metadata)
     }
 

@@ -47,7 +47,7 @@ open class VoiceMessage: Message, MessageContentType {
 
     var state = VoiceMessage.State.INITIAL
 
-    constructor(chatMsg: ChatMessage): super(chatMsg)
+    constructor(chatMsg: ChatMessage, style: MessageStyle): super(chatMsg, style)
 
     init {
         if (!VoiceMessage.isVoiceMessage(this.chatMessage)) {

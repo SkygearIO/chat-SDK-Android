@@ -7,10 +7,11 @@ import io.skygear.plugins.chat.ui.model.ImageMessage
 import io.skygear.plugins.chat.ui.model.User
 import io.skygear.skygear.Asset
 import org.json.JSONObject
+import java.net.URI
 
 class MessageBuilder {
     companion object {
-        fun createImageMessage(imageData: ImageData): Message {
+        fun createImageMessage(imageData: ImageData, imageUri: Uri): Message {
 
             val imageByteArray = bitmapToByteArray(imageData.image)
             val thumbByteArray = bitmapToByteArray(imageData.thumbnail)

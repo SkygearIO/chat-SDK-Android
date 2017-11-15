@@ -4,17 +4,18 @@ import android.util.Log
 import io.skygear.plugins.chat.ChatContainer
 import io.skygear.plugins.chat.ChatUser
 import io.skygear.plugins.chat.ui.model.User
+import io.skygear.plugins.chat.ui.model.UserBuilder
 import io.skygear.skygear.*
 import java.util.*
 
-class UserCache(val skygear: Container) {
+class UserCache(val skygear: Container, val userBuilder: UserBuilder) {
     companion object {
         private val TAG = UserCache::class.java.canonicalName
         private var sharedInstance: UserCache? = null
 
-        fun getInstance(skygear: Container): UserCache {
+        fun getInstance(skygear: Container, userBuilder: UserBuilder): UserCache {
             if (this.sharedInstance == null) {
-                this.sharedInstance = UserCache(skygear)
+                this.sharedInstance = UserCache(skygear, userBuilder)
             }
 
             return this.sharedInstance as UserCache
@@ -57,8 +58,7 @@ class UserCache(val skygear: Container) {
             }
 
             override fun onQuerySuccess(records: Array<out Record>?) {
-                records?.map { ChatUser.fromJson(it.toJson()) }
-                        ?.map { User(it) }
+                records?.map { userBuilder.createUser(it) }
                         ?.forEach { this@UserCache.cache(it) }
                 invokeCallback()
             }

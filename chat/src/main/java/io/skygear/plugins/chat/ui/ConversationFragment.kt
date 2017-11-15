@@ -21,7 +21,6 @@ import com.stfalcon.chatkit.messages.MessagesListAdapter
 import io.skygear.skygear.Error
 import io.skygear.plugins.chat.*
 import io.skygear.plugins.chat.ui.model.*
-import io.skygear.plugins.chat.ui.model.Conversation
 import io.skygear.plugins.chat.ui.model.Message
 import io.skygear.plugins.chat.ui.utils.*
 import io.skygear.skygear.Asset
@@ -50,10 +49,9 @@ open class ConversationFragment :
         private val REQUEST_IMAGE_CAPTURE = 5002
         private val REQUEST_CAMERA_PERMISSION = 5003
         private val REQUEST_VOICE_RECORDING_PERMISSION = 5004
-        private val VOICE_RECORDING_PERMISSIONS = arrayOf(Manifest.permission.RECORD_AUDIO)
     }
 
-    var conversation: Conversation? = null
+    var conversation: ChatConversation? = null
 
     private var skygear: Container? = null
     private var skygearChat: ChatContainer? = null
@@ -75,8 +73,8 @@ open class ConversationFragment :
 
     protected  var layoutResID: Int
 
-    constructor(layoutResID: Int = R.layout.conversation_fragment): super() {
-        this.layoutResID = layoutResID
+    constructor(layoutResID: Int? = null): super() {
+        this.layoutResID = layoutResID ?: R.layout.conversation_fragment
     }
 
     override fun onAttach(context: Context?) {
@@ -93,8 +91,7 @@ open class ConversationFragment :
     fun initializeConversation() {
         this.arguments?.let { args ->
             args.getString(ConversationBundleKey)?.let { convJson ->
-                val conv = ChatConversation.fromJson(JSONObject(convJson))
-                this.conversation = Conversation(conv)
+                this.conversation = ChatConversation.fromJson(JSONObject(convJson))
             }
         }
 
@@ -169,7 +166,7 @@ open class ConversationFragment :
             savedInstanceState: Bundle?
     ): View? {
         this.initializeConversation()
-        this.activity.title = this.conversation?.dialogName
+        this.activity.title = this.conversation?.title
 
         val view = createConversationView(inflater, container)
         // TODO: setup typing indicator subscription
@@ -217,7 +214,7 @@ open class ConversationFragment :
 
         this.conversation?.let { conv ->
             this.skygearChat?.getMessages(
-                    conv.chatConversation,
+                    conv,
                     0,
                     before,
                     null,
@@ -232,6 +229,13 @@ open class ConversationFragment :
                         }
                     })
         }
+    }
+
+    private fun addMessage(message: ChatMessage, imageUri: Uri? = null) {
+        val view = conversationView()
+        view.addMessageToStart(message, conversationView().needToScrollToBottom(), imageUri)
+        messageIDs.add(message.id)
+        this.skygearChat?.markMessageAsRead(message)
     }
 
     private fun addMessagesToBottom(messages: List<ChatMessage>) {
@@ -267,7 +271,7 @@ open class ConversationFragment :
         }
 
         // mark last read message
-        this.conversation?.chatConversation?.let { conv ->
+        this.conversation?.let { conv ->
             val lastChatMsg = messages.last()
             this.skygearChat?.markConversationLastReadMessage(conv, lastChatMsg)
         }
@@ -282,7 +286,7 @@ open class ConversationFragment :
             return
         }
         this.messageSubscriptionRetryCount++
-        this.conversation?.chatConversation?.let { conv ->
+        this.conversation?.let { conv ->
             this.skygearChat?.subscribeConversationMessage(
                     conv,
                     object : MessageSubscriptionCallback(conv) {
@@ -305,7 +309,7 @@ open class ConversationFragment :
     }
 
     private fun unsubscribeMessage() {
-        this.conversation?.chatConversation?.let { conv ->
+        this.conversation?.let { conv ->
             this.skygearChat?.unsubscribeConversationMessage(conv)
         }
     }
@@ -342,11 +346,11 @@ open class ConversationFragment :
     }
 
     override fun onVoiceMessagePlayerError(error: VoiceMessagePlayer.Error) {
-        Toast.makeText(this.activity, error.message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(activity, error.message, Toast.LENGTH_SHORT).show()
     }
 
     fun onAddAttachmentButtonClick(view: View?) {
-        AlertDialog.Builder(this.activity)
+        AlertDialog.Builder(this.context)
                 .setItems(R.array.attachment_options) { _, option ->
                     when (option) {
                         0 -> this@ConversationFragment.takePhotoFromCameraIntent()
@@ -370,7 +374,7 @@ open class ConversationFragment :
     fun onVoiceRecordingButtonPressedDown() {
         conversationView().toggleVoiceButtonHint(true)
 
-        val fileDir = this.activity.cacheDir.absolutePath
+        val fileDir = this.context.cacheDir.absolutePath
         val fileName = "voice-${Date().time}.${VoiceMessage.FILE_EXTENSION_NAME}"
         this.voiceRecordingFileName = "$fileDir/$fileName"
 
@@ -388,6 +392,9 @@ open class ConversationFragment :
 
     fun onVoiceRecordingButtonPressedUp(isCancel: Boolean) {
         conversationView().toggleVoiceButtonHint(false)
+        if (this.voiceRecordingPermissionManager?.permissionsGranted() != true) {
+            return
+        }
 
         // finish recording
         try {
@@ -422,29 +429,28 @@ open class ConversationFragment :
             val meta = JSONObject()
             meta.put(VoiceMessage.DurationMatadataName, duration)
 
-            this.skygearChat?.sendMessage(
-                    conv.chatConversation,
-                    null,
-                    asset,
-                    meta,
-                    object : SaveCallback<ChatMessage> {
-                        override fun onSucc(chatMsg: ChatMessage?) {
-                            voiceRecordingFile.delete()
-                        }
+            val message = ChatMessage()
+            message.asset = asset
+            message.metadata = meta
 
-                        override fun onFail(error: Error) {
-                            Log.e(
-                                    ConversationFragment.TAG,
-                                    "Failed to send voice message: ${error.message}"
-                            )
-                        }
-                    }
-            )
+            this.addMessagesToBottom(listOf(message))
+            this.skygearChat?.addMessage(message, conv, object : SaveCallback<ChatMessage> {
+                override fun onSucc(chatMsg: ChatMessage?) {
+                    voiceRecordingFile.delete()
+                }
+
+                override fun onFail(error: Error) {
+                    Log.e(
+                            ConversationFragment.TAG,
+                            "Failed to send voice message: ${error.message}"
+                    )
+                }
+            })
         }
     }
 
     fun onSendMessage(input: String): Boolean {
-        this.conversation?.chatConversation?.let { conv ->
+        this.conversation?.let { conv ->
             val message = ChatMessage()
             message.body = input.trim()
             this.addMessagesToBottom(listOf(message))
@@ -507,10 +513,9 @@ open class ConversationFragment :
             return
         }
 
-        this.conversation?.chatConversation?.let { conv ->
-            val user = User(this.skygear?.auth?.currentUser!!)
-            val imageMessage = MessageBuilder.createImageMessage(imageData)
-            this.addMessagesToBottom(listOf(imageMessage))
+        this.conversation?.let { conv ->
+            val imageMessage = MessageBuilder.createImageMessage(imageData, imageUri)
+            this.addMessage(imageMessage, imageUri)
             this.skygearChat?.addMessage(imageMessage, conv, null)
         }
     }
@@ -551,7 +556,7 @@ open class ConversationFragment :
                 R.string.please_turn_on_write_external_storage_permissions
             else -> null
         }?.let { msgId ->
-            Toast.makeText(this.activity, msgId, Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, msgId, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -559,7 +564,7 @@ open class ConversationFragment :
         conversationView().cancelVoiceButton()
 
         Toast.makeText(
-                this.activity,
+                activity,
                 R.string.please_turn_on_audio_recording_permission,
                 Toast.LENGTH_SHORT
         ).show()
