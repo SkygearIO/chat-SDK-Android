@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
 import android.net.Uri
@@ -16,6 +17,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import io.skygear.skygear.Error
@@ -44,6 +46,7 @@ open class ConversationFragment() :
     companion object {
         val ConversationBundleKey = "CONVERSATION"
         val LayoutResIdBundleKey = "LAYOUT"
+        val AvatarAdapterBundleKey = "AVATAR_ADAPTER"
         private val TAG = "ConversationFragment"
         private val MESSAGE_SUBSCRIPTION_MAX_RETRY = 10
         private val REQUEST_PICK_IMAGES = 5001
@@ -73,6 +76,7 @@ open class ConversationFragment() :
     private var voiceRecordingPermissionManager: PermissionManager? = null
 
     protected var layoutResID: Int = -1
+    protected var customAvatarAdapter: AvatarAdapter? = null
 
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,6 +84,9 @@ open class ConversationFragment() :
         layoutResID = arguments.getInt(LayoutResIdBundleKey, R.layout.conversation_fragment)
         arguments.getString(ConversationBundleKey)?.let { json ->
             conversation = ChatConversation.fromJson(JSONObject(json))
+        }
+        arguments.getSerializable(AvatarAdapterBundleKey)?.let { adapter ->
+            customAvatarAdapter = adapter as AvatarAdapter
         }
     }
 
@@ -150,6 +157,10 @@ open class ConversationFragment() :
         view.setSendTextMessageListener { msg -> this@ConversationFragment.onSendMessage(msg)}
         view.setOnMessageClickListener(this)
         view.setLoadMoreListener(this)
+        view.setConversation(conversation)
+        customAvatarAdapter?.let {
+            adapter ->  view.setAvatarAdapter(adapter)
+        }
         return view
     }
 
@@ -566,7 +577,9 @@ open class ConversationFragment() :
         ).show()
     }
 
-
+    open fun setAvatarAdapter(newAdapter: AvatarAdapter?) {
+        customAvatarAdapter = newAdapter
+    }
 }
 
 

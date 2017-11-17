@@ -17,7 +17,9 @@ class IncomingTextMessageView(itemView: View) : MessageHolders.IncomingTextMessa
     }
 
     override fun onBind(message: Message) {
-        super.onBind(message)
+        bubble?.isSelected = isSelected
+        text?.text = message.text
+
         usernameMessageView?.onBind(message)
         senderAvatarMessageView?.onBind(message)
     }

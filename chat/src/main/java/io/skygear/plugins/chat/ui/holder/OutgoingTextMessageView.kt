@@ -16,6 +16,6 @@ class OutgoingTextMessageView(itemView: View) : MessageHolders.OutcomingTextMess
 
     override fun onBind(message: Message) {
         super.onBind(message)
-        receiverAvatarMessageView?.onBind(message, this.imageLoader)
+        receiverAvatarMessageView?.onBind(message)
     }
 }
