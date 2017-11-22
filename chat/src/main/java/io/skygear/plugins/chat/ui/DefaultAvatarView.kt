@@ -10,14 +10,14 @@ import io.skygear.plugins.chat.ui.utils.ImageLoader
 
 class DefaultAvatarView(context: Context, attributeSet: AttributeSet): ShapeImageView(context, attributeSet) {
 
-    var imageLoader: ImageLoader? = null
+    var imageLoader: DefaultAvatarImageLoader? = null
 
     init {
 
     }
 
     fun onBind(message: Message) {
-        imageLoader = ImageLoader(context, AvatarBuilder())
+        imageLoader = DefaultAvatarImageLoader(context, AvatarBuilder())
         imageLoader?.loadImage(this, message.user?.avatar)
         layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
     }

@@ -8,6 +8,7 @@ import android.widget.TextView
 import com.stfalcon.chatkit.R
 import io.skygear.plugins.chat.ui.model.Message
 import com.stfalcon.chatkit.commons.ImageLoader
+import com.stfalcon.chatkit.utils.DateFormatter;
 
 
 class ReceiverAvatarMessageView(itemView: View){
@@ -29,7 +30,7 @@ class ReceiverAvatarMessageView(itemView: View){
             userAvatar!!.visibility = if (isAvatarExists) View.VISIBLE else View.GONE
         }
 
-        time?.text = message.getStatus()
+        time?.text = message.getStatus() + " " + DateFormatter.format(message.getCreatedAt(), DateFormatter.Template.TIME)
 
     }
 }

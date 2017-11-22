@@ -66,7 +66,8 @@ class User : IUser {
             }
         }
 
-        return AvatarBuilder.avatarUriForName(this.name, this.avatarBackgroundColor, this.avatarInitialTextColor)
+        val userName = this.chatUser.record.get(this.displayNameField) as String? ?: ""
+        return AvatarBuilder.avatarUriForName(userName, this.avatarBackgroundColor, this.avatarInitialTextColor)
     }
 
 
