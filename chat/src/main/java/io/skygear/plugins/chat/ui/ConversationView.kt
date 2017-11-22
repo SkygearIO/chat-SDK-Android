@@ -11,10 +11,6 @@ import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.RelativeLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
 import com.stfalcon.chatkit.messages.MessageHolders
@@ -33,7 +29,8 @@ import io.skygear.plugins.chat.ui.utils.AvatarBuilder
 import io.skygear.plugins.chat.Message as ChatMessage
 import io.skygear.plugins.chat.ui.utils.UserCache
 import io.skygear.skygear.Container
-
+import com.stfalcon.chatkit.messages.CustomMessageHolders
+import io.skygear.plugins.chat.Conversation
 
 
 open abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
@@ -112,13 +109,15 @@ open class ConversationView: RelativeLayout{
     private var avatarBackgroundColor: Int
     private var avatarType: AvatarType
     private var userBuilder: UserBuilder
+    private var avatarAdapter: AvatarAdapter = DefaultAvatarAdapter()
+    private var conversation: Conversation? = null
 
 
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
         val a = context.theme.obtainStyledAttributes(
                 attributeSet,
                 R.styleable.ConversationView,
-                0, 0);
+                0, 0)
 
        try {
            avatarNameField = a.getString(R.styleable.ConversationView_avatarNameField) ?: User.DefaultUsernameField
@@ -213,7 +212,7 @@ open class ConversationView: RelativeLayout{
     }
 
     fun createMessageListAdapter(imageLoader: ImageLoader, senderId: String): MessagesListAdapter<Message> {
-        val messageHolder = MessageHolders()
+        val messageHolder = CustomMessageHolders({avatarAdapter}, {conversation})
                 .setIncomingTextHolder(IncomingTextMessageView::class.java)
                 .setIncomingImageHolder(IncomingImageMessageView::class.java)
                 .setIncomingTextLayout(R.layout.item_incoming_text_message)
@@ -234,6 +233,14 @@ open class ConversationView: RelativeLayout{
                 imageLoader
         )
         return adapter
+    }
+
+    open fun setAvatarAdapter(newAdapter: AvatarAdapter) {
+        avatarAdapter = newAdapter
+    }
+
+    open fun setConversation(newConversation: Conversation?) {
+        conversation = newConversation
     }
 
     open fun setOnMessageClickListener(onMessageClickListener: OnMessageClickListener<Message>) {
@@ -331,6 +338,4 @@ open class ConversationView: RelativeLayout{
             }
         }
     }
-
-
 }

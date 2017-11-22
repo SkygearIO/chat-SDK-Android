@@ -17,6 +17,6 @@ class OutgoingImageMessageView(itemView: View) : MessageHolders.OutcomingImageMe
     override fun onBind(message: ImageMessage) {
         super.onBind(message)
         usernameMessageView?.onBind(message)
-        receiverAvatarMessageView?.onBind(message, this.imageLoader)
+        receiverAvatarMessageView?.onBind(message)
     }
 }

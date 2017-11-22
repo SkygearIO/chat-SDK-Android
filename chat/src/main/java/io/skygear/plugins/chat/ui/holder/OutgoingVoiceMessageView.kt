@@ -17,6 +17,6 @@ class OutgoingVoiceMessageView(view: View): MessageHolders.OutcomingTextMessageV
     override fun onBind(message: VoiceMessage) {
         super.onBind(message)
         voiceMessageView?.onBind(message)
-        receiverAvatarMessageView?.onBind(message, this.imageLoader)
+        receiverAvatarMessageView?.onBind(message)
     }
 }

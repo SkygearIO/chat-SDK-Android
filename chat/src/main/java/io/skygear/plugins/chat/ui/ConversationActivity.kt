@@ -5,11 +5,13 @@ import android.support.v7.app.AppCompatActivity
 import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.Conversation as ChatConversation
 
+
 class ConversationActivity : AppCompatActivity() {
 
     companion object {
         @JvmField open val ConversationIntentKey = "CONVERSATION"
         @JvmField open val LayoutIntentKey = "LAYOUT"
+        @JvmField open val AvatarAdapterIntentKey = "AVATAR_ADAPTER"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,6 +27,11 @@ class ConversationActivity : AppCompatActivity() {
                     bundle.putInt(ConversationFragment.LayoutResIdBundleKey,
                                   this.intent?.getIntExtra(LayoutIntentKey, -1) !!)
                 }
+                if (intent?.hasExtra(AvatarAdapterIntentKey) ?: false) {
+                    bundle.putSerializable(ConversationFragment.AvatarAdapterBundleKey,
+                            this.intent?.getSerializableExtra(ConversationFragment.AvatarAdapterBundleKey))
+                }
+
                 fragment.arguments = bundle
             }
 
