@@ -31,6 +31,7 @@ import io.skygear.plugins.chat.ui.utils.UserCache
 import io.skygear.skygear.Container
 import com.stfalcon.chatkit.messages.CustomMessageHolders
 import io.skygear.plugins.chat.Conversation
+import com.stfalcon.chatkit.messages.VoiceMessageOnClickListener
 
 
 open abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
@@ -111,6 +112,7 @@ open class ConversationView: RelativeLayout{
     private var userBuilder: UserBuilder
     private var avatarAdapter: AvatarAdapter = DefaultAvatarAdapter()
     private var conversation: Conversation? = null
+    private var messageHolders: MessageHolders? = null
 
 
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
@@ -167,6 +169,7 @@ open class ConversationView: RelativeLayout{
             }
         })
 
+
         this.messageSendButton?.setOnClickListener {
             _ ->
                 messageEditText?.text?.let { text ->
@@ -207,12 +210,16 @@ open class ConversationView: RelativeLayout{
         this.sendTextMessageListener = action
     }
 
+    open fun setVoiceMessageOnClickListener(listener: VoiceMessageOnClickListener) {
+        (this.messageHolders as CustomMessageHolders)?.voiceMessageOnClickListener = listener
+    }
+
     open fun needToScrollToBottom(): Boolean {
         return this.messagesListViewReachBottomListener?.isReachEnd !!;
     }
 
     fun createMessageListAdapter(imageLoader: ImageLoader, senderId: String): MessagesListAdapter<Message> {
-        val messageHolder = CustomMessageHolders({avatarAdapter}, {conversation})
+        messageHolders = CustomMessageHolders({avatarAdapter}, {conversation})
                 .setIncomingTextHolder(IncomingTextMessageView::class.java)
                 .setIncomingImageHolder(IncomingImageMessageView::class.java)
                 .setIncomingTextLayout(R.layout.item_incoming_text_message)
@@ -227,9 +234,10 @@ open class ConversationView: RelativeLayout{
                         OutgoingVoiceMessageView::class.java, R.layout.item_outgoing_voice_message,
                         ContentTypeChecker()
                 )
+
         val adapter = MessagesListAdapter<Message>(
                 senderId,
-                messageHolder,
+                messageHolders!!,
                 imageLoader
         )
         return adapter

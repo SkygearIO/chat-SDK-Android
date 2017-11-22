@@ -20,6 +20,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import com.stfalcon.chatkit.messages.MessagesListAdapter
+import com.stfalcon.chatkit.messages.VoiceMessageOnClickListener
 import io.skygear.skygear.Error
 import io.skygear.plugins.chat.*
 import io.skygear.plugins.chat.ui.model.*
@@ -41,7 +42,8 @@ open class ConversationFragment() :
         MessagesListAdapter.OnLoadMoreListener,
         MessagesListAdapter.OnMessageClickListener<Message>,
         VoiceMessagePlayer.OnMessageStateChangeListener,
-        VoiceMessagePlayer.OnPlayerErrorListener
+        VoiceMessagePlayer.OnPlayerErrorListener,
+        VoiceMessageOnClickListener
 {
     companion object {
         val ConversationBundleKey = "CONVERSATION"
@@ -156,6 +158,7 @@ open class ConversationFragment() :
 
         view.setSendTextMessageListener { msg -> this@ConversationFragment.onSendMessage(msg)}
         view.setOnMessageClickListener(this)
+        view.setVoiceMessageOnClickListener(this)
         view.setLoadMoreListener(this)
         view.setConversation(conversation)
         customAvatarAdapter?.let {
@@ -333,7 +336,7 @@ open class ConversationFragment() :
         this.fetchMessages(before = this.messageLoadMoreBefore)
     }
 
-    fun onVoiceMessageClick(voiceMessage: VoiceMessage) {
+    override fun onVoiceMessageClick(voiceMessage: VoiceMessage) {
         if (voiceMessage.state == VoiceMessage.State.PLAYING) {
             this.voicePlayer?.pause()
             return
