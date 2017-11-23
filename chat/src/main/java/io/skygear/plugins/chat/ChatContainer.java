@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import io.realm.Realm;
 import io.skygear.plugins.chat.error.TotalUnreadError;
 import io.skygear.skygear.Asset;
 import io.skygear.skygear.AssetPostRequest;
@@ -56,6 +57,7 @@ public final class ChatContainer {
     private static ChatContainer sharedInstance;
 
     private final Container skygear;
+    private final CacheController cacheController;
     private final Map<String, Subscription> messageSubscription = new HashMap<>();
     private final Map<String, Subscription> typingSubscription = new HashMap<>();
 
@@ -69,18 +71,22 @@ public final class ChatContainer {
      */
     public static ChatContainer getInstance(@NonNull final Container container) {
         if (sharedInstance == null) {
-            sharedInstance = new ChatContainer(container);
+            CacheController cacheController = CacheController.getInstance();
+            sharedInstance = new ChatContainer(container, cacheController);
         }
 
         return sharedInstance;
     }
 
-    private ChatContainer(final Container container) {
+    private ChatContainer(final Container container, CacheController cacheController) {
         if (container != null) {
             this.skygear = container;
         } else {
             throw new NullPointerException("Container can't be null");
         }
+
+        Realm.init(container.getContext());
+        this.cacheController = cacheController;
     }
 
     /* --- Conversation --- */
