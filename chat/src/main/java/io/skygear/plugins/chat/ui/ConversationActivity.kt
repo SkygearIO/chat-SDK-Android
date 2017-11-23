@@ -9,9 +9,9 @@ import io.skygear.plugins.chat.Conversation as ChatConversation
 class ConversationActivity : AppCompatActivity() {
 
     companion object {
-        @JvmField open val ConversationIntentKey = "CONVERSATION"
-        @JvmField open val LayoutIntentKey = "LAYOUT"
-        @JvmField open val AvatarAdapterIntentKey = "AVATAR_ADAPTER"
+        @JvmField val ConversationIntentKey = "CONVERSATION"
+        @JvmField val LayoutIntentKey = "LAYOUT"
+        @JvmField val AvatarAdapterIntentKey = "AVATAR_ADAPTER"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

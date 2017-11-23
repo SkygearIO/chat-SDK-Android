@@ -19,7 +19,7 @@ class VoiceMessageView(itemView: View){
     }
 
     fun onBind(message: VoiceMessage) {
-        message?.let { msg ->
+        message.let { msg ->
             val durationInSecond = msg.duration / 1000
             this@VoiceMessageView.durationTextView?.text =
                     String.format("%02d:%02d", durationInSecond / 60, durationInSecond % 60)

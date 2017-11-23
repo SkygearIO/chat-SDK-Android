@@ -44,10 +44,10 @@ class CustomMessageHolders(avatarAdapterFunc: () -> AvatarAdapter, conversationF
         avatarContainerView?.let { containerView ->
             if (containerView.visibility == View.VISIBLE) {
                 if (containerView.childCount == 0) {
-                    containerView.addView(avatarAdapterFunc()?.createAvatarView(inflater, containerView))
+                    containerView.addView(avatarAdapterFunc().createAvatarView(inflater, containerView))
                 }
                 val avatarView = containerView.getChildAt(0)
-                avatarAdapterFunc()?.bind(avatarView, conversationFunc(),item as Message, item.user)
+                avatarAdapterFunc().bind(avatarView, conversationFunc(),item as Message, item.user)
             }
         }
 

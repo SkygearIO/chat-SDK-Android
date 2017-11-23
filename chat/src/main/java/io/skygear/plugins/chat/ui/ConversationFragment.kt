@@ -140,9 +140,9 @@ open class ConversationFragment() :
 
 
     protected fun createConversationView(inflater: LayoutInflater?, container: ViewGroup?): ConversationView {
-        val view = inflater?.inflate(layoutResID !!, container, false) as ConversationView
+        val view = inflater?.inflate(layoutResID, container, false) as ConversationView
 
-        view.setAddAttachmentButtonOnClickListener{ view -> this@ConversationFragment.onAddAttachmentButtonClick(view) }
+        view.setAddAttachmentButtonOnClickListener{ _ -> this@ConversationFragment.onAddAttachmentButtonClick() }
 
         view.setVoiceButtonHolderListener(object : HoldingButtonLayoutBaseListener() {
             override fun onExpand() {
@@ -359,7 +359,7 @@ open class ConversationFragment() :
         Toast.makeText(activity, error.message, Toast.LENGTH_SHORT).show()
     }
 
-    fun onAddAttachmentButtonClick(view: View?) {
+    fun onAddAttachmentButtonClick() {
         AlertDialog.Builder(this.context)
                 .setItems(R.array.attachment_options) { _, option ->
                     when (option) {
@@ -524,7 +524,7 @@ open class ConversationFragment() :
         }
 
         this.conversation?.let { conv ->
-            val imageMessage = MessageBuilder.createImageMessage(imageData, imageUri)
+            val imageMessage = MessageBuilder.createImageMessage(imageData)
             this.addMessage(imageMessage, imageUri)
             this.skygearChat?.addMessage(imageMessage, conv, null)
         }

@@ -34,7 +34,7 @@ import io.skygear.plugins.chat.Conversation
 import com.stfalcon.chatkit.messages.VoiceMessageOnClickListener
 
 
-open abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
+abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
     override fun onBeforeCollapse() {}
 
     override fun onOffsetChanged(offset: Float, isCancel: Boolean) {}
@@ -46,7 +46,7 @@ open abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListene
     override fun onCollapse(isCancel: Boolean) {}
 }
 
-open abstract class TextBaseWatcher : TextWatcher {
+abstract class TextBaseWatcher : TextWatcher {
     override fun afterTextChanged(s: Editable?) {}
 
     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -174,7 +174,7 @@ open class ConversationView: RelativeLayout{
             _ ->
                 messageEditText?.text?.let { text ->
                     if (!text.isEmpty()) {
-                        val result = this?.sendTextMessageListener?.invoke(text.toString())
+                        val result = this.sendTextMessageListener.invoke(text.toString())
                         result?.let { success ->
                             if (success){
                                 this.messageEditText?.setText("")
@@ -211,7 +211,7 @@ open class ConversationView: RelativeLayout{
     }
 
     open fun setVoiceMessageOnClickListener(listener: VoiceMessageOnClickListener) {
-        (this.messageHolders as CustomMessageHolders)?.voiceMessageOnClickListener = listener
+        (this.messageHolders as CustomMessageHolders).voiceMessageOnClickListener = listener
     }
 
     open fun needToScrollToBottom(): Boolean {
@@ -300,7 +300,7 @@ open class ConversationView: RelativeLayout{
 
     open fun addMessageToStart(message: ChatMessage, scroll: Boolean, imageUri: Uri? = null) {
         MessageFromChatMessage(message, imageUri) {
-            message -> this.messageListAdapter?.addToStart(message, scroll)
+            uiMessage -> this.messageListAdapter?.addToStart(uiMessage, scroll)
         }
     }
 
@@ -311,9 +311,9 @@ open class ConversationView: RelativeLayout{
     fun MessagesFromChatMessages(chatMessages: List<ChatMessage>, callback: ((messages: List<Message>) -> Unit)? ) {
         val userIDs = chatMessages.map { it.record.ownerId }.distinct()
         val multitypeMessages = chatMessages.map { MessageFactory.getMessage(it, getMessageStyle()) }
-        this.userCache?.getUsers(userIDs) { userIDs ->
+        this.userCache?.getUsers(userIDs) { userMapping ->
             multitypeMessages.forEach {
-                msg -> updateMessageAuthor(msg, userIDs)
+                msg -> updateMessageAuthor(msg, userMapping)
             }
             callback?.invoke(multitypeMessages)
         }
