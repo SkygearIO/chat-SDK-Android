@@ -13,6 +13,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'org.jetbrains.dokka-android'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'realm-android'
 
 def skygearChatVersion = "git describe --abbrev=0 --tags".execute().text.trim()
 def skygearChatFullVersion = "git describe --always --tags".execute().text.trim()
