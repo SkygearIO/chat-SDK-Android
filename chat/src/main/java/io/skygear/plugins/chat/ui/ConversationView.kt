@@ -284,6 +284,14 @@ open class ConversationView: RelativeLayout{
         }
     }
 
+    open fun updateVoiceMessage(voiceMessage: VoiceMessage) {
+        this.userCache?.getUsers(listOf(voiceMessage.chatMessage.record.ownerId)) {
+            userIDs ->
+                updateMessageAuthor(voiceMessage, userIDs)
+                this.messageListAdapter?.update(voiceMessage)
+        }
+    }
+
     open fun addMessagesToEnd(messages: List<ChatMessage>, reverse: Boolean) {
         MessagesFromChatMessages(messages) {
             msgs -> this.messageListAdapter?.addToEnd(msgs, reverse)
@@ -305,32 +313,29 @@ open class ConversationView: RelativeLayout{
         val multitypeMessages = chatMessages.map { MessageFactory.getMessage(it, getMessageStyle()) }
         this.userCache?.getUsers(userIDs) { userIDs ->
             multitypeMessages.forEach {
-                msg ->
-                    val ownerId = msg.chatMessage.record.ownerId
-                    if (ownerId != null && userIDs.containsKey(ownerId)) {
-                        msg.author = userIDs[ownerId]
-                    } else {
-                        msg.author = userBuilder.createUser(this.skygear?.auth?.currentUser!!)
-                    }
+                msg -> updateMessageAuthor(msg, userIDs)
             }
             callback?.invoke(multitypeMessages)
         }
     }
 
     fun MessageFromChatMessage(chatMessage: ChatMessage, imageUri: Uri?, callback: ((messages: Message) -> Unit)? ) {
-
         this.userCache?.getUsers(listOf(chatMessage.record.ownerId)) { userIDs ->
-                val ownerId = chatMessage.record.ownerId
                 var multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), imageUri)
-                if (ownerId != null && userIDs.containsKey(ownerId)) {
-                    multitypeMessage.author = userIDs[ownerId]
-                } else {
-                    multitypeMessage.author = userBuilder.createUser(this.skygear?.auth?.currentUser!!)
-                }
+                updateMessageAuthor(multitypeMessage, userIDs)
                 callback?.invoke(multitypeMessage)
             }
 
+    }
+
+    fun updateMessageAuthor(message: Message, userIDs: Map<String, User>) {
+        val ownerId = message.chatMessage.record.ownerId
+        if (ownerId != null && userIDs.containsKey(ownerId)) {
+            message.author = userIDs[ownerId]
+        } else {
+            message.author = userBuilder.createUser(this.skygear?.auth?.currentUser!!)
         }
+    }
 
     class ContentTypeChecker : MessageHolders.ContentChecker<Message> {
         companion object {

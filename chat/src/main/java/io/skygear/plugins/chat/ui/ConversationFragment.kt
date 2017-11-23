@@ -352,7 +352,7 @@ open class ConversationFragment() :
 
     override fun onVoiceMessageStateChanged(voiceMessage: VoiceMessage) {
         Log.i(TAG, "Voice Message State Changed: ${voiceMessage.state}")
-        conversationView().updateMessage(voiceMessage.chatMessage)
+        conversationView().updateVoiceMessage(voiceMessage)
     }
 
     override fun onVoiceMessagePlayerError(error: VoiceMessagePlayer.Error) {
