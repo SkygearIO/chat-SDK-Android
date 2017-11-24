@@ -298,9 +298,9 @@ open class ConversationView: RelativeLayout{
         }
     }
 
-    open fun addMessageToStart(message: ChatMessage, scroll: Boolean, imageUri: Uri? = null) {
+    open fun addMessageToStart(message: ChatMessage, imageUri: Uri? = null) {
         MessageFromChatMessage(message, imageUri) {
-            uiMessage -> this.messageListAdapter?.addToStart(uiMessage, scroll)
+            uiMessage -> this.messageListAdapter?.addToStart(uiMessage, needToScrollToBottom())
         }
     }
 
@@ -319,9 +319,9 @@ open class ConversationView: RelativeLayout{
         }
     }
 
-    fun MessageFromChatMessage(chatMessage: ChatMessage, imageUri: Uri?, callback: ((messages: Message) -> Unit)? ) {
+    fun MessageFromChatMessage(chatMessage: ChatMessage, uri: Uri?, callback: ((messages: Message) -> Unit)? ) {
         this.userCache?.getUsers(listOf(chatMessage.record.ownerId)) { userIDs ->
-                var multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), imageUri)
+                var multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), uri)
                 updateMessageAuthor(multitypeMessage, userIDs)
                 callback?.invoke(multitypeMessage)
             }

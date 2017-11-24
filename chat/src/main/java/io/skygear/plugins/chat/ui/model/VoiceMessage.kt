@@ -1,5 +1,6 @@
 package io.skygear.plugins.chat.ui.model
 
+import android.net.Uri
 import android.media.MediaRecorder
 import com.stfalcon.chatkit.commons.models.MessageContentType
 import io.skygear.skygear.Asset
@@ -40,19 +41,19 @@ open class VoiceMessage: Message, MessageContentType {
         get() = this.chatMessage.record.get(VoiceMessage.AttachmentFieldName) as Asset
 
     val attachmentUrl
-        get() = this.attachment.url as String
+        get() = this.uri?.toString() ?: this.attachment.url as String
 
     val duration
         get() = this.chatMessage.metadata!!.getInt(VoiceMessage.DurationMatadataName)
 
     var state = VoiceMessage.State.INITIAL
+    var uri: Uri? = null
 
-    constructor(chatMsg: ChatMessage, style: MessageStyle): super(chatMsg, style)
-
-    init {
-        if (!VoiceMessage.isVoiceMessage(this.chatMessage)) {
+    constructor(chatMsg: ChatMessage, style: MessageStyle, u: Uri? = null): super(chatMsg, style) {
+        if (! VoiceMessage.isVoiceMessage(this.chatMessage)) {
             throw IllegalArgumentException("Not compatible skygear record")
         }
+        this.uri = u
     }
 
     enum class State {
