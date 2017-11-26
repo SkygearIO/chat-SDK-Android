@@ -646,13 +646,24 @@ public final class ChatContainer {
             limitCount = GET_MESSAGES_DEFAULT_LIMIT;
         }
 
+        cacheController.getMessages(conversation, limitCount, before, order, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> object) {
+              // TODO: pass the cached result to callback
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+
+            }
+        });
+
         Object[] args = new Object[]{conversation.getId(), limitCount, beforeTimeISO8601, order};
         this.skygear.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {
                 List<Message> messages = null;
                 JSONArray results = result.optJSONArray("results");
-
                 if (results != null) {
                     messages = new ArrayList<>(results.length());
 
@@ -669,6 +680,8 @@ public final class ChatContainer {
 
                     ChatContainer.this.markMessagesAsDelivered(messages);
                 }
+                Message[] messageArray = new Message[messages.size()];
+                cacheController.didGetMessages(messages.toArray(messageArray), new Message[]{});
                 if (callback != null) {
                     callback.onSucc(messages);
                 }

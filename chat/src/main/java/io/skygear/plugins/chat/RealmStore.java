@@ -13,6 +13,10 @@ import io.realm.annotations.RealmModule;
 
 class RealmStore {
 
+    interface QueryBuilder<T> {
+        RealmQuery<T> buildQueryFrom(RealmQuery<T> baseQuery);
+    }
+
     private final String name;
     private final boolean inMemory;
 
@@ -34,9 +38,11 @@ class RealmStore {
         return Realm.getInstance(configBuilder.build());
     }
 
-    Message[] getMessages(RealmQuery<MessageCacheObject> query,
+    Message[] getMessages(QueryBuilder<MessageCacheObject> queryBuilder,
                           int limit,
                           String order) {
+        RealmQuery<MessageCacheObject> query = getRealm().where(MessageCacheObject.class);
+        query = queryBuilder.buildQueryFrom(query);
         OrderedRealmCollectionSnapshot<MessageCacheObject> results = query.findAllSorted(order, Sort.DESCENDING).createSnapshot();
         int size = results.size();
         if (limit == -1 || limit > size) {
@@ -44,9 +50,24 @@ class RealmStore {
         }
 
         List<Message> messages = new ArrayList<>(limit);
+        List<MessageCacheObject> faultyCacheObjects = new ArrayList<>();
         for (int i = 0; i < limit; i++) {
             MessageCacheObject cacheObject = results.get(i);
-            messages.add(cacheObject.toMessage());
+            if (cacheObject == null) {
+                throw new RuntimeException("query limit should not exceed result size");
+            }
+
+            Message message = cacheObject.toMessage();
+            if (message != null) {
+                messages.add(message);
+            } else {
+                faultyCacheObjects.add(cacheObject);
+            }
+        }
+
+        // clear up faulty cache objects
+        for (MessageCacheObject cacheObject : faultyCacheObjects) {
+            cacheObject.deleteFromRealm();
         }
 
         Message[] messageArray = new Message[messages.size()];

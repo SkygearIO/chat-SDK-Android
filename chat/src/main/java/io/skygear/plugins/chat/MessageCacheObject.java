@@ -2,11 +2,15 @@ package io.skygear.plugins.chat;
 
 import android.support.annotation.NonNull;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Date;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import io.skygear.plugins.chat.Message;
+import io.skygear.skygear.Record;
 
 public class MessageCacheObject extends RealmObject {
 
@@ -34,12 +38,23 @@ public class MessageCacheObject extends RealmObject {
     }
 
     public MessageCacheObject(Message message) {
-        // TODO: from Message to MessageCacheObject
+        this.recordID = message.getId();
+        this.conversationID = message.getConversationId();
+        this.creationDate = message.getCreatedTime();
+        this.editionDate = (Date) message.record.get("edited_at");
+        this.deleted = (Boolean) message.record.get("deleted");
+        this.jsonData = message.toJson().toString();
     }
 
-    @NonNull
     Message toMessage() {
-        // TODO: from MessageCacheObject to Message
+        try {
+            JSONObject json = new JSONObject(this.jsonData);
+            Record record = Record.fromJson(json);
+            Message message = new Message(record);
+            return message;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 }
