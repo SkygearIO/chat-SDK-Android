@@ -117,6 +117,16 @@ class RealmStore {
         realm.commitTransaction();
     }
 
+    void deleteAll() {
+        Realm realm = getRealm();
+
+        realm.beginTransaction();
+
+        realm.deleteAll();
+
+        realm.commitTransaction();
+    }
+
     @RealmModule(library = true, allClasses = true)
     private static class SkygearChatModule {
 
