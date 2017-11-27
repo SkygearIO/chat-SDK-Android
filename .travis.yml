@@ -4,8 +4,10 @@ dk: oraclejdk8
 android:
   components:
     - tools
+    - tools # as per https://github.com/travis-ci/travis-ci/issues/6040#issuecomment-219367943
     - platform-tools
     - build-tools-26.0.2
+    - android-19
     - android-26
     - extra-android-support
     - extra-android-m2repository
@@ -20,19 +22,15 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 
-###
-### Uncomment the following lines to enable android emulator
-###
-# before_script:
-  # - echo no | android create avd --force -n test -t android-19 --abi armeabi-v7a
-  # - emulator -avd test -no-audio -no-window &
-  # - android-wait-for-emulator
-  # - adb shell input keyevent 82 &
+before_script:
+  - echo no | android create avd --force -n test -t android-19 --abi armeabi-v7a
+  - emulator -avd test -no-audio -no-window &
+  - android-wait-for-emulator
+  - adb shell input keyevent 82 &
 
 script:
   - ./gradlew :chat:build --info --stacktrace
-  ## Uncomment the following line to enable testing
-  # - ./gradlew :chat:connectedAndroidTest --info --stacktrace
+  - ./gradlew :chat:connectedAndroidTest --info --stacktrace
 
 before_deploy:
   - sudo pip install awscli
