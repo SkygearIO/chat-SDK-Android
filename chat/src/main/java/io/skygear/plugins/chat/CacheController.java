@@ -28,7 +28,7 @@ class CacheController {
         this.store = store;
     }
 
-    public void getMessages(@NonNull final Conversation conversation,
+    void getMessages(@NonNull final Conversation conversation,
                             final int limit,
                             @Nullable final Date before,
                             @Nullable final String order,

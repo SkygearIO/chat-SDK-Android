@@ -40,7 +40,6 @@ import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
-import io.skygear.skygear.DateSerializer;
 import io.skygear.skygear.Error;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.Reference;
