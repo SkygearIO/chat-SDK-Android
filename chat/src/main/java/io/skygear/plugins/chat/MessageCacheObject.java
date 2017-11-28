@@ -29,6 +29,9 @@ import io.realm.annotations.PrimaryKey;
 import io.skygear.plugins.chat.Message;
 import io.skygear.skygear.Record;
 
+/**
+ * The Realm model of Skygear message.
+ */
 public class MessageCacheObject extends RealmObject {
 
     @PrimaryKey

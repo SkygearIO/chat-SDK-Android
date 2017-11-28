@@ -27,6 +27,10 @@ import java.util.List;
 
 import io.realm.RealmQuery;
 
+/**
+ * The cache controller that contains the logic of updating cache store when
+ * calling chat container api and receiving response.
+ */
 class CacheController {
     private static CacheController sharedInstance;
 
