@@ -886,12 +886,15 @@ public final class ChatContainer {
 
     private void saveMessage(final Message message,
                              @Nullable final SaveCallback<Message> callback) {
+        this.cacheController.saveMessage(message, null);
+
         SaveCallback<Message> wrappedCallback = new SaveCallback<Message>() {
             @Override
             public void onSucc(@Nullable Message savedMessage) {
                 if (savedMessage != null) {
                     savedMessage.alreadySyncToServer = true;
                     savedMessage.fail = false;
+                    ChatContainer.this.cacheController.didSaveMessage(savedMessage, null);
                 }
 
                 if (callback != null) {
@@ -903,6 +906,8 @@ public final class ChatContainer {
             public void onFail(@NonNull Error error) {
                 message.alreadySyncToServer = false;
                 message.fail = true;
+
+                ChatContainer.this.cacheController.didSaveMessage(message, error);
 
                 if (callback != null) {
                     callback.onFail(error);

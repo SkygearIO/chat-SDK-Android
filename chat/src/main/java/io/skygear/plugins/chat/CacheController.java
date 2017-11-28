@@ -26,6 +26,8 @@ import java.util.Date;
 import java.util.List;
 
 import io.realm.RealmQuery;
+import io.skygear.skygear.Error;
+import io.skygear.skygear.Record;
 
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_ALREADY_SYNC_TO_SERVER;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_CONVERSATION_ID;
@@ -104,5 +106,31 @@ class CacheController {
         // soft delete
         // so update the messages
         this.store.setMessages(deletedMessages);
+    }
+
+
+    void saveMessage(final Message message,
+                     @Nullable final SaveCallback<Message> callback) {
+        this.store.setMessages(new Message[]{message});
+
+        if (callback != null) {
+            callback.onSucc(message);
+        }
+    }
+
+    void didSaveMessage(final Message message,
+                        @Nullable Error error) {
+        if (error != null) {
+            // invalidate unsaved message
+            message.alreadySyncToServer = false;
+            message.fail = true;
+            this.store.setMessages(new Message[]{message});
+            return;
+        }
+
+        message.alreadySyncToServer = true;
+        message.fail = false;
+
+        this.store.setMessages(new Message[]{message});
     }
 }
