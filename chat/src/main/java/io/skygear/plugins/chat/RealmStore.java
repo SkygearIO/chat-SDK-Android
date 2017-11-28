@@ -28,6 +28,8 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 import io.realm.annotations.RealmModule;
 
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_RECORD_ID;
+
 class RealmStore {
 
     interface QueryBuilder<T> {
@@ -93,7 +95,7 @@ class RealmStore {
     }
 
     Message getMessageWithID(String messageID) {
-        MessageCacheObject cacheObject = getRealm().where(MessageCacheObject.class).equalTo("recordID", messageID).findFirst();
+        MessageCacheObject cacheObject = getRealm().where(MessageCacheObject.class).equalTo(KEY_RECORD_ID, messageID).findFirst();
         if (cacheObject == null) {
             return null;
         }
@@ -134,7 +136,7 @@ class RealmStore {
         }
 
         RealmResults<MessageCacheObject> cacheObjects =
-                realm.where(MessageCacheObject.class).in("recordID", messageIDs).findAll();
+                realm.where(MessageCacheObject.class).in(KEY_RECORD_ID, messageIDs).findAll();
 
         realm.beginTransaction();
 
