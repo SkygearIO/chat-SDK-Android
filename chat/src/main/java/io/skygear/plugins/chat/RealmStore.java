@@ -71,7 +71,7 @@ class RealmStore {
         for (int i = 0; i < limit; i++) {
             MessageCacheObject cacheObject = results.get(i);
             if (cacheObject == null) {
-                throw new RuntimeException("query limit should not exceed result size");
+                throw new RuntimeException("Unexpected null object when getting message query result");
             }
 
             Message message;
