@@ -37,6 +37,10 @@ import static io.skygear.plugins.chat.MessageCacheObject.KEY_EDITION_DATE;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_FAIL;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEND_DATE;
 
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_CREATE;
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_DELETE;
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_UPDATE;
+
 /**
  * The cache controller that contains the logic of updating cache store when
  * calling chat container api and receiving response.
@@ -138,5 +142,19 @@ class CacheController {
         // soft delete
         // so update the messages
         this.store.setMessages(new Message[]{message});
+    }
+
+    void handleMessageChange(Message message, String eventType) {
+        if (eventType.equals(EVENT_TYPE_CREATE)) {
+            this.didSaveMessage(message, null);
+        }
+
+        if (eventType.equals(EVENT_TYPE_UPDATE)) {
+            this.didSaveMessage(message, null);
+        }
+
+        if (eventType.equals(EVENT_TYPE_DELETE)) {
+            this.didDeleteMessage(message);
+        }
     }
 }

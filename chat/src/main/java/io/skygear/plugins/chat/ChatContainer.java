@@ -1108,6 +1108,24 @@ public final class ChatContainer {
         final String conversationId = conversation.getId();
 
         if (messageSubscription.get(conversationId) == null) {
+            final MessageSubscriptionCallback wrappedCallback = new MessageSubscriptionCallback(conversation) {
+                @Override
+                public void notify(@NonNull String eventType, @NonNull Message message) {
+                    ChatContainer.this.cacheController.handleMessageChange(message, eventType);
+
+                    if (callback != null) {
+                        callback.notify(eventType, message);
+                    }
+                }
+
+                @Override
+                public void onSubscriptionFail(@NonNull Error error) {
+                    if (callback != null) {
+                        callback.onSubscriptionFail(error);
+                    }
+                }
+            };
+
             getOrCreateUserChannel(new GetCallback<Record>() {
                 @Override
                 public void onSucc(@Nullable Record userChannelRecord) {
@@ -1115,7 +1133,7 @@ public final class ChatContainer {
                         Subscription subscription = new Subscription(
                                 conversationId,
                                 (String) userChannelRecord.get("name"),
-                                callback
+                                wrappedCallback
                         );
                         subscription.attach(pubsub);
                         messageSubscription.put(conversationId, subscription);
@@ -1125,9 +1143,7 @@ public final class ChatContainer {
                 @Override
                 public void onFail(@NonNull Error error) {
                     Log.w(TAG, "Fail to subscribe conversation message: " + error.getMessage());
-                    if (callback != null) {
-                        callback.onSubscriptionFail(error);
-                    }
+                    wrappedCallback.onSubscriptionFail(error);
                 }
             });
         }
