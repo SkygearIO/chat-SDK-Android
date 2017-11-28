@@ -27,6 +27,14 @@ import java.util.List;
 
 import io.realm.RealmQuery;
 
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_ALREADY_SYNC_TO_SERVER;
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_CONVERSATION_ID;
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_CREATION_DATE;
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_DELETED;
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_EDITION_DATE;
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_FAIL;
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEND_DATE;
+
 /**
  * The cache controller that contains the logic of updating cache store when
  * calling chat container api and receiving response.
@@ -58,19 +66,19 @@ class CacheController {
             @Override
             public RealmQuery<MessageCacheObject> buildQueryFrom(RealmQuery<MessageCacheObject> baseQuery) {
                 RealmQuery<MessageCacheObject>  query = baseQuery
-                        .equalTo("conversationID", conversation.getId())
-                        .equalTo("deleted", false)
+                        .equalTo(KEY_CONVERSATION_ID, conversation.getId())
+                        .equalTo(KEY_DELETED, false)
                         .beginGroup()
                             .beginGroup()
-                                .equalTo("alreadySyncToServer", true)
-                                .equalTo("fail", false)
+                                .equalTo(KEY_ALREADY_SYNC_TO_SERVER, true)
+                                .equalTo(KEY_FAIL, false)
                             .endGroup()
                             .or()
-                            .isNull("sendDate")
+                            .isNull(KEY_SEND_DATE)
                         .endGroup();
 
                 if (before != null) {
-                    query.lessThan("creationDate", before);
+                    query.lessThan(KEY_CREATION_DATE, before);
                 }
 
                 return query;
@@ -79,9 +87,9 @@ class CacheController {
 
         String resolvedOrder = order;
         if (resolvedOrder != null && resolvedOrder.equalsIgnoreCase("edited_at")) {
-            resolvedOrder = "editionDate";
+            resolvedOrder = KEY_EDITION_DATE;
         } else {
-            resolvedOrder = "creationDate";
+            resolvedOrder = KEY_CREATION_DATE;
         }
 
         if (callback != null) {

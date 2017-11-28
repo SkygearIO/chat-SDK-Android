@@ -34,6 +34,16 @@ import io.skygear.skygear.Record;
  */
 public class MessageCacheObject extends RealmObject {
 
+    static String KEY_RECORD_ID = "recordID";
+    static String KEY_CONVERSATION_ID = "conversationID";
+    static String KEY_CREATION_DATE = "creationDate";
+    static String KEY_EDITION_DATE = "editionDate";
+    static String KEY_SEND_DATE = "sendDate";
+    static String KEY_DELETED = "deleted";
+    static String KEY_ALREADY_SYNC_TO_SERVER = "alreadySyncToServer";
+    static String KEY_FAIL = "fail";
+    static String KEY_JSON_DATA = "jsonData";
+
     @PrimaryKey
     String recordID;
 
