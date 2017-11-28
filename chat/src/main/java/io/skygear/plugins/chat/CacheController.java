@@ -65,7 +65,7 @@ class CacheController {
         RealmStore.QueryBuilder<MessageCacheObject> queryBuilder = new RealmStore.QueryBuilder<MessageCacheObject>() {
             @Override
             public RealmQuery<MessageCacheObject> buildQueryFrom(RealmQuery<MessageCacheObject> baseQuery) {
-                RealmQuery<MessageCacheObject>  query = baseQuery
+                RealmQuery<MessageCacheObject> query = baseQuery
                         .equalTo(KEY_CONVERSATION_ID, conversation.getId())
                         .equalTo(KEY_DELETED, false)
                         .beginGroup()
