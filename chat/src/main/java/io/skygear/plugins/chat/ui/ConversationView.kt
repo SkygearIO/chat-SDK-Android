@@ -34,7 +34,7 @@ import io.skygear.plugins.chat.Conversation
 import com.stfalcon.chatkit.messages.VoiceMessageOnClickListener
 
 
-open abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
+abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
     override fun onBeforeCollapse() {}
 
     override fun onOffsetChanged(offset: Float, isCancel: Boolean) {}
@@ -46,7 +46,7 @@ open abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListene
     override fun onCollapse(isCancel: Boolean) {}
 }
 
-open abstract class TextBaseWatcher : TextWatcher {
+abstract class TextBaseWatcher : TextWatcher {
     override fun afterTextChanged(s: Editable?) {}
 
     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -174,7 +174,7 @@ open class ConversationView: RelativeLayout{
             _ ->
                 messageEditText?.text?.let { text ->
                     if (!text.isEmpty()) {
-                        val result = this?.sendTextMessageListener?.invoke(text.toString())
+                        val result = this.sendTextMessageListener.invoke(text.toString())
                         result?.let { success ->
                             if (success){
                                 this.messageEditText?.setText("")
@@ -211,7 +211,7 @@ open class ConversationView: RelativeLayout{
     }
 
     open fun setVoiceMessageOnClickListener(listener: VoiceMessageOnClickListener) {
-        (this.messageHolders as CustomMessageHolders)?.voiceMessageOnClickListener = listener
+        (this.messageHolders as CustomMessageHolders).voiceMessageOnClickListener = listener
     }
 
     open fun needToScrollToBottom(): Boolean {
@@ -284,15 +284,23 @@ open class ConversationView: RelativeLayout{
         }
     }
 
+    open fun updateVoiceMessage(voiceMessage: VoiceMessage) {
+        this.userCache?.getUsers(listOf(voiceMessage.chatMessage.record.ownerId)) {
+            userIDs ->
+                updateMessageAuthor(voiceMessage, userIDs)
+                this.messageListAdapter?.update(voiceMessage)
+        }
+    }
+
     open fun addMessagesToEnd(messages: List<ChatMessage>, reverse: Boolean) {
         MessagesFromChatMessages(messages) {
             msgs -> this.messageListAdapter?.addToEnd(msgs, reverse)
         }
     }
 
-    open fun addMessageToStart(message: ChatMessage, scroll: Boolean, imageUri: Uri? = null) {
+    open fun addMessageToStart(message: ChatMessage, imageUri: Uri? = null) {
         MessageFromChatMessage(message, imageUri) {
-            message -> this.messageListAdapter?.addToStart(message, scroll)
+            uiMessage -> this.messageListAdapter?.addToStart(uiMessage, needToScrollToBottom())
         }
     }
 
@@ -303,34 +311,31 @@ open class ConversationView: RelativeLayout{
     fun MessagesFromChatMessages(chatMessages: List<ChatMessage>, callback: ((messages: List<Message>) -> Unit)? ) {
         val userIDs = chatMessages.map { it.record.ownerId }.distinct()
         val multitypeMessages = chatMessages.map { MessageFactory.getMessage(it, getMessageStyle()) }
-        this.userCache?.getUsers(userIDs) { userIDs ->
+        this.userCache?.getUsers(userIDs) { userMapping ->
             multitypeMessages.forEach {
-                msg ->
-                    val ownerId = msg.chatMessage.record.ownerId
-                    if (ownerId != null && userIDs.containsKey(ownerId)) {
-                        msg.author = userIDs[ownerId]
-                    } else {
-                        msg.author = userBuilder.createUser(this.skygear?.auth?.currentUser!!)
-                    }
+                msg -> updateMessageAuthor(msg, userMapping)
             }
             callback?.invoke(multitypeMessages)
         }
     }
 
-    fun MessageFromChatMessage(chatMessage: ChatMessage, imageUri: Uri?, callback: ((messages: Message) -> Unit)? ) {
-
+    fun MessageFromChatMessage(chatMessage: ChatMessage, uri: Uri?, callback: ((messages: Message) -> Unit)? ) {
         this.userCache?.getUsers(listOf(chatMessage.record.ownerId)) { userIDs ->
-                val ownerId = chatMessage.record.ownerId
-                var multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), imageUri)
-                if (ownerId != null && userIDs.containsKey(ownerId)) {
-                    multitypeMessage.author = userIDs[ownerId]
-                } else {
-                    multitypeMessage.author = userBuilder.createUser(this.skygear?.auth?.currentUser!!)
-                }
+                var multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), uri)
+                updateMessageAuthor(multitypeMessage, userIDs)
                 callback?.invoke(multitypeMessage)
             }
 
+    }
+
+    fun updateMessageAuthor(message: Message, userIDs: Map<String, User>) {
+        val ownerId = message.chatMessage.record.ownerId
+        if (ownerId != null && userIDs.containsKey(ownerId)) {
+            message.author = userIDs[ownerId]
+        } else {
+            message.author = userBuilder.createUser(this.skygear?.auth?.currentUser!!)
         }
+    }
 
     class ContentTypeChecker : MessageHolders.ContentChecker<Message> {
         companion object {

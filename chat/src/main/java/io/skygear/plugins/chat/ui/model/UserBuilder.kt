@@ -22,7 +22,7 @@ class UserBuilder {
         this.avatarInitialTextColor = avatarInitialTextColor
     }
 
-    open fun createUser(record: Record): User {
+    fun createUser(record: Record): User {
         return User(record, displayNameField, avatarField, avatarType, avatarBackgroundColor, avatarInitialTextColor)
     }
 

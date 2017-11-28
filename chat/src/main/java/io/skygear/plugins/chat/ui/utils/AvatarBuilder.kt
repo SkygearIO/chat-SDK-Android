@@ -20,7 +20,7 @@ class AvatarBuilder(
         val DefaultAvatarWidth = 100
         val DefaultAvatarHeight = 100
         val DefaultAvatarTextSize = 50
-        open fun avatarUriForName(name: String, backgroundColor: Int, initialTextColor: Int)
+        fun avatarUriForName(name: String, backgroundColor: Int, initialTextColor: Int)
                 = "${AvatarBuilder.Scheme}://user?name=$name&backgroundColor=${backgroundColor}&initialTextColor=${initialTextColor}"
 
     }

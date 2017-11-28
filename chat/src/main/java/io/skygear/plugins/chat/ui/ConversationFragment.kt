@@ -140,9 +140,9 @@ open class ConversationFragment() :
 
 
     protected fun createConversationView(inflater: LayoutInflater?, container: ViewGroup?): ConversationView {
-        val view = inflater?.inflate(layoutResID !!, container, false) as ConversationView
+        val view = inflater?.inflate(layoutResID, container, false) as ConversationView
 
-        view.setAddAttachmentButtonOnClickListener{ view -> this@ConversationFragment.onAddAttachmentButtonClick(view) }
+        view.setAddAttachmentButtonOnClickListener{ _ -> this@ConversationFragment.onAddAttachmentButtonClick() }
 
         view.setVoiceButtonHolderListener(object : HoldingButtonLayoutBaseListener() {
             override fun onExpand() {
@@ -167,8 +167,8 @@ open class ConversationFragment() :
         return view
     }
 
-    fun conversationView() : ConversationView {
-        return this.view as ConversationView
+    fun conversationView() : ConversationView? {
+        return this.view as ConversationView?
     }
 
     override fun onCreateView(
@@ -189,7 +189,7 @@ open class ConversationFragment() :
 
     override fun onResume() {
         super.onResume()
-        if (conversationView().itemCount() == 0) {
+        if (conversationView()?.itemCount() == 0) {
             this.conversation?.let {
                 this.fetchMessages()
             }
@@ -210,7 +210,7 @@ open class ConversationFragment() :
             complete: ((msgs: List<ChatMessage>?, error: String?) -> Unit)? = null
     ) {
         val successCallback = fun(chatMsgs: List<ChatMessage>?) {
-            conversationView().hideProgress()
+            conversationView()?.hideProgress()
             chatMsgs?.let { this@ConversationFragment.addMessages(it, isAddToTop = true) }
             chatMsgs?.map { it.createdTime }?.min()?.let { newBefore ->
                 // update load more cursor
@@ -243,18 +243,17 @@ open class ConversationFragment() :
 
     private fun addMessage(message: ChatMessage, imageUri: Uri? = null) {
         val view = conversationView()
-        view.addMessageToStart(message, conversationView().needToScrollToBottom(), imageUri)
+        view?.addMessageToStart(message, imageUri)
         messageIDs.add(message.id)
         this.skygearChat?.markMessageAsRead(message)
     }
 
     private fun addMessagesToBottom(messages: List<ChatMessage>) {
-        this.addMessages(messages, isScrollToBottom = conversationView().needToScrollToBottom())
+        this.addMessages(messages)
     }
 
     private fun addMessages(messages: List<ChatMessage>,
-                            isAddToTop: Boolean = false,
-                            isScrollToBottom: Boolean = false
+                            isAddToTop: Boolean = false
     ) {
         if (messages.isEmpty()) {
             return
@@ -262,15 +261,14 @@ open class ConversationFragment() :
 
         val view = conversationView()
         if (isAddToTop) {
-            view.addMessagesToEnd(messages, false)
+            view?.addMessagesToEnd(messages, false)
         } else {
             messages.forEach { msg ->
                 if (messageIDs.contains(msg.id)) {
-                    view.updateMessage(msg)
+                    view?.updateMessage(msg)
                 } else {
-                    view.addMessageToStart(
-                            msg,
-                            isScrollToBottom
+                    view?.addMessageToStart(
+                            msg
                     )
                 }
             }
@@ -329,7 +327,7 @@ open class ConversationFragment() :
     }
 
     private fun onUpdateChatMessage(message: ChatMessage) {
-        conversationView().updateMessage(message)
+        conversationView()?.updateMessage(message)
     }
 
     override fun onLoadMore(page: Int, totalItemsCount: Int) {
@@ -352,14 +350,14 @@ open class ConversationFragment() :
 
     override fun onVoiceMessageStateChanged(voiceMessage: VoiceMessage) {
         Log.i(TAG, "Voice Message State Changed: ${voiceMessage.state}")
-        conversationView().updateMessage(voiceMessage.chatMessage)
+        conversationView()?.updateVoiceMessage(voiceMessage)
     }
 
     override fun onVoiceMessagePlayerError(error: VoiceMessagePlayer.Error) {
         Toast.makeText(activity, error.message, Toast.LENGTH_SHORT).show()
     }
 
-    fun onAddAttachmentButtonClick(view: View?) {
+    fun onAddAttachmentButtonClick() {
         AlertDialog.Builder(this.context)
                 .setItems(R.array.attachment_options) { _, option ->
                     when (option) {
@@ -382,7 +380,7 @@ open class ConversationFragment() :
     }
 
     fun onVoiceRecordingButtonPressedDown() {
-        conversationView().toggleVoiceButtonHint(true)
+        conversationView()?.toggleVoiceButtonHint(true)
 
         val fileDir = this.context.cacheDir.absolutePath
         val fileName = "voice-${Date().time}.${VoiceMessage.FILE_EXTENSION_NAME}"
@@ -401,7 +399,7 @@ open class ConversationFragment() :
     }
 
     fun onVoiceRecordingButtonPressedUp(isCancel: Boolean) {
-        conversationView().toggleVoiceButtonHint(false)
+        conversationView()?.toggleVoiceButtonHint(false)
         if (this.voiceRecordingPermissionManager?.permissionsGranted() != true) {
             return
         }
@@ -434,16 +432,17 @@ open class ConversationFragment() :
         stream.close()
 
         this.conversation?.let { conv ->
-            val fileName = this@ConversationFragment.voiceRecordingFileName!!.split("/").last()
+            val fileName = voiceRecordingFileName!!.split("/").last()
             val asset = Asset(fileName, VoiceMessage.MIME_TYPE, bytes)
+
             val meta = JSONObject()
             meta.put(VoiceMessage.DurationMatadataName, duration)
 
             val message = ChatMessage()
             message.asset = asset
             message.metadata = meta
+            addMessage(message, Uri.parse("file://" + voiceRecordingFileName))
 
-            this.addMessagesToBottom(listOf(message))
             this.skygearChat?.addMessage(message, conv, object : SaveCallback<ChatMessage> {
                 override fun onSucc(chatMsg: ChatMessage?) {
                     voiceRecordingFile.delete()
@@ -524,7 +523,7 @@ open class ConversationFragment() :
         }
 
         this.conversation?.let { conv ->
-            val imageMessage = MessageBuilder.createImageMessage(imageData, imageUri)
+            val imageMessage = MessageBuilder.createImageMessage(imageData)
             this.addMessage(imageMessage, imageUri)
             this.skygearChat?.addMessage(imageMessage, conv, null)
         }
@@ -571,7 +570,7 @@ open class ConversationFragment() :
     }
 
     private fun voiceRecordingPermissionDenied() {
-        conversationView().cancelVoiceButton()
+        conversationView()?.cancelVoiceButton()
 
         Toast.makeText(
                 activity,
