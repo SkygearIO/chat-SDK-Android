@@ -74,10 +74,11 @@ class RealmStore {
                 throw new RuntimeException("query limit should not exceed result size");
             }
 
-            Message message = cacheObject.toMessage();
-            if (message != null) {
+            Message message;
+            try {
+                message = cacheObject.toMessage();
                 messages.add(message);
-            } else {
+            } catch (Exception e) {
                 faultyCacheObjects.add(cacheObject);
             }
         }
@@ -97,7 +98,15 @@ class RealmStore {
             return null;
         }
 
-        return cacheObject.toMessage();
+        Message message;
+        try {
+            message = cacheObject.toMessage();
+            return message;
+        } catch (Exception e) {
+            // clear up faulty cache objects
+            cacheObject.deleteFromRealm();
+            return null;
+        }
     }
 
     void setMessages(Message[] messages) {

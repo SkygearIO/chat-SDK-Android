@@ -76,15 +76,9 @@ public class MessageCacheObject extends RealmObject {
         this.jsonData = message.toJson().toString();
     }
 
-    Message toMessage() {
-        try {
-            JSONObject json = new JSONObject(this.jsonData);
-            Record record = Record.fromJson(json);
-            Message message = new Message(record);
-            return message;
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return null;
+    Message toMessage() throws Exception {
+        JSONObject json = new JSONObject(this.jsonData);
+        Record record = Record.fromJson(json);
+        return new Message(record);
     }
 }
