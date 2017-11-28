@@ -74,11 +74,28 @@ public class MessageCacheObject extends RealmObject {
         this.editionDate = (Date) message.record.get("edited_at");
         this.deleted = (Boolean) message.record.get("deleted");
         this.jsonData = message.toJson().toString();
+        this.sendDate = message.sendDate;
+        this.alreadySyncToServer = message.alreadySyncToServer;
+        this.fail = message.fail;
+
+        // creationDate of the record originally represents the message creation date on server
+        // this overloads the meaning of creationDate, to also represents local creation date
+        // then creationDate can also be used to sort messages even not uploaded to server yet
+        //
+        // this will not affect the SKYMessage created from cache object
+        // because the deserialization of message record data is based on recordData only
+        if (this.creationDate == null && message.sendDate != null) {
+            this.creationDate = message.sendDate;
+        }
     }
 
     Message toMessage() throws Exception {
         JSONObject json = new JSONObject(this.jsonData);
         Record record = Record.fromJson(json);
-        return new Message(record);
+        Message message = new Message(record);
+        message.sendDate = this.sendDate;
+        message.alreadySyncToServer = this.alreadySyncToServer;
+        message.fail = this.fail;
+        return message;
     }
 }
