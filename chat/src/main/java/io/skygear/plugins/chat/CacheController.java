@@ -133,4 +133,10 @@ class CacheController {
 
         this.store.setMessages(new Message[]{message});
     }
+
+    void didDeleteMessage(final Message message) {
+        // soft delete
+        // so update the messages
+        this.store.setMessages(new Message[]{message});
+    }
 }

@@ -870,6 +870,8 @@ public final class ChatContainer {
                             return;
                         }
 
+                        ChatContainer.this.cacheController.didDeleteMessage(message);
+
                         callback.onSucc(message);
                     }
 
