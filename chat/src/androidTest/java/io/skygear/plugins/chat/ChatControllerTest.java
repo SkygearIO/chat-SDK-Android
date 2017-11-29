@@ -28,6 +28,7 @@ import junit.framework.Assert;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -191,5 +192,77 @@ public class ChatControllerTest {
         });
 
         Assert.assertTrue(checkpoints[0]);
+    }
+
+    @Test
+    public void testSaveMessageUpdateCache() throws JSONException {
+        final boolean[] checkpoints = new boolean[] { false, false, false };
+        Conversation conversation = new Conversation(new Record("conversation", "c0"));
+
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("_id", "message/mm1");
+
+        Record record = Record.fromJson(messageJson);
+        Reference conversationRef = new Reference("conversation", "c0");
+        record.set("conversation", conversationRef);
+        record.set("body", "new message");
+
+        final Message messageToSave = new Message(record);
+        messageToSave.sendDate = new Date(50000);
+
+        this.cacheController.saveMessage(messageToSave, new SaveCallback<Message>() {
+            @Override
+            public void onSucc(@Nullable Message message) {
+                Assert.assertEquals(message.getId(), messageToSave.getId());
+                Assert.assertEquals(message.getSendDate(), messageToSave.getSendDate());
+
+                checkpoints[0] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> messages) {
+                Assert.assertEquals(messages.size(), 5);
+
+                for (Message message : messages) {
+                    Assert.assertNotSame(message.getId(), messageToSave.getId());
+                }
+
+                checkpoints[1] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        this.cacheController.didSaveMessage(messageToSave, null);
+        this.cacheController.getMessages(conversation, 1, null, null, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> messages) {
+                Message message = messages.get(0);
+                Assert.assertEquals(message.getId(), messageToSave.getId());
+                Assert.assertEquals(message.getSendDate(), messageToSave.getSendDate());
+                Assert.assertTrue(message.alreadySyncToServer);
+
+                checkpoints[2] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        for (boolean checkpoint : checkpoints) {
+            Assert.assertTrue(checkpoint);
+        }
     }
 }

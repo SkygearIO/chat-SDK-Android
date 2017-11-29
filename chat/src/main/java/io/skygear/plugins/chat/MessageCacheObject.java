@@ -72,7 +72,12 @@ public class MessageCacheObject extends RealmObject {
         this.conversationID = message.getConversationId();
         this.creationDate = message.getCreatedTime();
         this.editionDate = (Date) message.record.get("edited_at");
-        this.deleted = (Boolean) message.record.get("deleted");
+        Boolean deleted = (Boolean) message.record.get("deleted");
+        if (deleted == null) {
+            this.deleted = false;
+        } else {
+            this.deleted = deleted;
+        }
         this.jsonData = message.toJson().toString();
         this.sendDate = message.sendDate;
         this.alreadySyncToServer = message.alreadySyncToServer;
