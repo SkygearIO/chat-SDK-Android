@@ -35,6 +35,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.theories.suppliers.TestedOn;
 import org.junit.runner.RunWith;
 
 import java.util.Date;
@@ -264,5 +265,75 @@ public class ChatControllerTest {
         for (boolean checkpoint : checkpoints) {
             Assert.assertTrue(checkpoint);
         }
+    }
+
+    @Test
+    public void testDeleteMessageUpdateCache() throws JSONException {
+        final boolean[] checkpoints = new boolean[] { false };
+        Conversation conversation = new Conversation(new Record("conversation", "c0"));
+
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("_id", "message/m0");
+        Date createdAt = new Date(0);
+        messageJson.put("_created_at", formatterWithMS.print(new DateTime(createdAt)));
+
+        Record record = Record.fromJson(messageJson);
+        Reference conversationRef = new Reference("conversation", "c0");
+        record.set("conversation", conversationRef);
+        record.set("deleted", true);
+
+        Message deletedMessage = new Message(record);
+
+        this.cacheController.didDeleteMessage(deletedMessage);
+        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> messages) {
+                Assert.assertEquals(messages.size(), 4);
+
+                checkpoints[0] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        Assert.assertTrue(checkpoints[0]);
+    }
+
+    @Test
+    public void testDeleteNonExistedMessage() throws JSONException {
+        final boolean[] checkpoints = new boolean[] { false };
+        Conversation conversation = new Conversation(new Record("conversation", "c0"));
+
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("_id", "message/m99");
+        Date createdAt = new Date(0);
+        messageJson.put("_created_at", formatterWithMS.print(new DateTime(createdAt)));
+
+        Record record = Record.fromJson(messageJson);
+        Reference conversationRef = new Reference("conversation", "c0");
+        record.set("conversation", conversationRef);
+        record.set("deleted", true);
+
+        Message deletedMessage = new Message(record);
+
+        this.cacheController.didDeleteMessage(deletedMessage);
+        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> messages) {
+                Assert.assertEquals(messages.size(), 5);
+
+                checkpoints[0] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        Assert.assertTrue(checkpoints[0]);
     }
 }
