@@ -35,13 +35,13 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.experimental.theories.suppliers.TestedOn;
 import org.junit.runner.RunWith;
 
 import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 import io.skygear.skygear.Error;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.Reference;
@@ -128,6 +128,10 @@ public class ChatControllerTest {
             }
         });
 
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).findAll();
+        Assert.assertEquals(results.size(), 10);
+
         Assert.assertTrue(checkpoints[0]);
     }
 
@@ -192,6 +196,13 @@ public class ChatControllerTest {
             }
         });
 
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).equalTo("conversationID", "c0").findAll();
+        Assert.assertEquals(results.size(), 8);
+
+        results = results.where().equalTo("editionDate", new Date(50000)).findAll();
+        Assert.assertEquals(results.size(), 5);
+
         Assert.assertTrue(checkpoints[0]);
     }
 
@@ -225,6 +236,12 @@ public class ChatControllerTest {
                 Assert.fail("Should not get fail callback");
             }
         });
+
+        Realm realm = this.cacheController.store.getRealm();
+        MessageCacheObject result = realm.where(MessageCacheObject.class).equalTo("recordID", "mm1").findFirst();
+        Assert.assertEquals(result.sendDate, messageToSave.sendDate);
+
+        Assert.assertEquals(realm.where(MessageCacheObject.class).findAll().size(), 11);
 
         this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
             @Override
@@ -299,6 +316,11 @@ public class ChatControllerTest {
             }
         });
 
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).equalTo("deleted", true).findAll();
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(realm.where(MessageCacheObject.class).findAll().size(), 10);
+
         Assert.assertTrue(checkpoints[0]);
     }
 
@@ -333,6 +355,11 @@ public class ChatControllerTest {
                 Assert.fail("Should not get fail callback");
             }
         });
+
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).equalTo("deleted", true).findAll();
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(realm.where(MessageCacheObject.class).findAll().size(), 11);
 
         Assert.assertTrue(checkpoints[0]);
     }
