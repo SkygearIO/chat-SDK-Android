@@ -46,6 +46,10 @@ import io.skygear.skygear.Error;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.Reference;
 
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_CREATE;
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_DELETE;
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_UPDATE;
+
 @RunWith(AndroidJUnit4.class)
 public class ChatControllerTest {
     static Context context;
@@ -362,5 +366,73 @@ public class ChatControllerTest {
         Assert.assertEquals(realm.where(MessageCacheObject.class).findAll().size(), 11);
 
         Assert.assertTrue(checkpoints[0]);
+    }
+
+    @Test
+    public void testHandleSubscription() throws JSONException {
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> allResults = realm.where(MessageCacheObject.class).findAll();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).equalTo("recordID", "mm1").findAll();
+        Assert.assertEquals(allResults.size(), 10);
+        Assert.assertEquals(results.size(), 0);
+
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("_id", "message/mm1");
+
+        Record record = Record.fromJson(messageJson);
+        Reference conversationRef = new Reference("conversation", "cc0");
+        record.set("conversation", conversationRef);
+        record.set("edited_at", new Date(0));
+        record.set("body", "new message");
+
+        final Message message = new Message(record);
+        message.sendDate = new Date(50000);
+
+        this.cacheController.handleMessageChange(message, EVENT_TYPE_CREATE);
+        Assert.assertEquals(allResults.size(), 11);
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(results.get(0).editionDate, new Date(0));
+        Assert.assertEquals(results.get(0).deleted, false);
+
+        message.record.set("edited_at", new Date(1000));
+        this.cacheController.handleMessageChange(message, EVENT_TYPE_UPDATE);
+        Assert.assertEquals(allResults.size(), 11);
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(results.get(0).editionDate, new Date(1000));
+        Assert.assertEquals(results.get(0).deleted, false);
+
+        message.record.set("deleted", true);
+        this.cacheController.handleMessageChange(message, EVENT_TYPE_DELETE);
+        Assert.assertEquals(allResults.size(), 11);
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(results.get(0).editionDate, new Date(1000));
+        Assert.assertEquals(results.get(0).deleted, true);
+    }
+
+    @Test
+    public void handleSubscriptionForNonExistedMesssage() throws JSONException {
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> allResults = realm.where(MessageCacheObject.class).findAll();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).equalTo("recordID", "mm1").findAll();
+        Assert.assertEquals(allResults.size(), 10);
+        Assert.assertEquals(results.size(), 0);
+
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("_id", "message/mm1");
+
+        Record record = Record.fromJson(messageJson);
+        Reference conversationRef = new Reference("conversation", "cc0");
+        record.set("conversation", conversationRef);
+        record.set("edited_at", new Date(0));
+        record.set("body", "new message");
+
+        final Message message = new Message(record);
+        message.sendDate = new Date(50000);
+
+        this.cacheController.handleMessageChange(message, EVENT_TYPE_UPDATE);
+        Assert.assertEquals(allResults.size(), 11);
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(results.get(0).editionDate, new Date(0));
+        Assert.assertEquals(results.get(0).deleted, false);
     }
 }
