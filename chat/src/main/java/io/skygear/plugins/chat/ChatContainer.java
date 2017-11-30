@@ -701,6 +701,20 @@ public final class ChatContainer {
     }
 
     /**
+     *  Gets unsent messages in a conversation.
+     *
+     *  There are two types of unsent messages. First is pending messages that are added but no server
+     *  response yet. Second is messages that are failed saved to server.
+     *
+     * @param conversation conversation
+     * @param callback callback
+     */
+    public void getUnsentMessages(@NonNull final Conversation conversation,
+                                  @Nullable final GetCallback<List<Message>> callback) {
+        this.cacheController.getUnsentMessages(conversation, callback);
+    }
+
+    /**
      * Send message.
      *
      * @param conversation the conversation
