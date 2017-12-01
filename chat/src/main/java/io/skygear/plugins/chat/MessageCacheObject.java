@@ -84,11 +84,11 @@ public class MessageCacheObject extends RealmObject {
         this.fail = message.fail;
 
         // creationDate of the record originally represents the message creation date on server
-        // this overloads the meaning of creationDate, to also represents local creation date
-        // then creationDate can also be used to sort messages even not uploaded to server yet
+        // this overloads the meaning of creationDate, to also represents local creation date.
+        // Then creationDate can also be used to sort messages even not uploaded to server yet.
         //
-        // this will not affect the SKYMessage created from cache object
-        // because the deserialization of message record data is based on recordData only
+        // This will not affect the Message created from cache object
+        // because the deserialization of message record data is based on jsonData only.
         if (this.creationDate == null && message.sendDate != null) {
             this.creationDate = message.sendDate;
         }

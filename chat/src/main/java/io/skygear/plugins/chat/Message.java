@@ -27,6 +27,9 @@ public class Message {
 
     final Record record;
 
+    /**
+     * Transient fields that are not saved to the server
+     */
     Date sendDate;
     boolean alreadySyncToServer;
     boolean fail;
