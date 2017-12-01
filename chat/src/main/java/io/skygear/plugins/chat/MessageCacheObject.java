@@ -73,11 +73,7 @@ public class MessageCacheObject extends RealmObject {
         this.creationDate = message.getCreatedTime();
         this.editionDate = (Date) message.record.get("edited_at");
         Boolean deleted = (Boolean) message.record.get("deleted");
-        if (deleted == null) {
-            this.deleted = false;
-        } else {
-            this.deleted = deleted;
-        }
+        this.deleted = deleted == null ? false : deleted;
         this.jsonData = message.toJson().toString();
         this.sendDate = message.sendDate;
         this.alreadySyncToServer = message.alreadySyncToServer;
