@@ -128,12 +128,10 @@ class CacheController {
             // invalidate unsaved message
             message.alreadySyncToServer = false;
             message.fail = true;
-            this.store.setMessages(new Message[]{message});
-            return;
+        } else {
+            message.alreadySyncToServer = true;
+            message.fail = false;
         }
-
-        message.alreadySyncToServer = true;
-        message.fail = false;
 
         this.store.setMessages(new Message[]{message});
     }
