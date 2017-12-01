@@ -28,6 +28,7 @@ import junit.framework.Assert;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -40,9 +41,14 @@ import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 import io.skygear.skygear.Error;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.Reference;
+
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_CREATE;
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_DELETE;
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_UPDATE;
 
 @RunWith(AndroidJUnit4.class)
 public class ChatControllerTest {
@@ -126,6 +132,10 @@ public class ChatControllerTest {
             }
         });
 
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).findAll();
+        Assert.assertEquals(results.size(), 10);
+
         Assert.assertTrue(checkpoints[0]);
     }
 
@@ -190,6 +200,239 @@ public class ChatControllerTest {
             }
         });
 
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).equalTo("conversationID", "c0").findAll();
+        Assert.assertEquals(results.size(), 8);
+
+        results = results.where().equalTo("editionDate", new Date(50000)).findAll();
+        Assert.assertEquals(results.size(), 5);
+
         Assert.assertTrue(checkpoints[0]);
+    }
+
+    @Test
+    public void testSaveMessageUpdateCache() throws JSONException {
+        final boolean[] checkpoints = new boolean[] { false, false, false };
+        Conversation conversation = new Conversation(new Record("conversation", "c0"));
+
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("_id", "message/mm1");
+
+        Record record = Record.fromJson(messageJson);
+        Reference conversationRef = new Reference("conversation", "c0");
+        record.set("conversation", conversationRef);
+        record.set("body", "new message");
+
+        final Message messageToSave = new Message(record);
+        messageToSave.sendDate = new Date(50000);
+
+        this.cacheController.saveMessage(messageToSave, new SaveCallback<Message>() {
+            @Override
+            public void onSucc(@Nullable Message message) {
+                Assert.assertEquals(message.getId(), messageToSave.getId());
+                Assert.assertEquals(message.getSendDate(), messageToSave.getSendDate());
+
+                checkpoints[0] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        Realm realm = this.cacheController.store.getRealm();
+        MessageCacheObject result = realm.where(MessageCacheObject.class).equalTo("recordID", "mm1").findFirst();
+        Assert.assertEquals(result.sendDate, messageToSave.sendDate);
+
+        Assert.assertEquals(realm.where(MessageCacheObject.class).findAll().size(), 11);
+
+        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> messages) {
+                Assert.assertEquals(messages.size(), 5);
+
+                for (Message message : messages) {
+                    Assert.assertNotSame(message.getId(), messageToSave.getId());
+                }
+
+                checkpoints[1] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        this.cacheController.didSaveMessage(messageToSave, null);
+        this.cacheController.getMessages(conversation, 1, null, null, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> messages) {
+                Message message = messages.get(0);
+                Assert.assertEquals(message.getId(), messageToSave.getId());
+                Assert.assertEquals(message.getSendDate(), messageToSave.getSendDate());
+                Assert.assertTrue(message.alreadySyncToServer);
+
+                checkpoints[2] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        for (boolean checkpoint : checkpoints) {
+            Assert.assertTrue(checkpoint);
+        }
+    }
+
+    @Test
+    public void testDeleteMessageUpdateCache() throws JSONException {
+        final boolean[] checkpoints = new boolean[] { false };
+        Conversation conversation = new Conversation(new Record("conversation", "c0"));
+
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("_id", "message/m0");
+        Date createdAt = new Date(0);
+        messageJson.put("_created_at", formatterWithMS.print(new DateTime(createdAt)));
+
+        Record record = Record.fromJson(messageJson);
+        Reference conversationRef = new Reference("conversation", "c0");
+        record.set("conversation", conversationRef);
+        record.set("deleted", true);
+
+        Message deletedMessage = new Message(record);
+
+        this.cacheController.didDeleteMessage(deletedMessage);
+        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> messages) {
+                Assert.assertEquals(messages.size(), 4);
+
+                checkpoints[0] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).equalTo("deleted", true).findAll();
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(realm.where(MessageCacheObject.class).findAll().size(), 10);
+
+        Assert.assertTrue(checkpoints[0]);
+    }
+
+    @Test
+    public void testDeleteNonExistedMessage() throws JSONException {
+        final boolean[] checkpoints = new boolean[] { false };
+        Conversation conversation = new Conversation(new Record("conversation", "c0"));
+
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("_id", "message/m99");
+        Date createdAt = new Date(0);
+        messageJson.put("_created_at", formatterWithMS.print(new DateTime(createdAt)));
+
+        Record record = Record.fromJson(messageJson);
+        Reference conversationRef = new Reference("conversation", "c0");
+        record.set("conversation", conversationRef);
+        record.set("deleted", true);
+
+        Message deletedMessage = new Message(record);
+
+        this.cacheController.didDeleteMessage(deletedMessage);
+        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> messages) {
+                Assert.assertEquals(messages.size(), 5);
+
+                checkpoints[0] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).equalTo("deleted", true).findAll();
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(realm.where(MessageCacheObject.class).findAll().size(), 11);
+
+        Assert.assertTrue(checkpoints[0]);
+    }
+
+    @Test
+    public void testHandleSubscription() throws JSONException {
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> allResults = realm.where(MessageCacheObject.class).findAll();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).equalTo("recordID", "mm1").findAll();
+        Assert.assertEquals(allResults.size(), 10);
+        Assert.assertEquals(results.size(), 0);
+
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("_id", "message/mm1");
+
+        Record record = Record.fromJson(messageJson);
+        Reference conversationRef = new Reference("conversation", "cc0");
+        record.set("conversation", conversationRef);
+        record.set("edited_at", new Date(0));
+        record.set("body", "new message");
+
+        final Message message = new Message(record);
+        message.sendDate = new Date(50000);
+
+        this.cacheController.handleMessageChange(message, EVENT_TYPE_CREATE);
+        Assert.assertEquals(allResults.size(), 11);
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(results.get(0).editionDate, new Date(0));
+        Assert.assertEquals(results.get(0).deleted, false);
+
+        message.record.set("edited_at", new Date(1000));
+        this.cacheController.handleMessageChange(message, EVENT_TYPE_UPDATE);
+        Assert.assertEquals(allResults.size(), 11);
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(results.get(0).editionDate, new Date(1000));
+        Assert.assertEquals(results.get(0).deleted, false);
+
+        message.record.set("deleted", true);
+        this.cacheController.handleMessageChange(message, EVENT_TYPE_DELETE);
+        Assert.assertEquals(allResults.size(), 11);
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(results.get(0).editionDate, new Date(1000));
+        Assert.assertEquals(results.get(0).deleted, true);
+    }
+
+    @Test
+    public void handleSubscriptionForNonExistedMesssage() throws JSONException {
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageCacheObject> allResults = realm.where(MessageCacheObject.class).findAll();
+        RealmResults<MessageCacheObject> results = realm.where(MessageCacheObject.class).equalTo("recordID", "mm1").findAll();
+        Assert.assertEquals(allResults.size(), 10);
+        Assert.assertEquals(results.size(), 0);
+
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("_id", "message/mm1");
+
+        Record record = Record.fromJson(messageJson);
+        Reference conversationRef = new Reference("conversation", "cc0");
+        record.set("conversation", conversationRef);
+        record.set("edited_at", new Date(0));
+        record.set("body", "new message");
+
+        final Message message = new Message(record);
+        message.sendDate = new Date(50000);
+
+        this.cacheController.handleMessageChange(message, EVENT_TYPE_UPDATE);
+        Assert.assertEquals(allResults.size(), 11);
+        Assert.assertEquals(results.size(), 1);
+        Assert.assertEquals(results.get(0).editionDate, new Date(0));
+        Assert.assertEquals(results.get(0).deleted, false);
     }
 }

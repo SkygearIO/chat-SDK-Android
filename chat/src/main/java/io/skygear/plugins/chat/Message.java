@@ -28,6 +28,13 @@ public class Message {
     final Record record;
 
     /**
+     * Transient fields that are not saved to the server
+     */
+    Date sendDate;
+    boolean alreadySyncToServer;
+    boolean fail;
+
+    /**
      * Instantiates a new Message with new Skygear Record.
      */
     public Message() {
@@ -154,6 +161,42 @@ public class Message {
     @Nullable
     public Asset getAsset() {
         return (Asset) record.get(ATTACHMENT_KEY);
+    }
+
+    /**
+     * Gets if message is deleted.
+     *
+     * @return if message is deleted
+     */
+    public boolean isDeleted() {
+        return (boolean) this.record.get("deleted");
+    }
+
+    /**
+     * Gets message send date.
+     *
+     * @return message send date
+     */
+    public Date getSendDate() {
+        return this.sendDate;
+    }
+
+    /**
+     * Gets if message already sync to server.
+     *
+     * @return if message already sync to server
+     */
+    public boolean isAlreadySyncToServer() {
+        return this.alreadySyncToServer;
+    }
+
+    /**
+     * Gets if failed to message sync to server.
+     *
+     * @return if failed to message sync to server
+     */
+    public boolean isFail() {
+        return this.fail;
     }
 
     /**

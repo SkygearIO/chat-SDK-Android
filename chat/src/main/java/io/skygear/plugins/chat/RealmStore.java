@@ -44,7 +44,7 @@ class RealmStore {
         this.inMemory = inMemory;
     }
 
-    private Realm getRealm() {
+    Realm getRealm() {
         RealmConfiguration.Builder configBuilder = new RealmConfiguration.Builder()
                 .name(this.name)
                 .schemaVersion(1)

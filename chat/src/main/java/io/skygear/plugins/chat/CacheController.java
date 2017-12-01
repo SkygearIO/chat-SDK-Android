@@ -26,6 +26,8 @@ import java.util.Date;
 import java.util.List;
 
 import io.realm.RealmQuery;
+import io.skygear.skygear.Error;
+import io.skygear.skygear.Record;
 
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_ALREADY_SYNC_TO_SERVER;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_CONVERSATION_ID;
@@ -34,6 +36,10 @@ import static io.skygear.plugins.chat.MessageCacheObject.KEY_DELETED;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_EDITION_DATE;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_FAIL;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEND_DATE;
+
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_CREATE;
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_DELETE;
+import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_UPDATE;
 
 /**
  * The cache controller that contains the logic of updating cache store when
@@ -104,5 +110,49 @@ class CacheController {
         // soft delete
         // so update the messages
         this.store.setMessages(deletedMessages);
+    }
+
+
+    void saveMessage(final Message message,
+                     @Nullable final SaveCallback<Message> callback) {
+        this.store.setMessages(new Message[]{message});
+
+        if (callback != null) {
+            callback.onSucc(message);
+        }
+    }
+
+    void didSaveMessage(final Message message,
+                        @Nullable Error error) {
+        if (error != null) {
+            // invalidate unsaved message
+            message.alreadySyncToServer = false;
+            message.fail = true;
+        } else {
+            message.alreadySyncToServer = true;
+            message.fail = false;
+        }
+
+        this.store.setMessages(new Message[]{message});
+    }
+
+    void didDeleteMessage(final Message message) {
+        // soft delete
+        // so update the messages
+        this.store.setMessages(new Message[]{message});
+    }
+
+    void handleMessageChange(Message message, String eventType) {
+        if (eventType.equals(EVENT_TYPE_CREATE)) {
+            this.didSaveMessage(message, null);
+        }
+
+        if (eventType.equals(EVENT_TYPE_UPDATE)) {
+            this.didSaveMessage(message, null);
+        }
+
+        if (eventType.equals(EVENT_TYPE_DELETE)) {
+            this.didDeleteMessage(message);
+        }
     }
 }

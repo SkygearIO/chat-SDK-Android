@@ -672,6 +672,8 @@ public final class ChatContainer {
                             JSONObject object = results.getJSONObject(i);
                             Record record = Record.fromJson(object);
                             Message message = new Message(record);
+                            message.alreadySyncToServer = true;
+                            message.fail = false;
                             messages.add(message);
                         } catch (JSONException e) {
                             Log.e(TAG, "Fail to get message: " + e.getMessage());
@@ -712,20 +714,18 @@ public final class ChatContainer {
                             @Nullable final SaveCallback<Message> callback) {
         if (!StringUtils.isEmpty(body) || asset != null || metadata != null) {
             Record record = new Record("message");
-            Reference reference = new Reference("conversation", conversation.getId());
-            record.set("conversation", reference);
+            Message message = new Message(record);
             if (body != null) {
-                record.set("body", body);
+                message.setBody(body);
+            }
+            if (asset != null) {
+                message.setAsset(asset);
             }
             if (metadata != null) {
-                record.set("metadata", metadata);
+                message.setMetadata(metadata);
             }
 
-            if (asset == null) {
-                this.saveMessageRecord(record, callback);
-            } else {
-                this.saveMessageRecord(record, asset, callback);
-            }
+            this.addMessage(message, conversation, callback);
         } else {
             if (callback != null) {
                 callback.onFail(new InvalidMessageError());
@@ -823,14 +823,14 @@ public final class ChatContainer {
                            @NonNull final Conversation conversation,
                            @Nullable final SaveCallback<Message> callback)
     {
-        Record record = message.getRecord();
         Reference reference = new Reference("conversation", conversation.getId());
-        record.set("conversation", reference);
+        message.record.set("conversation", reference);
+        message.sendDate = new Date();
 
         if (message.getAsset() == null) {
-            this.saveMessageRecord(record, callback);
+            this.saveMessage(message, callback);
         } else {
-            this.saveMessageRecord(record, message.getAsset(), callback);
+            this.saveMessage(message, message.getAsset(), callback);
         }
     }
 
@@ -847,7 +847,7 @@ public final class ChatContainer {
                             @Nullable final SaveCallback<Message> callback)
     {
         message.setBody(body);
-        this.saveMessageRecord(message.getRecord(), callback);
+        this.saveMessage(message, callback);
     }
 
 
@@ -870,6 +870,8 @@ public final class ChatContainer {
                             return;
                         }
 
+                        ChatContainer.this.cacheController.didDeleteMessage(message);
+
                         callback.onSucc(message);
                     }
 
@@ -884,11 +886,40 @@ public final class ChatContainer {
 
     }
 
-    private void saveMessageRecord(final Record message,
-                                   @Nullable final SaveCallback<Message> callback) {
+    private void saveMessage(final Message message,
+                             @Nullable final SaveCallback<Message> callback) {
+        this.cacheController.saveMessage(message, null);
+
+        SaveCallback<Message> wrappedCallback = new SaveCallback<Message>() {
+            @Override
+            public void onSucc(@Nullable Message savedMessage) {
+                if (savedMessage != null) {
+                    savedMessage.alreadySyncToServer = true;
+                    savedMessage.fail = false;
+                    ChatContainer.this.cacheController.didSaveMessage(savedMessage, null);
+                }
+
+                if (callback != null) {
+                    callback.onSucc(savedMessage);
+                }
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                message.alreadySyncToServer = false;
+                message.fail = true;
+
+                ChatContainer.this.cacheController.didSaveMessage(message, error);
+
+                if (callback != null) {
+                    callback.onFail(error);
+                }
+            }
+        };
+
         this.skygear.getPublicDatabase().save(
-                message,
-                new SaveResponseAdapter<Message>(callback) {
+                message.getRecord(),
+                new SaveResponseAdapter<Message>(wrappedCallback) {
                     @Override
                     public Message convert(Record record) {
                         return new Message(record);
@@ -897,20 +928,20 @@ public final class ChatContainer {
         );
     }
 
-    private void saveMessageRecord(final Record message,
-                                   final Asset asset,
-                                   @Nullable final SaveCallback<Message> callback) {
+    private void saveMessage(final Message message,
+                             final Asset asset,
+                             @Nullable final SaveCallback<Message> callback) {
         this.skygear.getPublicDatabase().uploadAsset(asset, new AssetPostRequest.ResponseHandler() {
             @Override
             public void onPostSuccess(Asset asset, String response) {
-                message.set("attachment", asset);
-                ChatContainer.this.saveMessageRecord(message, callback);
+                message.setAsset(asset);
+                ChatContainer.this.saveMessage(message, callback);
             }
 
             @Override
             public void onPostFail(Asset asset, Error error) {
                 Log.w(TAG, "Fail to upload asset: " + error.getMessage());
-                ChatContainer.this.saveMessageRecord(message, callback);
+                ChatContainer.this.saveMessage(message, callback);
             }
         });
     }
@@ -1077,6 +1108,24 @@ public final class ChatContainer {
         final String conversationId = conversation.getId();
 
         if (messageSubscription.get(conversationId) == null) {
+            final MessageSubscriptionCallback wrappedCallback = new MessageSubscriptionCallback(conversation) {
+                @Override
+                public void notify(@NonNull String eventType, @NonNull Message message) {
+                    ChatContainer.this.cacheController.handleMessageChange(message, eventType);
+
+                    if (callback != null) {
+                        callback.notify(eventType, message);
+                    }
+                }
+
+                @Override
+                public void onSubscriptionFail(@NonNull Error error) {
+                    if (callback != null) {
+                        callback.onSubscriptionFail(error);
+                    }
+                }
+            };
+
             getOrCreateUserChannel(new GetCallback<Record>() {
                 @Override
                 public void onSucc(@Nullable Record userChannelRecord) {
@@ -1084,7 +1133,7 @@ public final class ChatContainer {
                         Subscription subscription = new Subscription(
                                 conversationId,
                                 (String) userChannelRecord.get("name"),
-                                callback
+                                wrappedCallback
                         );
                         subscription.attach(pubsub);
                         messageSubscription.put(conversationId, subscription);
@@ -1094,9 +1143,7 @@ public final class ChatContainer {
                 @Override
                 public void onFail(@NonNull Error error) {
                     Log.w(TAG, "Fail to subscribe conversation message: " + error.getMessage());
-                    if (callback != null) {
-                        callback.onSubscriptionFail(error);
-                    }
+                    wrappedCallback.onSubscriptionFail(error);
                 }
             });
         }
