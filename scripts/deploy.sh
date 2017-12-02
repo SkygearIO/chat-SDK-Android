@@ -18,6 +18,7 @@ fi
 if [ -n "$TRAVIS_TAG" ]; then
    generate_doc $TRAVIS_TAG
   ./gradlew :chat:bintrayUpload
+  ./gradlew :chat_ui:bintrayUpload
 fi
 
 if [ -n "$TRAVIS_BRANCH" ]; then

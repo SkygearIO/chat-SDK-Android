@@ -10,7 +10,7 @@ import com.stfalcon.chatkit.commons.models.IMessage
 import com.stfalcon.chatkit.utils.DateFormatter
 import io.skygear.plugins.chat.Conversation
 import io.skygear.plugins.chat.ui.AvatarAdapter
-import io.skygear.plugins.chat.R
+import io.skygear.plugins.chat.ui.R
 import io.skygear.plugins.chat.ui.DefaultAvatarAdapter
 import io.skygear.plugins.chat.ui.model.Message
 import io.skygear.plugins.chat.ui.model.VoiceMessage

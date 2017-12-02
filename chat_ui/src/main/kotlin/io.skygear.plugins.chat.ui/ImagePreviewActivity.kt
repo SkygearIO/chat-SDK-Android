@@ -8,7 +8,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.ImageView
 import com.squareup.picasso.Picasso
-import io.skygear.plugins.chat.R
+import io.skygear.plugins.chat.ui.R
 
 
 class ImagePreviewActivity : AppCompatActivity() {

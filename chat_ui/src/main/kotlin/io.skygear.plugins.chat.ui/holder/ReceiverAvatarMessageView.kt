@@ -5,10 +5,10 @@ package io.skygear.plugins.chat.ui.holder
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.stfalcon.chatkit.R
+import io.skygear.plugins.chat.ui.R
 import io.skygear.plugins.chat.ui.model.Message
 import com.stfalcon.chatkit.commons.ImageLoader
-import com.stfalcon.chatkit.utils.DateFormatter;
+import com.stfalcon.chatkit.utils.DateFormatter
 
 
 class ReceiverAvatarMessageView(itemView: View){
@@ -18,7 +18,7 @@ class ReceiverAvatarMessageView(itemView: View){
 
     init {
         time = itemView.findViewById<TextView>(R.id.messageTime) as TextView
-        userAvatar = itemView.findViewById<LinearLayout>(io.skygear.plugins.chat.R.id.userAvatar) as LinearLayout
+        userAvatar = itemView.findViewById<LinearLayout>(R.id.userAvatar) as LinearLayout
     }
 
     fun onBind(message: Message) {
