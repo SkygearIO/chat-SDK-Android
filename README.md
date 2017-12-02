@@ -38,6 +38,7 @@ dependencies {
     // other dependencies
     compile 'io.skygear:skygear:+'
     compile 'io.skygear.plugins:chat:+'
+    compile 'io.skygear.plugins:chat_ui:+'
 }
 ```
 

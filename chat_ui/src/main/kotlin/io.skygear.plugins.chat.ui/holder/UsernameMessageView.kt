@@ -3,6 +3,7 @@ package io.skygear.plugins.chat.ui.holder
 import android.view.View
 import android.widget.TextView
 import io.skygear.plugins.chat.ui.model.Message
+import io.skygear.plugins.chat.ui.R
 
 
 class UsernameMessageView(itemView: View){
@@ -10,7 +11,7 @@ class UsernameMessageView(itemView: View){
     var username: TextView? = null
 
     init {
-        username = itemView.findViewById<TextView>(io.skygear.plugins.chat.R.id.usernameText)
+        username = itemView.findViewById<TextView>(R.id.usernameText)
     }
 
     fun onBind(message: Message) {

@@ -13,7 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import com.dewarder.holdinglibrary.HoldingButtonLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
-import io.skygear.plugins.chat.R
+import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
 import android.net.Uri
 import android.widget.*
@@ -25,7 +25,6 @@ import io.skygear.skygear.Container
 import io.skygear.chatkit.messages.CustomMessageHolders
 import io.skygear.plugins.chat.Conversation
 import io.skygear.chatkit.messages.VoiceMessageOnClickListener
-import io.skygear.plugins.chat.ui.utils.ImageLoader
 import io.skygear.chatkit.messages.MessageHolders
 import io.skygear.chatkit.messages.MessagesList
 import io.skygear.chatkit.messages.MessagesListAdapter
