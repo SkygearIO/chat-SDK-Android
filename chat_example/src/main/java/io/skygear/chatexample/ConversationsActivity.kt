@@ -17,7 +17,6 @@ import io.skygear.skygear.Error
 import io.skygear.skygear.LambdaResponseHandler
 import io.skygear.skygear.LogoutResponseHandler
 import org.json.JSONObject
-import java.util.*
 
 class ConversationsActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "ConversationsActivity"

@@ -16,7 +16,7 @@ import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesList
-import io.skygear.plugins.chat.R
+import io.skygear.plugins.chat.ui.R
 import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
 import android.net.Uri
