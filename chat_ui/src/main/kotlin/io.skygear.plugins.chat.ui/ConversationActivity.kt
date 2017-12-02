@@ -2,7 +2,7 @@ package io.skygear.plugins.chat.ui
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import io.skygear.plugins.chat.R
+import io.skygear.plugins.chat.ui.R
 import io.skygear.plugins.chat.Conversation as ChatConversation
 
 

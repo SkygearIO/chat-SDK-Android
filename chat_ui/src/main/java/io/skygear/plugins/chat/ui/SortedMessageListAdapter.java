@@ -12,10 +12,10 @@ import java.util.Map;
 
 import io.skygear.chatkit.commons.ImageLoader;
 import io.skygear.chatkit.messages.MessageHolders;
-import io.skygear.chatkit.messages.MessagesListAdapter;
 import io.skygear.chatkit.utils.DateFormatter;
 import io.skygear.plugins.chat.ui.model.Message;
 import io.skygear.plugins.chat.ui.model.User;
+import io.skygear.chatkit.messages.MessagesListAdapter;
 
 public class SortedMessageListAdapter extends MessagesListAdapter<Message> {
     public SortedMessageListAdapter(String senderId, MessageHolders holders, ImageLoader imageLoader) {

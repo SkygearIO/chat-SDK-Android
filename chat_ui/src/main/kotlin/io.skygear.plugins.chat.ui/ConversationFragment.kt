@@ -20,7 +20,6 @@ import android.widget.Toast
 import io.skygear.chatkit.messages.VoiceMessageOnClickListener
 import io.skygear.chatkit.messages.MessagesListAdapter
 import io.skygear.plugins.chat.*
-import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.model.Message
 import io.skygear.plugins.chat.ui.utils.*
