@@ -191,6 +191,7 @@ open class ConversationFragment() :
         super.onResume()
         if (conversationView()?.itemCount() == 0) {
             this.conversation?.let {
+                this.fetchUnsentMessages()
                 this.fetchMessages()
             }
         }
@@ -242,6 +243,20 @@ open class ConversationFragment() :
                             complete?.let { it(null, error.message) }
                         }
                     })
+        }
+    }
+
+    private fun fetchUnsentMessages() {
+        this.conversation?.let { conv ->
+            this.skygearChat?.getUnsentMessages(conv, object : GetCallback<List<ChatMessage>> {
+                override fun onSucc(chatMsgs: List<ChatMessage>?) {
+                    chatMsgs?.let { this@ConversationFragment.addMessages(it) }
+                }
+
+                override fun onFail(error: Error) {
+                    Log.w(TAG, "Failed to get unsent message: %s".format(error.message))
+                }
+            })
         }
     }
 
