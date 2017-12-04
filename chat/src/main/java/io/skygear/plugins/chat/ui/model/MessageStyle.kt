@@ -1,17 +1,14 @@
 package io.skygear.plugins.chat.ui.model
 
-import io.skygear.plugins.chat.ui.AvatarType
-
 
 class MessageStyle {
-    var showSender: Boolean
-    var showReceiver: Boolean
+    var hideOutgoing: Boolean
+    var hideIncoming: Boolean
     var senderTextColor: Int
 
-
-    constructor(showSender: Boolean, showReceiver: Boolean, senderTextColor: Int) {
-        this.showSender = showSender
-        this.showReceiver = showReceiver
+    constructor(hideOutgoing: Boolean, hideIncoming: Boolean, senderTextColor: Int) {
+        this.hideOutgoing = hideOutgoing
+        this.hideIncoming = hideIncoming
         this.senderTextColor = senderTextColor
     }
 }

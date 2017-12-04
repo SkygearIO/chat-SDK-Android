@@ -22,7 +22,7 @@ class ReceiverAvatarMessageView(itemView: View){
     }
 
     fun onBind(message: Message) {
-        userAvatar?.visibility = if (message.style.showReceiver) View.VISIBLE else View.GONE
+        userAvatar?.visibility = if (message.style.hideIncoming) View.GONE else View.VISIBLE
 
         if (userAvatar?.visibility == View.VISIBLE && userAvatar != null) {
             val isAvatarExists = ! ( message.user?.avatar?.isEmpty() ?: false)

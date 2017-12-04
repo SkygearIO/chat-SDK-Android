@@ -101,14 +101,14 @@ open class ConversationView: RelativeLayout{
     private var skygear: Container? = null
     private var userCache: UserCache? = null
 
-    private var senderUserNameTextColor: Int
+    private var messageSenderTextColor: Int
     private var avatarNameField: String
     private var avatarImageField: String
-    private var avatarShowSender: Boolean
-    private var avatarShowReceiver: Boolean
-    private var avatarInitialTextColor: Int
+    private var avatarHiddenForOutgoingMessages: Boolean
+    private var avatarHiddenForIncomingMessages: Boolean
+    private var avatarTextColor: Int
     private var avatarBackgroundColor: Int
-    private var avatarType: AvatarType
+    private var userAvatarType: AvatarType
     private var userBuilder: UserBuilder
     private var avatarAdapter: AvatarAdapter = DefaultAvatarAdapter()
     private var conversation: Conversation? = null
@@ -121,20 +121,20 @@ open class ConversationView: RelativeLayout{
                 R.styleable.ConversationView,
                 0, 0)
 
-       try {
-           avatarNameField = a.getString(R.styleable.ConversationView_avatarNameField) ?: User.DefaultUsernameField
-           avatarImageField = a.getString(R.styleable.ConversationView_avatarImageField) ?: User.DefaultAvatarField
-           avatarShowSender = a.getBoolean(R.styleable.ConversationView_avatarShowSender, true)
-           avatarShowReceiver = a.getBoolean(R.styleable.ConversationView_avatarShowReceiver, false)
-           senderUserNameTextColor = a.getColor(R.styleable.ConversationView_senderUserNameTextColor, Color.BLACK)
-           avatarType = AvatarType.fromInt(a.getInt(R.styleable.ConversationView_avatarType, AvatarType.INITIAL.value))
-           avatarInitialTextColor = a.getColor(R.styleable.ConversationView_avatarInitialTextColor, Color.WHITE)
-           avatarBackgroundColor = a.getColor(R.styleable.ConversationView_avatarBackgroundColor, ContextCompat.getColor(context, R.color.blue_1))
-       } finally {
-           a.recycle()
-       }
+        try {
+            avatarNameField = a.getString(R.styleable.ConversationView_userNameField) ?: User.DefaultUsernameField
+            avatarImageField = a.getString(R.styleable.ConversationView_userAvatarField) ?: User.DefaultAvatarField
+            avatarHiddenForOutgoingMessages = a.getBoolean(R.styleable.ConversationView_avatarHiddenForOutgoingMessages, false)
+            avatarHiddenForIncomingMessages = a.getBoolean(R.styleable.ConversationView_avatarHiddenForIncomingMessages, true)
+            messageSenderTextColor = a.getColor(R.styleable.ConversationView_messageSenderTextColor, Color.BLACK)
+            userAvatarType = AvatarType.fromInt(a.getInt(R.styleable.ConversationView_userAvatarType, AvatarType.INITIAL.value))
+            avatarTextColor = a.getColor(R.styleable.ConversationView_avatarTextColor, Color.WHITE)
+            avatarBackgroundColor = a.getColor(R.styleable.ConversationView_avatarBackgroundColor, ContextCompat.getColor(context, R.color.blue_1))
+        } finally {
+            a.recycle()
+        }
 
-        this.userBuilder = UserBuilder(avatarNameField, avatarImageField, avatarType, avatarBackgroundColor , avatarInitialTextColor)
+        this.userBuilder = UserBuilder(avatarNameField, avatarImageField, userAvatarType, avatarBackgroundColor , avatarTextColor)
 
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
@@ -305,7 +305,7 @@ open class ConversationView: RelativeLayout{
     }
 
     fun getMessageStyle(): MessageStyle {
-        return MessageStyle(this.avatarShowSender, this.avatarShowReceiver, this.senderUserNameTextColor)
+        return MessageStyle(this.avatarHiddenForOutgoingMessages, this.avatarHiddenForIncomingMessages, this.messageSenderTextColor)
     }
 
     fun MessagesFromChatMessages(chatMessages: List<ChatMessage>, callback: ((messages: List<Message>) -> Unit)? ) {

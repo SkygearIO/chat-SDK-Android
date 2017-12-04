@@ -8,7 +8,7 @@ class UserBuilder {
     val displayNameField: String?
     var avatarType: AvatarType
     var avatarBackgroundColor: Int
-    var avatarInitialTextColor: Int
+    var avatarTextColor: Int
 
     constructor(displayNameField: String? = User.DefaultUsernameField,
                 avatarField: String? = User.DefaultAvatarField,
@@ -19,11 +19,11 @@ class UserBuilder {
         this.displayNameField = displayNameField
         this.avatarType = avatarType
         this.avatarBackgroundColor = avatarBackgroundColor
-        this.avatarInitialTextColor = avatarInitialTextColor
+        this.avatarTextColor = avatarInitialTextColor
     }
-
+    
     fun createUser(record: Record): User {
-        return User(record, displayNameField, avatarField, avatarType, avatarBackgroundColor, avatarInitialTextColor)
+        return User(record, displayNameField, avatarField, avatarType, avatarBackgroundColor, avatarTextColor)
     }
 
 }
