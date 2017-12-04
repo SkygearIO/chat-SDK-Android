@@ -20,7 +20,7 @@ class User : IUser {
     val displayNameField: String?
     var avatarType: AvatarType
     var avatarBackgroundColor: Int
-    var avatarInitialTextColor: Int
+    var avatarTextColor: Int
 
     constructor(record: Record,
                 displayNameField: String?,
@@ -33,7 +33,7 @@ class User : IUser {
         this.chatUser = ChatUser.fromJson(record.toJson())
         this.avatarType = avatarType
         this.avatarBackgroundColor = avatarBackgroundColor
-        this.avatarInitialTextColor = avatarInitialTextColor
+        this.avatarTextColor = avatarInitialTextColor
     }
 
     override fun getId() = this.chatUser.id
@@ -67,7 +67,7 @@ class User : IUser {
         }
 
         val userName = this.chatUser.record.get(this.displayNameField) as String? ?: ""
-        return AvatarBuilder.avatarUriForName(userName, this.avatarBackgroundColor, this.avatarInitialTextColor)
+        return AvatarBuilder.avatarUriForName(userName, this.avatarBackgroundColor, this.avatarTextColor)
     }
 
 

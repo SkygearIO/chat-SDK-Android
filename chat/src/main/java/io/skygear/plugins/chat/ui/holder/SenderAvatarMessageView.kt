@@ -2,7 +2,6 @@ package io.skygear.plugins.chat.ui.holder
 
 import android.view.View
 import android.widget.LinearLayout
-import com.stfalcon.chatkit.utils.ShapeImageView
 import io.skygear.plugins.chat.ui.model.Message
 
 
@@ -15,6 +14,6 @@ class SenderAvatarMessageView(itemView: View){
     }
 
     fun onBind(message: Message) {
-        avatarView?.visibility = if (message.style.showSender) View.VISIBLE else View.GONE
+        avatarView?.visibility = if (message.style.hideOutgoing) View.GONE else View.VISIBLE
     }
 }
