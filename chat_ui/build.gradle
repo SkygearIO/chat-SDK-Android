@@ -1,15 +1,36 @@
-apply plugin: 'com.android.application'
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${dokka_version}"
+    }
+}
+
+
+apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.dokka-android'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+
+def (bintrayUser, bintrayApiKey) = getBintrayCredentials()
+def skygearChatVersion = getSkygearChatVersion()
+def skygearChatFullVersion = getSkygearChatFullVersion()
+
+group = 'io.skygear.plugins'
+version = skygearChatFullVersion
 
 android {
     compileSdkVersion 26
     buildToolsVersion "26.0.2"
     defaultConfig {
-        applicationId "io.skygear.chatexample"
         minSdkVersion 19
         targetSdkVersion 26
         versionCode 1
-        versionName "1.0"
+        versionName skygearChatFullVersion
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -40,6 +61,28 @@ dependencies {
     compile project(path: ':chat')
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 }
+
+
+bintray {
+    user = bintrayUser
+    key = bintrayApiKey
+    configurations = ['archives']
+    pkg {
+        repo = 'maven'
+        name = 'skygear-chat-android-uikit'
+        userOrg = 'skygeario'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/SkygearIO/chat-SDK-Android.git'
+        publish = true
+        version {
+            name = skygearChatFullVersion
+            desc = "Skygear Android SDK UI Kit ${skygearChatVersion}"
+            released  = new Date()
+            vcsTag = skygearChatVersion
+        }
+    }
+}
+
 repositories {
     mavenCentral()
     maven {
