@@ -99,8 +99,12 @@ class CacheController {
         }
 
         if (callback != null) {
-            Message[] messages = this.store.getMessages(queryBuilder, limit, resolvedOrder);
-            callback.onSucc(Arrays.asList(messages));
+            this.store.getMessages(queryBuilder, limit, resolvedOrder, new RealmStore.ResultCallback<Message[]>() {
+                @Override
+                public void onResultGet(Message[] messages) {
+                    callback.onSucc(Arrays.asList(messages));
+                }
+            });
         }
     }
 
@@ -156,7 +160,7 @@ class CacheController {
         }
     }
 
-    void getUnsentMessages(final Conversation conversation, GetCallback<List<Message>> callback) {
+    void getUnsentMessages(final Conversation conversation, final GetCallback<List<Message>> callback) {
         RealmStore.QueryBuilder<MessageCacheObject> queryBuilder = new RealmStore.QueryBuilder<MessageCacheObject>() {
             @Override
             public RealmQuery<MessageCacheObject> buildQueryFrom(RealmQuery<MessageCacheObject> baseQuery) {
@@ -174,8 +178,12 @@ class CacheController {
         };
 
         if (callback != null) {
-            Message[] messages = this.store.getMessages(queryBuilder, -1, "creationDate");
-            callback.onSucc(Arrays.asList(messages));
+            this.store.getMessages(queryBuilder, -1, "creationDate", new RealmStore.ResultCallback<Message[]>() {
+                @Override
+                public void onResultGet(Message[] messages) {
+                    callback.onSucc(Arrays.asList(messages));
+                }
+            });
         }
     }
 }

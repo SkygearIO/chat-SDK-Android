@@ -99,7 +99,7 @@ public class ChatControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        RealmStore store = new RealmStore("test", true);
+        RealmStore store = new RealmStore("test", true, false);
         this.cacheController = new CacheController(store);
         setUpFixture();
     }

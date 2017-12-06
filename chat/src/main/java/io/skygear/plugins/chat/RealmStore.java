@@ -20,6 +20,11 @@ package io.skygear.plugins.chat;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import io.realm.OrderedCollectionChangeSet;
+import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.OrderedRealmCollectionSnapshot;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -36,12 +41,24 @@ class RealmStore {
         RealmQuery<T> buildQueryFrom(RealmQuery<T> baseQuery);
     }
 
+    interface ResultCallback<T> {
+        void onResultGet(T result);
+    }
+
     private final String name;
     private final boolean inMemory;
+    private final boolean async;
 
     RealmStore(String name, boolean inMemory) {
         this.name = name;
         this.inMemory = inMemory;
+        this.async = true;
+    }
+
+    RealmStore(String name, boolean inMemory, boolean async) {
+        this.name = name;
+        this.inMemory = inMemory;
+        this.async = async;
     }
 
     Realm getRealm() {
@@ -57,21 +74,21 @@ class RealmStore {
         return Realm.getInstance(configBuilder.build());
     }
 
-    Message[] getMessages(QueryBuilder<MessageCacheObject> queryBuilder,
-                          int limit,
-                          String order) {
-        RealmQuery<MessageCacheObject> query = getRealm().where(MessageCacheObject.class);
-        query = queryBuilder.buildQueryFrom(query);
-        OrderedRealmCollectionSnapshot<MessageCacheObject> results = query.findAllSorted(order, Sort.DESCENDING).createSnapshot();
-        int size = results.size();
+    private void getMessages(final RealmResults<MessageCacheObject> results,
+                             final int limit,
+                             final ResultCallback<Message[]> callback) {
+        OrderedRealmCollectionSnapshot<MessageCacheObject> snapshot = results.createSnapshot();
+
+        int resolvedLimit = limit;
+        int size = snapshot.size();
         if (limit == -1 || limit > size) {
-            limit = size;
+            resolvedLimit = size;
         }
 
-        List<Message> messages = new ArrayList<>(limit);
+        List<Message> messages = new ArrayList<>(resolvedLimit);
         List<MessageCacheObject> faultyCacheObjects = new ArrayList<>();
-        for (int i = 0; i < limit; i++) {
-            MessageCacheObject cacheObject = results.get(i);
+        for (int i = 0; i < resolvedLimit; i++) {
+            MessageCacheObject cacheObject = snapshot.get(i);
             if (cacheObject == null) {
                 throw new RuntimeException("Unexpected null object when getting message query result");
             }
@@ -85,29 +102,67 @@ class RealmStore {
             }
         }
 
+        Realm realm = getRealm();
+
+        realm.beginTransaction();
+
         // clear up faulty cache objects
         for (MessageCacheObject cacheObject : faultyCacheObjects) {
             cacheObject.deleteFromRealm();
         }
 
+        realm.commitTransaction();
+
         Message[] messageArray = new Message[messages.size()];
-        return messages.toArray(messageArray);
+        callback.onResultGet(messages.toArray(messageArray));
     }
 
-    Message getMessageWithID(String messageID) {
-        MessageCacheObject cacheObject = getRealm().where(MessageCacheObject.class).equalTo(KEY_RECORD_ID, messageID).findFirst();
-        if (cacheObject == null) {
-            return null;
+    void getMessages(@Nonnull final QueryBuilder<MessageCacheObject> queryBuilder,
+                     final int limit,
+                     @Nonnull final String order,
+                     @Nonnull final ResultCallback<Message[]> callback) {
+        RealmQuery<MessageCacheObject> query = getRealm().where(MessageCacheObject.class);
+        query = queryBuilder.buildQueryFrom(query);
+        if (this.async) {
+            final RealmResults<MessageCacheObject> results = query.findAllSortedAsync(order, Sort.DESCENDING);
+            results.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<MessageCacheObject>>() {
+                @Override
+                public void onChange(RealmResults<MessageCacheObject> messageCacheObjects, @Nullable OrderedCollectionChangeSet changeSet) {
+                    results.removeAllChangeListeners();
+                    RealmStore.this.getMessages(messageCacheObjects, limit, callback);
+                }
+            });
+        } else {
+            final RealmResults<MessageCacheObject> results = query.findAllSorted(order, Sort.DESCENDING);
+            this.getMessages(results, limit, callback);
         }
+    }
 
-        Message message;
-        try {
-            message = cacheObject.toMessage();
-            return message;
-        } catch (Exception e) {
-            // clear up faulty cache objects
-            cacheObject.deleteFromRealm();
-            return null;
+    void getMessageWithID(@Nonnull final String messageID,
+                          @Nonnull final ResultCallback<Message> callback) {
+        final ResultCallback<Message[]> wrappedCallback = new ResultCallback<Message[]>() {
+            @Override
+            public void onResultGet(Message[] result) {
+                if (result.length == 0) {
+                    callback.onResultGet(null);
+                } else {
+                    callback.onResultGet(result[0]);
+                }
+            }
+        };
+
+        if (this.async) {
+            final RealmResults<MessageCacheObject> results = getRealm().where(MessageCacheObject.class).equalTo(KEY_RECORD_ID, messageID).findAllAsync();
+            results.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<MessageCacheObject>>() {
+                @Override
+                public void onChange(RealmResults<MessageCacheObject> messageCacheObjects, @Nullable OrderedCollectionChangeSet changeSet) {
+                    results.removeAllChangeListeners();
+                    RealmStore.this.getMessages(messageCacheObjects, 1, wrappedCallback);
+                }
+            });
+        } else {
+            final RealmResults<MessageCacheObject> results = getRealm().where(MessageCacheObject.class).equalTo(KEY_RECORD_ID, messageID).findAll();
+            this.getMessages(results, 1, wrappedCallback);
         }
     }
 
@@ -155,7 +210,7 @@ class RealmStore {
         realm.commitTransaction();
     }
 
-    @RealmModule(library = true, allClasses = true)
+    @RealmModule(library = true, classes = {MessageCacheObject.class})
     private static class SkygearChatModule {
 
     }
