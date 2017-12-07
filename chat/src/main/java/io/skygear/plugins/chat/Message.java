@@ -92,7 +92,7 @@ public class Message {
     /**
      * Sets metadata.
      *
-     * @param
+     * @param metadata metadata
      */
     @Nullable
     public void setMetadata(JSONObject metadata) {
@@ -144,9 +144,9 @@ public class Message {
     }
 
     /**
-     * Sets metadata.
+     * Sets asset.
      *
-     * @param
+     * @param asset asset
      */
     @Nullable
     public void setAsset(Asset asset) {
