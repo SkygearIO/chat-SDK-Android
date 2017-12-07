@@ -155,4 +155,27 @@ class CacheController {
             this.didDeleteMessage(message);
         }
     }
+
+    void getUnsentMessages(final Conversation conversation, GetCallback<List<Message>> callback) {
+        RealmStore.QueryBuilder<MessageCacheObject> queryBuilder = new RealmStore.QueryBuilder<MessageCacheObject>() {
+            @Override
+            public RealmQuery<MessageCacheObject> buildQueryFrom(RealmQuery<MessageCacheObject> baseQuery) {
+                RealmQuery<MessageCacheObject> query = baseQuery
+                        .equalTo(KEY_CONVERSATION_ID, conversation.getId())
+                        .isNotNull(KEY_SEND_DATE)
+                        .beginGroup()
+                            .equalTo(KEY_ALREADY_SYNC_TO_SERVER, false)
+                            .or()
+                            .equalTo(KEY_FAIL, true)
+                        .endGroup();
+
+                return query;
+            }
+        };
+
+        if (callback != null) {
+            Message[] messages = this.store.getMessages(queryBuilder, -1, "creationDate");
+            callback.onSucc(Arrays.asList(messages));
+        }
+    }
 }

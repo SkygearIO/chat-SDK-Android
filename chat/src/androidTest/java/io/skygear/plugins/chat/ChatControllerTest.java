@@ -212,7 +212,7 @@ public class ChatControllerTest {
 
     @Test
     public void testSaveMessageUpdateCache() throws JSONException {
-        final boolean[] checkpoints = new boolean[] { false, false, false };
+        final boolean[] checkpoints = new boolean[] { false, false, false, false };
         Conversation conversation = new Conversation(new Record("conversation", "c0"));
 
         JSONObject messageJson = new JSONObject();
@@ -247,6 +247,21 @@ public class ChatControllerTest {
 
         Assert.assertEquals(realm.where(MessageCacheObject.class).findAll().size(), 11);
 
+        this.cacheController.getUnsentMessages(conversation, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> messages) {
+                Assert.assertEquals(messages.size(), 1);
+                Assert.assertEquals(messages.get(0).getId(), messageToSave.getId());
+
+                checkpoints[1] = true;
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
         this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
             @Override
             public void onSucc(@Nullable List<Message> messages) {
@@ -256,7 +271,7 @@ public class ChatControllerTest {
                     Assert.assertNotSame(message.getId(), messageToSave.getId());
                 }
 
-                checkpoints[1] = true;
+                checkpoints[2] = true;
             }
 
             @Override
@@ -274,7 +289,7 @@ public class ChatControllerTest {
                 Assert.assertEquals(message.getSendDate(), messageToSave.getSendDate());
                 Assert.assertTrue(message.alreadySyncToServer);
 
-                checkpoints[2] = true;
+                checkpoints[3] = true;
             }
 
             @Override

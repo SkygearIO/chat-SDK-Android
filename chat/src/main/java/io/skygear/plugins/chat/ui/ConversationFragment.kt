@@ -228,9 +228,13 @@ open class ConversationFragment() :
                     0,
                     before,
                     null,
-                    object : GetCallback<List<ChatMessage>> {
+                    object : GetMessagesCallback {
                         override fun onSucc(chatMsgs: List<ChatMessage>?){
                             successCallback(chatMsgs)
+                        }
+
+                        override fun onGetCachedResult(messages: MutableList<io.skygear.plugins.chat.Message>?) {
+                            // TODO (Steven-Chan): handle cache result to update message list
                         }
 
                         override fun onFail(error: Error) {
@@ -443,9 +447,12 @@ open class ConversationFragment() :
             message.metadata = meta
             addMessage(message, Uri.parse("file://" + voiceRecordingFileName))
 
-            this.skygearChat?.addMessage(message, conv, object : SaveCallback<ChatMessage> {
+            this.skygearChat?.addMessage(message, conv, object : SaveMessageCallback {
                 override fun onSucc(chatMsg: ChatMessage?) {
                     voiceRecordingFile.delete()
+                }
+
+                override fun onSaveResultCached(message: io.skygear.plugins.chat.Message?) {
                 }
 
                 override fun onFail(error: Error) {

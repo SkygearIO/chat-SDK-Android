@@ -638,7 +638,7 @@ public final class ChatContainer {
                             final int limit,
                             @Nullable final Date before,
                             @Nullable final String order,
-                            @Nullable final GetCallback<List<Message>> callback) {
+                            @Nullable final GetMessagesCallback callback) {
         int limitCount = limit;
         String beforeTimeISO8601 = DateUtils.toISO8601(before != null ? before : new Date());
 
@@ -649,7 +649,9 @@ public final class ChatContainer {
         cacheController.getMessages(conversation, limitCount, before, order, new GetCallback<List<Message>>() {
             @Override
             public void onSucc(@Nullable List<Message> object) {
-              // TODO: pass the cached result to callback
+                if (callback != null) {
+                    callback.onGetCachedResult(object);
+                }
             }
 
             @Override
@@ -699,6 +701,20 @@ public final class ChatContainer {
     }
 
     /**
+     *  Gets unsent messages in a conversation.
+     *
+     *  There are two types of unsent messages. First is pending messages that are added but no server
+     *  response yet. Second is messages that are failed saved to server.
+     *
+     * @param conversation conversation
+     * @param callback callback
+     */
+    public void getUnsentMessages(@NonNull final Conversation conversation,
+                                  @Nullable final GetCallback<List<Message>> callback) {
+        this.cacheController.getUnsentMessages(conversation, callback);
+    }
+
+    /**
      * Send message.
      *
      * @param conversation the conversation
@@ -711,7 +727,7 @@ public final class ChatContainer {
                             @Nullable final String body,
                             @Nullable final Asset asset,
                             @Nullable final JSONObject metadata,
-                            @Nullable final SaveCallback<Message> callback) {
+                            @Nullable final SaveMessageCallback callback) {
         if (!StringUtils.isEmpty(body) || asset != null || metadata != null) {
             Record record = new Record("message");
             Message message = new Message(record);
@@ -821,7 +837,7 @@ public final class ChatContainer {
 
     public void addMessage(@NonNull Message message,
                            @NonNull final Conversation conversation,
-                           @Nullable final SaveCallback<Message> callback)
+                           @Nullable final SaveMessageCallback callback)
     {
         Reference reference = new Reference("conversation", conversation.getId());
         message.record.set("conversation", reference);
@@ -844,7 +860,7 @@ public final class ChatContainer {
 
     public void editMessage(@NonNull Message message,
                             @NonNull String body,
-                            @Nullable final SaveCallback<Message> callback)
+                            @Nullable final SaveMessageCallback callback)
     {
         message.setBody(body);
         this.saveMessage(message, callback);
@@ -887,8 +903,11 @@ public final class ChatContainer {
     }
 
     private void saveMessage(final Message message,
-                             @Nullable final SaveCallback<Message> callback) {
+                             @Nullable final SaveMessageCallback callback) {
         this.cacheController.saveMessage(message, null);
+        if (callback != null) {
+            callback.onSaveResultCached(message);
+        }
 
         SaveCallback<Message> wrappedCallback = new SaveCallback<Message>() {
             @Override
@@ -930,7 +949,7 @@ public final class ChatContainer {
 
     private void saveMessage(final Message message,
                              final Asset asset,
-                             @Nullable final SaveCallback<Message> callback) {
+                             @Nullable final SaveMessageCallback callback) {
         this.skygear.getPublicDatabase().uploadAsset(asset, new AssetPostRequest.ResponseHandler() {
             @Override
             public void onPostSuccess(Asset asset, String response) {
