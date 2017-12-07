@@ -1,6 +1,6 @@
 package io.skygear.plugins.chat.ui.model
 
-import com.stfalcon.chatkit.commons.models.IUser
+import io.skygear.chatkit.commons.models.IUser
 
 import io.skygear.plugins.chat.ChatUser
 import io.skygear.plugins.chat.ui.AvatarType

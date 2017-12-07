@@ -19,8 +19,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
-import com.stfalcon.chatkit.messages.MessagesListAdapter
-import com.stfalcon.chatkit.messages.VoiceMessageOnClickListener
+import io.skygear.chatkit.messages.VoiceMessageOnClickListener
+import io.skygear.chatkit.messages.MessagesListAdapter
 import io.skygear.skygear.Error
 import io.skygear.plugins.chat.*
 import io.skygear.plugins.chat.ui.model.*

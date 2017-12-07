@@ -13,25 +13,23 @@ import android.view.LayoutInflater
 import android.view.View
 import com.dewarder.holdinglibrary.HoldingButtonLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
-import com.stfalcon.chatkit.messages.MessageHolders
-import com.stfalcon.chatkit.messages.MessagesListAdapter
-import com.stfalcon.chatkit.messages.MessagesList
 import io.skygear.plugins.chat.R
-import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
 import android.net.Uri
 import android.widget.*
-import com.stfalcon.chatkit.messages.MessagesListAdapter.OnMessageClickListener
-import com.stfalcon.chatkit.messages.MessagesListAdapter.OnLoadMoreListener
 import io.skygear.plugins.chat.ui.holder.*
 import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.utils.AvatarBuilder
 import io.skygear.plugins.chat.Message as ChatMessage
 import io.skygear.plugins.chat.ui.utils.UserCache
 import io.skygear.skygear.Container
-import com.stfalcon.chatkit.messages.CustomMessageHolders
+import io.skygear.chatkit.messages.CustomMessageHolders
 import io.skygear.plugins.chat.Conversation
-import com.stfalcon.chatkit.messages.VoiceMessageOnClickListener
+import io.skygear.chatkit.messages.VoiceMessageOnClickListener
+import io.skygear.plugins.chat.ui.utils.ImageLoader
+import io.skygear.chatkit.messages.MessageHolders
+import io.skygear.chatkit.messages.MessagesList
+import io.skygear.chatkit.messages.MessagesListAdapter
 
 
 abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {

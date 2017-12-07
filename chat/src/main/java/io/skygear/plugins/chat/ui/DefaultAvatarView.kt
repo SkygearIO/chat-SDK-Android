@@ -1,12 +1,11 @@
 package io.skygear.plugins.chat.ui
 
-import com.stfalcon.chatkit.utils.ShapeImageView
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.LinearLayout
+import io.skygear.chatkit.utils.ShapeImageView
 import io.skygear.plugins.chat.ui.model.Message
 import io.skygear.plugins.chat.ui.utils.AvatarBuilder
-import io.skygear.plugins.chat.ui.utils.ImageLoader
 
 class DefaultAvatarView(context: Context, attributeSet: AttributeSet): ShapeImageView(context, attributeSet) {
 

@@ -1,8 +1,6 @@
 package io.skygear.plugins.chat.ui.model
 
-import com.stfalcon.chatkit.commons.models.IMessage
-import io.skygear.skygear.Record
-import org.json.JSONException
+import io.skygear.chatkit.commons.models.IMessage
 import java.util.*
 import io.skygear.plugins.chat.Message as ChatMessage
 

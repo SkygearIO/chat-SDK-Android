@@ -91,7 +91,7 @@
 
     </RelativeLayout>
 
-    <com.stfalcon.chatkit.messages.MessagesList
+    <io.skygear.chatkit.messages.MessagesList
         android:id="@+id/messages_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
