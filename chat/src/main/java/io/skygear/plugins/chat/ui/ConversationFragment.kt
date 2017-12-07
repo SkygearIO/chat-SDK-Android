@@ -34,6 +34,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.*
+import kotlin.collections.ArrayList
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
@@ -210,8 +211,29 @@ open class ConversationFragment() :
             before: Date? = null,
             complete: ((msgs: List<ChatMessage>?, error: String?) -> Unit)? = null
     ) {
-        val successCallback = fun(chatMsgs: List<ChatMessage>?) {
+        val cachedResult: MutableList<ChatMessage> = mutableListOf()
+
+        this.conversationView()?.stopListeningScroll()
+
+        val successCallback = fun(chatMsgs: List<ChatMessage>?, isCached: Boolean) {
             conversationView()?.hideProgress()
+            if (isCached) {
+                chatMsgs?.let { cachedResult.addAll(it) }
+            } else {
+                chatMsgs?.let { fetchedMessages ->
+                    if (fetchedMessages.isNotEmpty()) {
+                        this.conversationView()?.startListeningScroll()
+                    }
+
+                    // remove cached message if not found in fetched results
+                    val cachedResultToRemove = cachedResult.filter { message ->
+                        fetchedMessages.none { it.id.equals(message.id) } && chatMsgs.any { it.id.equals(message.id) }
+                    }
+
+                    this@ConversationFragment.deleteMessagesFromList(cachedResultToRemove)
+                }
+            }
+
             chatMsgs?.let { this@ConversationFragment.addMessages(it, isAddToTop = true) }
             chatMsgs?.map { it.createdTime }?.min()?.let { newBefore ->
                 // update load more cursor
@@ -231,11 +253,11 @@ open class ConversationFragment() :
                     null,
                     object : GetMessagesCallback {
                         override fun onSucc(chatMsgs: List<ChatMessage>?){
-                            successCallback(chatMsgs)
+                            successCallback(chatMsgs, false)
                         }
 
-                        override fun onGetCachedResult(messages: MutableList<io.skygear.plugins.chat.Message>?) {
-                            // TODO (Steven-Chan): handle cache result to update message list
+                        override fun onGetCachedResult(chatMsgs: List<ChatMessage>?) {
+                            successCallback(chatMsgs, true)
                         }
 
                         override fun onFail(error: Error) {
@@ -260,17 +282,24 @@ open class ConversationFragment() :
         }
     }
 
-    private fun addMessage(message: ChatMessage, imageUri: Uri? = null) {
+    /**
+     * This function is for receiving new message and sending new message.
+     */
+    private fun addMessageToBottom(message: ChatMessage, uri: Uri? = null) {
         val view = conversationView()
-        view?.addMessageToStart(message, imageUri)
+        view?.addMessageToBottom(message, uri)
         messageIDs.add(message.id)
+
+        // mark last read message
+        this.conversation?.let { conv ->
+            this.skygearChat?.markConversationLastReadMessage(conv, message)
+        }
         this.skygearChat?.markMessageAsRead(message)
     }
 
-    private fun addMessagesToBottom(messages: List<ChatMessage>) {
-        this.addMessages(messages)
-    }
-
+    /**
+     * This function is for loading more previous messages.
+     */
     private fun addMessages(messages: List<ChatMessage>,
                             isAddToTop: Boolean = false
     ) {
@@ -279,22 +308,19 @@ open class ConversationFragment() :
         }
 
         val view = conversationView()
-        if (isAddToTop) {
-            view?.addMessagesToEnd(messages, false)
-        } else {
-            messages.forEach { msg ->
-                if (messageIDs.contains(msg.id)) {
-                    view?.updateMessage(msg)
-                } else {
-                    view?.addMessageToStart(
-                            msg
-                    )
-                }
+        val messagesAddToEnd = mutableListOf<ChatMessage>()
+        messages.forEach { msg ->
+            when {
+                messageIDs.contains(msg.id) -> view?.updateMessage(msg)
+                isAddToTop -> messagesAddToEnd.add(msg)
+                else -> view?.addMessageToBottom(msg)
             }
+
+            messageIDs.add(msg.id)
         }
 
-        messages.forEach { msg ->
-            messageIDs.add(msg.id)
+        if (messagesAddToEnd.isNotEmpty()) {
+            view?.mergeMessagesToList(messagesAddToEnd)
         }
 
         // mark last read message
@@ -303,8 +329,16 @@ open class ConversationFragment() :
             this.skygearChat?.markConversationLastReadMessage(conv, lastChatMsg)
         }
 
-
         this.skygearChat?.markMessagesAsRead(messages)
+    }
+
+    private fun deleteMessagesFromList(messages: List<ChatMessage>) {
+        if (messages.isEmpty()) {
+            return
+        }
+
+        val view = conversationView()
+        view?.deleteMessages(messages)
     }
 
     private fun subscribeMessage() {
@@ -342,14 +376,14 @@ open class ConversationFragment() :
     }
 
     private fun onReceiveChatMessage(msg: ChatMessage) {
-        this.addMessagesToBottom(listOf(msg))
+        this.addMessageToBottom(msg)
     }
 
     private fun onUpdateChatMessage(message: ChatMessage) {
         conversationView()?.updateMessage(message)
     }
 
-    override fun onLoadMore(page: Int, totalItemsCount: Int) {
+    override fun onLoadMore(totalItemsCount: Int) {
         this.fetchMessages(before = this.messageLoadMoreBefore)
     }
 
@@ -460,7 +494,7 @@ open class ConversationFragment() :
             val message = ChatMessage()
             message.asset = asset
             message.metadata = meta
-            addMessage(message, Uri.parse("file://" + voiceRecordingFileName))
+            addMessageToBottom(message, Uri.parse("file://" + voiceRecordingFileName))
 
             this.skygearChat?.addMessage(message, conv, object : SaveMessageCallback {
                 override fun onSucc(chatMsg: ChatMessage?) {
@@ -484,7 +518,7 @@ open class ConversationFragment() :
         this.conversation?.let { conv ->
             val message = ChatMessage()
             message.body = input.trim()
-            this.addMessagesToBottom(listOf(message))
+            this.addMessageToBottom(message)
             this.skygearChat?.addMessage(message, conv, null)
         }
 
@@ -546,7 +580,7 @@ open class ConversationFragment() :
 
         this.conversation?.let { conv ->
             val imageMessage = MessageBuilder.createImageMessage(imageData)
-            this.addMessage(imageMessage, imageUri)
+            this.addMessageToBottom(imageMessage, imageUri)
             this.skygearChat?.addMessage(imageMessage, conv, null)
         }
     }

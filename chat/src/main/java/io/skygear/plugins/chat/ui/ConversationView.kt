@@ -95,7 +95,7 @@ open class ConversationView: RelativeLayout{
     private var progressBar: ProgressBar? = null
     private var messagesListViewReachBottomListener: MessagesListViewReachBottomListener? = null
     private var sendTextMessageListener: (String) -> Boolean? = {true}
-    private var messageListAdapter: MessagesListAdapter<Message>? = null
+    private var messageListAdapter: SortedMessageListAdapter<Message>? = null
     private var skygear: Container? = null
     private var userCache: UserCache? = null
 
@@ -216,7 +216,7 @@ open class ConversationView: RelativeLayout{
         return this.messagesListViewReachBottomListener?.isReachEnd !!;
     }
 
-    fun createMessageListAdapter(imageLoader: ImageLoader, senderId: String): MessagesListAdapter<Message> {
+    fun createMessageListAdapter(imageLoader: ImageLoader, senderId: String): SortedMessageListAdapter<Message> {
         messageHolders = CustomMessageHolders({avatarAdapter}, {conversation})
                 .setIncomingTextHolder(IncomingTextMessageView::class.java)
                 .setIncomingImageHolder(IncomingImageMessageView::class.java)
@@ -233,7 +233,7 @@ open class ConversationView: RelativeLayout{
                         ContentTypeChecker()
                 )
 
-        val adapter = MessagesListAdapter<Message>(
+        val adapter = SortedMessageListAdapter<Message>(
                 senderId,
                 messageHolders!!,
                 imageLoader
@@ -249,11 +249,11 @@ open class ConversationView: RelativeLayout{
         conversation = newConversation
     }
 
-    open fun setOnMessageClickListener(onMessageClickListener: OnMessageClickListener<Message>) {
+    open fun setOnMessageClickListener(onMessageClickListener: MessagesListAdapter.OnMessageClickListener<Message>) {
         this.messageListAdapter?.setOnMessageClickListener(onMessageClickListener)
     }
 
-    open fun setLoadMoreListener(onLoadMoreListener: OnLoadMoreListener) {
+    open fun setLoadMoreListener(onLoadMoreListener: MessagesListAdapter.OnLoadMoreListener) {
         this.messageListAdapter?.setLoadMoreListener(onLoadMoreListener)
     }
 
@@ -290,16 +290,28 @@ open class ConversationView: RelativeLayout{
         }
     }
 
-    open fun addMessagesToEnd(messages: List<ChatMessage>, reverse: Boolean) {
+    open fun mergeMessagesToList(messages: List<ChatMessage>) {
         MessagesFromChatMessages(messages) {
-            msgs -> this.messageListAdapter?.addToEnd(msgs, reverse)
+            msgs -> this.messageListAdapter?.merge(msgs)
         }
     }
 
-    open fun addMessageToStart(message: ChatMessage, imageUri: Uri? = null) {
+    open fun addMessageToBottom(message: ChatMessage, imageUri: Uri? = null) {
         MessageFromChatMessage(message, imageUri) {
             uiMessage -> this.messageListAdapter?.addToStart(uiMessage, needToScrollToBottom())
         }
+    }
+
+    open fun startListeningScroll() {
+        this.messageListAdapter?.startListeningScroll()
+    }
+
+    open fun stopListeningScroll() {
+        this.messageListAdapter?.stopListeningScroll()
+    }
+
+    open fun deleteMessages(messages: List<ChatMessage>) {
+        this.messageListAdapter?.deleteByIds(messages.map { it.id }.toTypedArray())
     }
 
     fun getMessageStyle(): MessageStyle {
