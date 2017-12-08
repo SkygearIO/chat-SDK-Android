@@ -12,6 +12,8 @@ class ConversationActivity : AppCompatActivity() {
         @JvmField val ConversationIntentKey = "CONVERSATION"
         @JvmField val LayoutIntentKey = "LAYOUT"
         @JvmField val AvatarAdapterIntentKey = "AVATAR_ADAPTER"
+        @JvmField val MessageSentListenerIntentKey = "MESSAGE_SENT_LISTENER"
+        @JvmField val MessageFetchListenerIntentKey = "MESSAGE_FETCH_LISTENER"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,7 +31,15 @@ class ConversationActivity : AppCompatActivity() {
                 }
                 if (intent?.hasExtra(AvatarAdapterIntentKey) ?: false) {
                     bundle.putSerializable(ConversationFragment.AvatarAdapterBundleKey,
-                            this.intent?.getSerializableExtra(ConversationFragment.AvatarAdapterBundleKey))
+                            this.intent?.getSerializableExtra(AvatarAdapterIntentKey))
+                }
+                if (intent?.hasExtra(MessageSentListenerIntentKey) ?: false) {
+                    bundle.putSerializable(ConversationFragment.MessageSentListenerKey,
+                            this.intent?.getSerializableExtra(MessageSentListenerIntentKey))
+                }
+                if (intent?.hasExtra(MessageFetchListenerIntentKey) ?: false) {
+                    bundle.putSerializable(ConversationFragment.MessageFetchListenerKey,
+                            this.intent?.getSerializableExtra(MessageFetchListenerIntentKey))
                 }
 
                 fragment.arguments = bundle

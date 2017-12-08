@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
 import android.net.Uri
@@ -17,7 +16,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.VoiceMessageOnClickListener
@@ -37,6 +35,7 @@ import java.util.*
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
+
 open class ConversationFragment() :
         Fragment(),
         MessagesListAdapter.OnLoadMoreListener,
@@ -49,6 +48,8 @@ open class ConversationFragment() :
         val ConversationBundleKey = "CONVERSATION"
         val LayoutResIdBundleKey = "LAYOUT"
         val AvatarAdapterBundleKey = "AVATAR_ADAPTER"
+        val MessageSentListenerKey = "MESSAGE_SENT_LISTENER"
+        val MessageFetchListenerKey = "MESSAGE_FETCH_LISTENER"
         private val TAG = "ConversationFragment"
         private val MESSAGE_SUBSCRIPTION_MAX_RETRY = 10
         private val REQUEST_PICK_IMAGES = 5001
@@ -79,6 +80,8 @@ open class ConversationFragment() :
 
     protected var layoutResID: Int = -1
     protected var customAvatarAdapter: AvatarAdapter? = null
+    protected var fragmentMessageSentListener: MessageSentListener? = null
+    protected var fragmentMessageFetchListener: MessageFetchListener? = null
 
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,6 +92,12 @@ open class ConversationFragment() :
         }
         arguments.getSerializable(AvatarAdapterBundleKey)?.let { adapter ->
             customAvatarAdapter = adapter as AvatarAdapter
+        }
+        arguments.getSerializable(MessageSentListenerKey)?.let { listener ->
+            fragmentMessageSentListener = listener as MessageSentListener
+        }
+        arguments.getSerializable(MessageFetchListenerKey)?.let { listener ->
+            fragmentMessageFetchListener = listener as MessageFetchListener
         }
     }
 
@@ -210,6 +219,7 @@ open class ConversationFragment() :
             complete: ((msgs: List<ChatMessage>?, error: String?) -> Unit)? = null
     ) {
         val successCallback = fun(chatMsgs: List<ChatMessage>?) {
+            callMessageFetchSuccessListener(chatMsgs)
             conversationView()?.hideProgress()
             chatMsgs?.let { this@ConversationFragment.addMessages(it, isAddToTop = true) }
             chatMsgs?.map { it.createdTime }?.min()?.let { newBefore ->
@@ -222,6 +232,7 @@ open class ConversationFragment() :
             complete?.let { it(chatMsgs, null) }
         }
 
+        this.fragmentMessageFetchListener?.onBeforeMessageFetch(this)
         this.conversation?.let { conv ->
             this.skygearChat?.getMessages(
                     conv,
@@ -235,10 +246,12 @@ open class ConversationFragment() :
 
                         override fun onGetCachedResult(messages: MutableList<io.skygear.plugins.chat.Message>?) {
                             // TODO (Steven-Chan): handle cache result to update message list
+                            callMessageFetchSuccessListener(messages)
                         }
 
                         override fun onFail(error: Error) {
                             Log.w(TAG, "Failed to get message: %s".format(error.message))
+                            this@ConversationFragment.fragmentMessageFetchListener?.onMessageFetchFailed(this@ConversationFragment, error)
                             complete?.let { it(null, error.message) }
                         }
                     })
@@ -445,14 +458,16 @@ open class ConversationFragment() :
             val message = ChatMessage()
             message.asset = asset
             message.metadata = meta
+            this.fragmentMessageSentListener?.onBeforeMessageSent(this, message)
             addMessage(message, Uri.parse("file://" + voiceRecordingFileName))
-
             this.skygearChat?.addMessage(message, conv, object : SaveMessageCallback {
-                override fun onSucc(chatMsg: ChatMessage?) {
+                override fun onSucc(message: ChatMessage?) {
                     voiceRecordingFile.delete()
+                    callMessageSentSuccessListener(message)
                 }
 
                 override fun onSaveResultCached(message: io.skygear.plugins.chat.Message?) {
+                    callMessageSentSuccessListener(message)
                 }
 
                 override fun onFail(error: Error) {
@@ -460,17 +475,56 @@ open class ConversationFragment() :
                             ConversationFragment.TAG,
                             "Failed to send voice message: ${error.message}"
                     )
+                    this@ConversationFragment.fragmentMessageSentListener?.onMessageSentFailed(this@ConversationFragment, message, error)
                 }
             })
         }
     }
 
+    fun callMessageSentSuccessListener(chatMsg: ChatMessage?) {
+        chatMsg?.let {
+            this@ConversationFragment.fragmentMessageSentListener?.
+                    onMessageSentSuccess(this@ConversationFragment, chatMsg)
+        } ?: run {
+            this@ConversationFragment.fragmentMessageSentListener?.
+                    onMessageSentFailed(this@ConversationFragment,
+                            null, Error("No message sent"))
+        }
+    }
+
+
+    fun callMessageFetchSuccessListener(chatMsgs: List<ChatMessage> ?) {
+        chatMsgs?.let {
+            this@ConversationFragment.fragmentMessageFetchListener?.onMessageFetchSuccess(this@ConversationFragment, it)
+        } ?: run {
+            this@ConversationFragment.fragmentMessageFetchListener?.
+                    onMessageFetchFailed(this@ConversationFragment,
+                            Error("No message fetched"))
+        }
+    }
+
     fun onSendMessage(input: String): Boolean {
+
         this.conversation?.let { conv ->
             val message = ChatMessage()
             message.body = input.trim()
+            this.fragmentMessageSentListener?.onBeforeMessageSent(this, message)
             this.addMessagesToBottom(listOf(message))
-            this.skygearChat?.addMessage(message, conv, null)
+            this.skygearChat?.addMessage(message, conv, object: SaveMessageCallback{
+                override fun onSucc(message: ChatMessage?) {
+                    callMessageSentSuccessListener(message)
+                }
+
+                override fun onSaveResultCached(message: io.skygear.plugins.chat.Message?) {
+                    callMessageSentSuccessListener(message)
+                }
+
+                override fun onFail(error: Error) {
+                    this@ConversationFragment.fragmentMessageSentListener?.
+                            onMessageSentFailed(this@ConversationFragment, message, error)
+                }
+
+            })
         }
 
         return true
@@ -531,8 +585,22 @@ open class ConversationFragment() :
 
         this.conversation?.let { conv ->
             val imageMessage = MessageBuilder.createImageMessage(imageData)
+            this.fragmentMessageSentListener?.onBeforeMessageSent(this, imageMessage)
             this.addMessage(imageMessage, imageUri)
-            this.skygearChat?.addMessage(imageMessage, conv, null)
+            this.skygearChat?.addMessage(imageMessage, conv, object: SaveMessageCallback{
+                override fun onSucc(message: ChatMessage?) {
+                    callMessageSentSuccessListener(message)
+                }
+
+                override fun onSaveResultCached(message: io.skygear.plugins.chat.Message?) {
+                    callMessageSentSuccessListener(message)
+                }
+
+                override fun onFail(error: Error) {
+                    this@ConversationFragment.fragmentMessageSentListener?.
+                            onMessageSentFailed(this@ConversationFragment, imageMessage,  error)
+                }
+            })
         }
     }
 
