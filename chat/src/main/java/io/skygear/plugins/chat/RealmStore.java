@@ -102,16 +102,17 @@ class RealmStore {
             }
         }
 
-        Realm realm = getRealm();
+        if (faultyCacheObjects.size() > 0) {
+            Realm realm = getRealm();
+            realm.beginTransaction();
 
-        realm.beginTransaction();
+            // clear up faulty cache objects
+            for (MessageCacheObject cacheObject : faultyCacheObjects) {
+                cacheObject.deleteFromRealm();
+            }
 
-        // clear up faulty cache objects
-        for (MessageCacheObject cacheObject : faultyCacheObjects) {
-            cacheObject.deleteFromRealm();
+            realm.commitTransaction();
         }
-
-        realm.commitTransaction();
 
         Message[] messageArray = new Message[messages.size()];
         callback.onResultGet(messages.toArray(messageArray));
