@@ -3,6 +3,7 @@ package io.skygear.plugins.chat.ui
 import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.media.MediaMetadataRetriever
@@ -42,6 +43,7 @@ open class ConversationFragment() :
         Fragment(),
         MessagesListAdapter.OnLoadMoreListener,
         MessagesListAdapter.OnMessageClickListener<Message>,
+        MessagesListAdapter.OnMessageLongClickListener<Message>,
         VoiceMessagePlayer.OnMessageStateChangeListener,
         VoiceMessagePlayer.OnPlayerErrorListener,
         VoiceMessageOnClickListener
@@ -159,6 +161,7 @@ open class ConversationFragment() :
 
         view.setSendTextMessageListener { msg -> this@ConversationFragment.onSendMessage(msg)}
         view.setOnMessageClickListener(this)
+        view.setOnMessageLongClickListener(this)
         view.setVoiceMessageOnClickListener(this)
         view.setLoadMoreListener(this)
         view.setConversation(conversation)
@@ -234,7 +237,7 @@ open class ConversationFragment() :
                 }
             }
 
-            chatMsgs?.let { this@ConversationFragment.addMessages(it, isAddToTop = true) }
+            chatMsgs?.let { this@ConversationFragment.addMessages(it) }
             chatMsgs?.map { it.createdTime }?.min()?.let { newBefore ->
                 // update load more cursor
                 if (newBefore.before(this@ConversationFragment.messageLoadMoreBefore)) {
@@ -287,8 +290,12 @@ open class ConversationFragment() :
      */
     private fun addMessageToBottom(message: ChatMessage, uri: Uri? = null) {
         val view = conversationView()
-        view?.addMessageToBottom(message, uri)
-        messageIDs.add(message.id)
+        if (messageIDs.contains(message.id)) {
+            view?.updateMessage(message)
+        } else {
+            view?.addMessageToBottom(message, uri)
+            messageIDs.add(message.id)
+        }
 
         // mark last read message
         this.conversation?.let { conv ->
@@ -300,9 +307,7 @@ open class ConversationFragment() :
     /**
      * This function is for loading more previous messages.
      */
-    private fun addMessages(messages: List<ChatMessage>,
-                            isAddToTop: Boolean = false
-    ) {
+    private fun addMessages(messages: List<ChatMessage>) {
         if (messages.isEmpty()) {
             return
         }
@@ -312,8 +317,7 @@ open class ConversationFragment() :
         messages.forEach { msg ->
             when {
                 messageIDs.contains(msg.id) -> view?.updateMessage(msg)
-                isAddToTop -> messagesAddToEnd.add(msg)
-                else -> view?.addMessageToBottom(msg)
+                else -> messagesAddToEnd.add(msg)
             }
 
             messageIDs.add(msg.id)
@@ -339,6 +343,7 @@ open class ConversationFragment() :
 
         val view = conversationView()
         view?.deleteMessages(messages)
+        messages?.map { this.messageIDs.remove(it.id) }
     }
 
     private fun subscribeMessage() {
@@ -519,7 +524,17 @@ open class ConversationFragment() :
             val message = ChatMessage()
             message.body = input.trim()
             this.addMessageToBottom(message)
-            this.skygearChat?.addMessage(message, conv, null)
+            this.skygearChat?.addMessage(message, conv, object : SaveMessageCallback {
+                override fun onSucc(msg: io.skygear.plugins.chat.Message?) {
+                    msg?.let { this@ConversationFragment.conversationView()?.updateMessage(msg) }
+                }
+
+                override fun onFail(error: Error) {
+                    this@ConversationFragment.conversationView()?.updateMessage(message)
+                }
+
+                override fun onSaveResultCached(msg: io.skygear.plugins.chat.Message?) {}
+            })
         }
 
         return true
@@ -540,6 +555,47 @@ open class ConversationFragment() :
             }
         }
     }
+
+    override fun onMessageLongClick(message: Message?) {
+        message?.let { msg ->
+            when (msg.chatMessage.isFail) {
+                true -> {
+                    showFailedMessageDialog(msg.chatMessage)
+                }
+                else -> {
+                    // Do nothing
+                }
+            }
+        }
+    }
+
+    fun showFailedMessageDialog(message: ChatMessage) {
+        AlertDialog.Builder(this.context)
+                .setTitle("Action")
+                .setPositiveButton("Resend", { dialogInterface, i ->
+                    this.conversation?.let { conv ->
+                        this.skygearChat?.addMessage(message, conv, object : SaveMessageCallback {
+                            override fun onSucc(msg: io.skygear.plugins.chat.Message?) {
+                                msg?.let { this@ConversationFragment.conversationView()?.updateMessage(msg) }
+                            }
+
+                            override fun onFail(error: Error) {
+                                this@ConversationFragment.conversationView()?.updateMessage(message)
+                            }
+
+                            override fun onSaveResultCached(msg: io.skygear.plugins.chat.Message?) {}
+                        })
+                        this.deleteMessagesFromList(listOf(message))
+                        this.addMessageToBottom(message)
+                    }
+                })
+                .setNegativeButton("Delete", { dialogInterface, i ->
+                    this.skygearChat?.deleteMessage(message, null)
+                    this.deleteMessagesFromList(listOf(message))
+                })
+                .show()
+    }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

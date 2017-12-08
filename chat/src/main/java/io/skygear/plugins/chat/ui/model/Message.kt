@@ -17,13 +17,17 @@ open class Message: IMessage {
 
     override fun getId(): String = this.chatMessage.id
 
-    override fun getCreatedAt(): Date = this.chatMessage.record.createdAt ?: Date()
+    override fun getCreatedAt(): Date = this.chatMessage.record.createdAt ?: this.chatMessage.sendDate ?: Date()
 
     override fun getUser(): User? = this.author
 
     override fun getText(): String? = this.chatMessage.body
 
     fun getStatus(): String {
+        if (this.chatMessage.isFail) {
+            return "Failed"
+        }
+
         this.chatMessage.status?.getName()?.let {
             return it.replace("_", " ", true).capitalize()
         }

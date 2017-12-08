@@ -711,7 +711,25 @@ public final class ChatContainer {
      */
     public void getUnsentMessages(@NonNull final Conversation conversation,
                                   @Nullable final GetCallback<List<Message>> callback) {
-        this.cacheController.getUnsentMessages(conversation, callback);
+        this.cacheController.getUnsentMessages(conversation, new GetCallback<List<Message>>() {
+            @Override
+            public void onSucc(@Nullable List<Message> messages) {
+                for (Message message : messages) {
+                    message.fail = true;
+                }
+
+                if (callback != null) {
+                    callback.onSucc(messages);
+                }
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                if (callback != null) {
+                    callback.onFail(error);
+                }
+            }
+        });
     }
 
     /**
@@ -904,6 +922,8 @@ public final class ChatContainer {
 
     private void saveMessage(final Message message,
                              @Nullable final SaveMessageCallback callback) {
+        message.alreadySyncToServer = false;
+        message.fail = false;
         this.cacheController.saveMessage(message, null);
         if (callback != null) {
             callback.onSaveResultCached(message);

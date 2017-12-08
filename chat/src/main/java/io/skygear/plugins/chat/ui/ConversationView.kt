@@ -253,6 +253,10 @@ open class ConversationView: RelativeLayout{
         this.messageListAdapter?.setOnMessageClickListener(onMessageClickListener)
     }
 
+    open fun setOnMessageLongClickListener(onMessageLongClickListener: MessagesListAdapter.OnMessageLongClickListener<Message>) {
+        this.messageListAdapter?.setOnMessageLongClickListener(onMessageLongClickListener)
+    }
+
     open fun setLoadMoreListener(onLoadMoreListener: MessagesListAdapter.OnLoadMoreListener) {
         this.messageListAdapter?.setLoadMoreListener(onLoadMoreListener)
     }
