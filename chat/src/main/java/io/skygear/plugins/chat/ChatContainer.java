@@ -33,6 +33,8 @@ import io.skygear.skygear.Database;
 import io.skygear.skygear.Error;
 import io.skygear.skygear.LambdaResponseHandler;
 import io.skygear.skygear.PubsubContainer;
+import io.skygear.skygear.PubsubHandler;
+import io.skygear.skygear.PubsubListener;
 import io.skygear.skygear.Query;
 import io.skygear.skygear.Record;
 import io.skygear.skygear.RecordQueryResponseHandler;
@@ -517,7 +519,7 @@ public final class ChatContainer {
      * @param callback the callback
      */
     public void getTotalUnreadMessageCount(@Nullable final GetCallback<Integer> callback) {
-        this.skygear.callLambdaFunction("chat:total_unread", new LambdaResponseHandler() {
+        this.skygear.callLambdaFunction("chat:total_unread", new HashMap<String, Object>(), new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {
                 try {
@@ -1231,6 +1233,11 @@ public final class ChatContainer {
             subscription.detach(pubsub);
             messageSubscription.remove(conversationId);
         }
+    }
+
+    public void setPubsubListener(@Nullable final PubsubListener listener) {
+        this.skygear.getPubsub().setListener(listener);
+
     }
 
     private void getOrCreateUserChannel(@Nullable final GetCallback<Record> callback) {
