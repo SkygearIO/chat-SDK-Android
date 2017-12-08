@@ -334,7 +334,8 @@ open class ConversationView: RelativeLayout{
     }
 
     fun MessageFromChatMessage(chatMessage: ChatMessage, uri: Uri?, callback: ((messages: Message) -> Unit)? ) {
-        this.userCache?.getUsers(listOf(chatMessage.record.ownerId)) { userIDs ->
+        val userID = chatMessage.record.ownerId ?: this.skygear?.auth?.currentUser!!.id
+        this.userCache?.getUsers(listOf(userID)) { userIDs ->
                 var multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), uri)
                 updateMessageAuthor(multitypeMessage, userIDs)
                 callback?.invoke(multitypeMessage)
