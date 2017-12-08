@@ -13,6 +13,9 @@ class ConversationActivity : AppCompatActivity() {
         @JvmField val LayoutIntentKey = "LAYOUT"
         @JvmField val AvatarAdapterIntentKey = "AVATAR_ADAPTER"
         @JvmField val TitleOptionIntentKey = "TITLE_OPTION"
+        @JvmField val MessageSentListenerIntentKey = "MESSAGE_SENT_LISTENER"
+        @JvmField val MessageFetchListenerIntentKey = "MESSAGE_FETCH_LISTENER"
+        @JvmField val ConnectionListenerIntentKey = "CONNECTION_LISTENER"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,11 +33,23 @@ class ConversationActivity : AppCompatActivity() {
                 }
                 if (intent?.hasExtra(AvatarAdapterIntentKey) ?: false) {
                     bundle.putSerializable(ConversationFragment.AvatarAdapterBundleKey,
-                            this.intent?.getSerializableExtra(ConversationFragment.AvatarAdapterBundleKey))
+                            this.intent?.getSerializableExtra(AvatarAdapterIntentKey))
+                }
+                if (intent?.hasExtra(MessageSentListenerIntentKey) ?: false) {
+                    bundle.putSerializable(ConversationFragment.MessageSentListenerKey,
+                            this.intent?.getSerializableExtra(MessageSentListenerIntentKey))
+                }
+                if (intent?.hasExtra(MessageFetchListenerIntentKey) ?: false) {
+                    bundle.putSerializable(ConversationFragment.MessageFetchListenerKey,
+                            this.intent?.getSerializableExtra(MessageFetchListenerIntentKey))
                 }
                 if (intent?.hasExtra(TitleOptionIntentKey) ?: false) {
                     bundle.putSerializable(ConversationFragment.TitleOptionBundleKey,
-                            this.intent?.getSerializableExtra(ConversationFragment.TitleOptionBundleKey))
+                            this.intent?.getSerializableExtra(TitleOptionIntentKey))
+                }
+                if (intent?.hasExtra(ConnectionListenerIntentKey) ?: false) {
+                    bundle.putSerializable(ConversationFragment.ConnectionListenerKey,
+                            this.intent?.getSerializableExtra(ConnectionListenerIntentKey))
                 }
                 fragment.arguments = bundle
             }
