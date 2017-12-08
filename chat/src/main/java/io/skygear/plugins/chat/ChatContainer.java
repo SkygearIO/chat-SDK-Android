@@ -894,6 +894,12 @@ public final class ChatContainer {
 
     public void deleteMessage(@NonNull final Message message, @Nullable final DeleteCallback<Message> callback)
     {
+        // if the message is marked as failed, it is stored locally only
+        if (message.isFail()) {
+            this.cacheController.didDeleteMessage(message);
+            return;
+        }
+
         this.skygear.callLambdaFunction(
                 "chat:delete_message",
                 new Object[]{ message.getId() },
