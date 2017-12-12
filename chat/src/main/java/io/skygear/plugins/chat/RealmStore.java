@@ -167,11 +167,7 @@ class RealmStore {
         }
     }
 
-    void setMessages(Message[] messages) {
-        Realm realm = getRealm();
-
-        realm.beginTransaction();
-
+    private void setMessages(final Realm realm, final Message[] messages) {
         List<MessageCacheObject> cacheObjects = new ArrayList<>(messages.length);
         for (Message message : messages) {
             MessageCacheObject cacheObject = new MessageCacheObject(message);
@@ -179,13 +175,24 @@ class RealmStore {
         }
 
         realm.insertOrUpdate(cacheObjects);
-
-        realm.commitTransaction();
     }
 
-    void deleteMessages(Message[] messages) {
-        Realm realm = getRealm();
+    void setMessages(final Message[] messages) {
+        Realm.Transaction transaction = new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                RealmStore.this.setMessages(realm, messages);
+            }
+        };
 
+        if (this.async) {
+            getRealm().executeTransaction(transaction);
+        } else {
+            getRealm().executeTransactionAsync(transaction);
+        }
+    }
+
+    private void deleteMessages(final Realm realm, final Message[] messages) {
         String[] messageIDs = new String[messages.length];
         for (int i = 0; i < messages.length; i++) {
             messageIDs[i] = messages[i].getId();
@@ -193,22 +200,37 @@ class RealmStore {
 
         RealmResults<MessageCacheObject> cacheObjects =
                 realm.where(MessageCacheObject.class).in(KEY_RECORD_ID, messageIDs).findAll();
-
-        realm.beginTransaction();
-
         cacheObjects.deleteAllFromRealm();
+    }
 
-        realm.commitTransaction();
+    void deleteMessages(final Message[] messages) {
+        Realm.Transaction transaction = new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                RealmStore.this.deleteMessages(realm, messages);
+            }
+        };
+
+        if (this.async) {
+            getRealm().executeTransaction(transaction);
+        } else {
+            getRealm().executeTransactionAsync(transaction);
+        }
     }
 
     void deleteAll() {
-        Realm realm = getRealm();
+        Realm.Transaction transaction = new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.deleteAll();
+            }
+        };
 
-        realm.beginTransaction();
-
-        realm.deleteAll();
-
-        realm.commitTransaction();
+        if (this.async) {
+            getRealm().executeTransaction(transaction);
+        } else {
+            getRealm().executeTransactionAsync(transaction);
+        }
     }
 
     @RealmModule(library = true, classes = {MessageCacheObject.class})
