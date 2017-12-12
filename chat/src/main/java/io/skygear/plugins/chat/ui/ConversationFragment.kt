@@ -595,19 +595,20 @@ open class ConversationFragment() :
                 .setTitle("Action")
                 .setPositiveButton("Resend", { dialogInterface, i ->
                     this.conversation?.let { conv ->
-                        this.skygearChat?.addMessage(message, conv, object : SaveMessageCallback {
+                        val messageToResend = ChatMessage(message.record)
+                        this.skygearChat?.addMessage(messageToResend, conv, object : SaveMessageCallback {
                             override fun onSucc(msg: io.skygear.plugins.chat.Message?) {
                                 msg?.let { this@ConversationFragment.conversationView()?.updateMessage(msg) }
                             }
 
                             override fun onFail(error: Error) {
-                                this@ConversationFragment.conversationView()?.updateMessage(message)
+                                this@ConversationFragment.conversationView()?.updateMessage(messageToResend)
                             }
 
                             override fun onSaveResultCached(msg: io.skygear.plugins.chat.Message?) {}
                         })
                         this.deleteMessagesFromList(listOf(message))
-                        this.addMessageToBottom(message)
+                        this.addMessageToBottom(messageToResend)
                     }
                 })
                 .setNegativeButton("Delete", { dialogInterface, i ->
