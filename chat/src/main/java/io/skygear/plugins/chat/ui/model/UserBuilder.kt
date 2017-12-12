@@ -26,4 +26,8 @@ class UserBuilder {
         return User(record, displayNameField, avatarField, avatarType, avatarBackgroundColor, avatarTextColor)
     }
 
+    fun createUser(recordID: String): User {
+        return User(recordID, displayNameField, avatarField, avatarType, avatarBackgroundColor, avatarTextColor)
+    }
+
 }

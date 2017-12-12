@@ -8,14 +8,16 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import io.skygear.chatkit.commons.ImageLoader;
-import io.skygear.chatkit.commons.models.IMessage;
 import io.skygear.chatkit.messages.MessageHolders;
 import io.skygear.chatkit.messages.MessagesListAdapter;
 import io.skygear.chatkit.utils.DateFormatter;
+import io.skygear.plugins.chat.ui.model.Message;
+import io.skygear.plugins.chat.ui.model.User;
 
-public class SortedMessageListAdapter<MESSAGE extends IMessage> extends MessagesListAdapter<MESSAGE> {
+public class SortedMessageListAdapter extends MessagesListAdapter<Message> {
     public SortedMessageListAdapter(String senderId, MessageHolders holders, ImageLoader imageLoader) {
         super(senderId, holders, imageLoader);
     }
@@ -25,10 +27,10 @@ public class SortedMessageListAdapter<MESSAGE extends IMessage> extends Messages
      *
      * @param messages messages to add.
      */
-    public void merge(List<MESSAGE> messages) {
-        this.merge(messages, new Comparator<MESSAGE>() {
+    public void merge(List<Message> messages) {
+        this.merge(messages, new Comparator<Message>() {
             @Override
-            public int compare(MESSAGE m1, MESSAGE m2) {
+            public int compare(Message m1, Message m2) {
                 return m2.getCreatedAt().compareTo(m1.getCreatedAt());
             }
         });
@@ -40,8 +42,8 @@ public class SortedMessageListAdapter<MESSAGE extends IMessage> extends Messages
      * @param messages messages to add.
      * @param comparator comparator for sorting the item list
      */
-    public void merge(List<MESSAGE> messages, final Comparator<MESSAGE> comparator) {
-        for (MESSAGE message : messages) {
+    public void merge(List<Message> messages, final Comparator<Message> comparator) {
+        for (Message message : messages) {
             this.items.add(new Wrapper<>(message));
         }
 
@@ -50,13 +52,26 @@ public class SortedMessageListAdapter<MESSAGE extends IMessage> extends Messages
             @Override
             public int compare(Wrapper o1, Wrapper o2) {
                 // Assume all date headers are removed
-                MESSAGE m1 = (MESSAGE) o1.item;
-                MESSAGE m2 = (MESSAGE) o2.item;
+                Message m1 = (Message) o1.item;
+                Message m2 = (Message) o2.item;
                 return comparator.compare(m1, m2);
             }
         });
         regenerateDateHeaders();
         notifyDataSetChanged();
+    }
+
+    public void updateMessagesAuthor(final Map<String, User> authors) {
+        for (Wrapper item : items) {
+            if (item.item instanceof Message) {
+                Message message = (Message) item.item;
+                String ownerId = message.getChatMessage().getRecord().getOwnerId();
+                User author = authors.get(ownerId);
+                if (author != null) {
+                    message.setAuthor(author);
+                }
+            }
+        }
     }
 
     private void removeDateHeaders() {
@@ -74,9 +89,9 @@ public class SortedMessageListAdapter<MESSAGE extends IMessage> extends Messages
         List<Integer> indeicesToInsert = new ArrayList<>();
         SparseArray<Date> indeicesOfDate = new SparseArray<>();
         for (int i = 0; i < this.items.size(); i++) {
-            MESSAGE message = (MESSAGE) this.items.get(i).item;
+            Message message = (Message) this.items.get(i).item;
             if (this.items.size() > i + 1) {
-                MESSAGE nextMessage = (MESSAGE) this.items.get(i + 1).item;
+                Message nextMessage = (Message) this.items.get(i + 1).item;
                 if (!DateFormatter.isSameDay(message.getCreatedAt(), nextMessage.getCreatedAt())) {
                     indeicesToInsert.add(i + 1);
                     indeicesOfDate.put(i + 1, message.getCreatedAt());

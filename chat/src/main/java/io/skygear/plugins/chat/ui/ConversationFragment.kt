@@ -22,13 +22,12 @@ import android.widget.TextView
 import android.widget.Toast
 import io.skygear.chatkit.messages.VoiceMessageOnClickListener
 import io.skygear.chatkit.messages.MessagesListAdapter
-import io.skygear.skygear.Error
 import io.skygear.plugins.chat.*
+import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.model.Message
 import io.skygear.plugins.chat.ui.utils.*
-import io.skygear.skygear.Asset
-import io.skygear.skygear.Container
+import io.skygear.skygear.*
 import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.File
@@ -36,6 +35,7 @@ import java.io.FileInputStream
 import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
@@ -200,6 +200,8 @@ open class ConversationFragment() :
             }
         }
 
+        this.fetchParticipants()
+
         this.messageSubscriptionRetryCount = 0
         this.subscribeMessage()
     }
@@ -208,6 +210,25 @@ open class ConversationFragment() :
         super.onPause()
 
         this.unsubscribeMessage()
+    }
+
+    private fun fetchParticipants() {
+        this.conversation?.let { conv ->
+            val userIDs = conv.participantIds.orEmpty()
+            if (userIDs.isEmpty()) {
+                return
+            }
+
+            val q = Query("user").contains("_id", userIDs.toList())
+            this.skygear?.publicDatabase?.query(q, object: RecordQueryResponseHandler(){
+                override fun onQueryError(error: Error?) {
+                }
+
+                override fun onQuerySuccess(records: Array<out Record>?) {
+                    records?.let { conversationView()?.updateAuthors(it.toList()) }
+                }
+            })
+        }
     }
 
     private fun fetchMessages(
