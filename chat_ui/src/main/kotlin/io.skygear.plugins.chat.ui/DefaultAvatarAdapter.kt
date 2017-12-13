@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import io.skygear.plugins.chat.Conversation
 import io.skygear.plugins.chat.ui.model.Message
-import io.skygear.plugins.chat.R
+import io.skygear.plugins.chat.ui.R
 import io.skygear.plugins.chat.ui.model.User
 
 open class DefaultAvatarAdapter(): AvatarAdapter() {

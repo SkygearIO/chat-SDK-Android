@@ -4,33 +4,24 @@ buildscript {
     }
 
     dependencies {
-       classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${dokka_version}"
+        classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${dokka_version}"
     }
 }
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jetbrains.dokka-android'
-apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'realm-android'
+apply plugin: 'com.jfrog.bintray'
 
-def skygearChatVersion = "git describe --abbrev=0 --tags".execute().text.trim()
-def skygearChatFullVersion = "git describe --always --tags".execute().text.trim()
+
+def (bintrayUser, bintrayApiKey) = getBintrayCredentials()
+def skygearChatVersion = getSkygearChatVersion()
+def skygearChatFullVersion = getSkygearChatFullVersion()
 
 group = 'io.skygear.plugins'
 version = skygearChatFullVersion
-
-def bintrayUser = System.getenv('BINTRAY_USER')
-def bintrayApiKey = System.getenv('BINTRAY_API_KEY')
-
-if (project.rootProject.file('local.properties').exists()) {
-    Properties localProperties = new Properties()
-    localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
-
-    bintrayUser = localProperties.getProperty('bintrayUser', bintrayUser)
-    bintrayApiKey = localProperties.getProperty('bintrayApiKey', bintrayApiKey)
-}
 
 android {
     compileSdkVersion 26
@@ -51,6 +42,8 @@ android {
     }
 }
 
+apply from: '../buildJar.gradle'
+
 dependencies {
     compile 'com.android.support:support-annotations:26.1.0'
     compile 'com.android.support:design:26.1.0'
@@ -69,36 +62,6 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:1.0.1'
     androidTestCompile 'com.android.support.test:rules:1.0.1'
 }
-
-//
-// TODO: Generate Javadoc and Kotlin Doc using dokka
-//
-// task generateSourcesJar(type: Jar) {
-//     from android.sourceSets.main.java.srcDirs
-//     classifier 'sources'
-// }
-//
-// task generateJavadocs(type: Javadoc) {
-//     source = android.sourceSets.main.java.srcDirs
-//     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-// }
-//
-// afterEvaluate {
-//     generateJavadocs.classpath += files(android.libraryVariants.collect { variant ->
-//         variant.javaCompile.classpath.files
-//     })
-// }
-//
-// task generateJavadocsJar(type: Jar) {
-//     from generateJavadocs.destinationDir
-//     classifier 'javadoc'
-// }
-//
-// generateJavadocsJar.dependsOn generateJavadocs
-// artifacts {
-//     archives generateJavadocsJar
-//     archives generateSourcesJar
-// }
 
 bintray {
     user = bintrayUser
@@ -119,6 +82,7 @@ bintray {
         }
     }
 }
+
 repositories {
     mavenCentral()
     maven {
