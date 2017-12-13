@@ -855,6 +855,22 @@ public final class ChatContainer {
      *
      * @param message the message to be edited
      * @param body    the new message body
+     * @param callback save callback
+     */
+
+    public void editMessage(@NonNull Message message,
+                            @NonNull String body,
+                            @Nullable final SaveMessageCallback callback)
+    {
+        message.setBody(body);
+        this.saveMessage(message, callback);
+    }
+
+    /**
+     * Edit Message
+     *
+     * @param message the message to be edited
+     * @param body    the new message body
      * @param metadata  the new message metadata
      * @param asset  the new message asset
      * @param callback save callback
