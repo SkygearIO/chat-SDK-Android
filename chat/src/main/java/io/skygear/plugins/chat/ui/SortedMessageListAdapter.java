@@ -86,25 +86,25 @@ public class SortedMessageListAdapter extends MessagesListAdapter<Message> {
 
     private void regenerateDateHeaders() {
         // Assume all date headers are removed
-        List<Integer> indeicesToInsert = new ArrayList<>();
-        SparseArray<Date> indeicesOfDate = new SparseArray<>();
+        List<Integer> indicesToInsert = new ArrayList<>();
+        SparseArray<Date> indicesOfDate = new SparseArray<>();
         for (int i = 0; i < this.items.size(); i++) {
             Message message = (Message) this.items.get(i).item;
             if (this.items.size() > i + 1) {
                 Message nextMessage = (Message) this.items.get(i + 1).item;
                 if (!DateFormatter.isSameDay(message.getCreatedAt(), nextMessage.getCreatedAt())) {
-                    indeicesToInsert.add(i + 1);
-                    indeicesOfDate.put(i + 1, message.getCreatedAt());
+                    indicesToInsert.add(i + 1);
+                    indicesOfDate.put(i + 1, message.getCreatedAt());
                 }
             } else {
-                indeicesToInsert.add(i + 1);
-                indeicesOfDate.put(i + 1, message.getCreatedAt());
+                indicesToInsert.add(i + 1);
+                indicesOfDate.put(i + 1, message.getCreatedAt());
             }
         }
 
-        for (int i = indeicesToInsert.size() - 1; i >= 0; i--) {
-            Integer index = indeicesToInsert.get(i);
-            Date date = indeicesOfDate.get(index);
+        for (int i = indicesToInsert.size() - 1; i >= 0; i--) {
+            Integer index = indicesToInsert.get(i);
+            Date date = indicesOfDate.get(index);
             if (date == null) {
                 continue;
             }
