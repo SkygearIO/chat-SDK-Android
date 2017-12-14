@@ -337,6 +337,21 @@ open class ConversationView: RelativeLayout{
         }
     }
 
+    open fun getOtherParticipantsTitle(callback: ((String?) -> Unit)? ) {
+        val currentUserId = this.skygear?.auth?.currentUser?.id
+        val otherParticipantIds = conversation?.participantIds?.filter { p -> p != currentUserId }
+        otherParticipantIds?.let { it ->
+            this.userCache?.getUsers(it, { userIDs ->
+                val names = otherParticipantIds?.map {
+                    val key = userIDs[it]?.displayNameField
+                    userIDs[it]?.chatUser?.record?.get(key) ?: userIDs[it]?.chatUser?.record?.get(User.DefaultUsernameField)
+                }
+                val newTitle = names?.joinToString(", ")
+                callback?.invoke(newTitle)
+            })
+        }
+    }
+
     class ContentTypeChecker : MessageHolders.ContentChecker<Message> {
         companion object {
             val VoiceMessageType: Byte = 1
