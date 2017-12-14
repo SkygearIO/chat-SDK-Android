@@ -186,9 +186,9 @@ class RealmStore {
         };
 
         if (this.async) {
-            getRealm().executeTransaction(transaction);
-        } else {
             getRealm().executeTransactionAsync(transaction);
+        } else {
+            getRealm().executeTransaction(transaction);
         }
     }
 
@@ -212,9 +212,9 @@ class RealmStore {
         };
 
         if (this.async) {
-            getRealm().executeTransaction(transaction);
-        } else {
             getRealm().executeTransactionAsync(transaction);
+        } else {
+            getRealm().executeTransaction(transaction);
         }
     }
 
@@ -227,9 +227,9 @@ class RealmStore {
         };
 
         if (this.async) {
-            getRealm().executeTransaction(transaction);
-        } else {
             getRealm().executeTransactionAsync(transaction);
+        } else {
+            getRealm().executeTransaction(transaction);
         }
     }
 
