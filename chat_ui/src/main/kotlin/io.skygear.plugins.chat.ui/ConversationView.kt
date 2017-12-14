@@ -363,6 +363,17 @@ open class ConversationView: RelativeLayout{
         this.messageListAdapter?.updateMessagesAuthor(userMap)
     }
 
+    open fun getOtherParticipantsTitle(): String {
+        val names = userMap.values.filter {
+            it.chatUserId != this.skygear?.auth?.currentUser?.id
+        }.map {
+            val key = it.displayNameField
+            it.chatUser?.record?.get(key) ?: it.chatUser?.record?.get(User.DefaultUsernameField)
+        }
+        return names?.joinToString(", ")
+
+    }
+
     class ContentTypeChecker : MessageHolders.ContentChecker<Message> {
         companion object {
             val VoiceMessageType: Byte = 1
