@@ -46,7 +46,7 @@ public class Message {
      *
      * @param record the record
      */
-    Message(@NonNull final Record record) {
+    public Message(@NonNull final Record record) {
         this.record = record;
     }
 

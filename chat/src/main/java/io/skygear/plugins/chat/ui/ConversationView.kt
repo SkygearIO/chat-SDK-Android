@@ -13,25 +13,23 @@ import android.view.LayoutInflater
 import android.view.View
 import com.dewarder.holdinglibrary.HoldingButtonLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
-import com.stfalcon.chatkit.messages.MessageHolders
-import com.stfalcon.chatkit.messages.MessagesListAdapter
-import com.stfalcon.chatkit.messages.MessagesList
 import io.skygear.plugins.chat.R
-import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
 import android.net.Uri
 import android.widget.*
-import com.stfalcon.chatkit.messages.MessagesListAdapter.OnMessageClickListener
-import com.stfalcon.chatkit.messages.MessagesListAdapter.OnLoadMoreListener
 import io.skygear.plugins.chat.ui.holder.*
 import io.skygear.plugins.chat.ui.model.*
 import io.skygear.plugins.chat.ui.utils.AvatarBuilder
 import io.skygear.plugins.chat.Message as ChatMessage
-import io.skygear.plugins.chat.ui.utils.UserCache
 import io.skygear.skygear.Container
-import com.stfalcon.chatkit.messages.CustomMessageHolders
+import io.skygear.chatkit.messages.CustomMessageHolders
 import io.skygear.plugins.chat.Conversation
-import com.stfalcon.chatkit.messages.VoiceMessageOnClickListener
+import io.skygear.chatkit.messages.VoiceMessageOnClickListener
+import io.skygear.plugins.chat.ui.utils.ImageLoader
+import io.skygear.chatkit.messages.MessageHolders
+import io.skygear.chatkit.messages.MessagesList
+import io.skygear.chatkit.messages.MessagesListAdapter
+import io.skygear.skygear.Record
 
 
 abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
@@ -97,9 +95,8 @@ open class ConversationView: RelativeLayout{
     private var progressBar: ProgressBar? = null
     private var messagesListViewReachBottomListener: MessagesListViewReachBottomListener? = null
     private var sendTextMessageListener: (String) -> Boolean? = {true}
-    private var messageListAdapter: MessagesListAdapter<Message>? = null
+    private var messageListAdapter: SortedMessageListAdapter? = null
     private var skygear: Container? = null
-    private var userCache: UserCache? = null
 
     private var messageSenderTextColor: Int
     private var avatarNameField: String
@@ -113,6 +110,8 @@ open class ConversationView: RelativeLayout{
     private var avatarAdapter: AvatarAdapter = DefaultAvatarAdapter()
     private var conversation: Conversation? = null
     private var messageHolders: MessageHolders? = null
+
+    private var userMap: MutableMap<String, User> = mutableMapOf()
 
 
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
@@ -194,8 +193,6 @@ open class ConversationView: RelativeLayout{
             (this.messagesListView?.layoutManager as LinearLayoutManager).isAutoMeasureEnabled = false
             this.messagesListView?.addOnScrollListener(this.messagesListViewReachBottomListener)
         }
-
-        this.userCache = UserCache.getInstance(this.skygear!!, this.userBuilder)
     }
 
     open fun setAddAttachmentButtonOnClickListener(action: (View) -> Unit) {
@@ -218,7 +215,7 @@ open class ConversationView: RelativeLayout{
         return this.messagesListViewReachBottomListener?.isReachEnd !!;
     }
 
-    fun createMessageListAdapter(imageLoader: ImageLoader, senderId: String): MessagesListAdapter<Message> {
+    fun createMessageListAdapter(imageLoader: ImageLoader, senderId: String): SortedMessageListAdapter {
         messageHolders = CustomMessageHolders({avatarAdapter}, {conversation})
                 .setIncomingTextHolder(IncomingTextMessageView::class.java)
                 .setIncomingImageHolder(IncomingImageMessageView::class.java)
@@ -235,7 +232,7 @@ open class ConversationView: RelativeLayout{
                         ContentTypeChecker()
                 )
 
-        val adapter = MessagesListAdapter<Message>(
+        val adapter = SortedMessageListAdapter(
                 senderId,
                 messageHolders!!,
                 imageLoader
@@ -251,11 +248,15 @@ open class ConversationView: RelativeLayout{
         conversation = newConversation
     }
 
-    open fun setOnMessageClickListener(onMessageClickListener: OnMessageClickListener<Message>) {
+    open fun setOnMessageClickListener(onMessageClickListener: MessagesListAdapter.OnMessageClickListener<Message>) {
         this.messageListAdapter?.setOnMessageClickListener(onMessageClickListener)
     }
 
-    open fun setLoadMoreListener(onLoadMoreListener: OnLoadMoreListener) {
+    open fun setOnMessageLongClickListener(onMessageLongClickListener: MessagesListAdapter.OnMessageLongClickListener<Message>) {
+        this.messageListAdapter?.setOnMessageLongClickListener(onMessageLongClickListener)
+    }
+
+    open fun setLoadMoreListener(onLoadMoreListener: MessagesListAdapter.OnLoadMoreListener) {
         this.messageListAdapter?.setLoadMoreListener(onLoadMoreListener)
     }
 
@@ -279,62 +280,66 @@ open class ConversationView: RelativeLayout{
     }
 
     open fun updateMessage(message: ChatMessage) {
-        MessagesFromChatMessages(listOf(message)) {
-            msgs -> this.messageListAdapter?.update(msgs.first())
-        }
+        this.messageListAdapter?.update(MessagesFromChatMessages(listOf(message)).first())
     }
 
     open fun updateVoiceMessage(voiceMessage: VoiceMessage) {
-        this.userCache?.getUsers(listOf(voiceMessage.chatMessage.record.ownerId)) {
-            userIDs ->
-                updateMessageAuthor(voiceMessage, userIDs)
-                this.messageListAdapter?.update(voiceMessage)
-        }
+        updateMessageAuthor(voiceMessage)
+        this.messageListAdapter?.update(voiceMessage)
     }
 
-    open fun addMessagesToEnd(messages: List<ChatMessage>, reverse: Boolean) {
-        MessagesFromChatMessages(messages) {
-            msgs -> this.messageListAdapter?.addToEnd(msgs, reverse)
-        }
+    open fun mergeMessagesToList(messages: List<ChatMessage>) {
+        this.messageListAdapter?.merge(MessagesFromChatMessages(messages))
     }
 
-    open fun addMessageToStart(message: ChatMessage, imageUri: Uri? = null) {
-        MessageFromChatMessage(message, imageUri) {
-            uiMessage -> this.messageListAdapter?.addToStart(uiMessage, needToScrollToBottom())
-        }
+    open fun addMessageToBottom(message: ChatMessage, imageUri: Uri? = null) {
+        this.messageListAdapter?.addToStart(MessageFromChatMessage(message, imageUri), needToScrollToBottom())
+    }
+
+    open fun startListeningScroll() {
+        this.messageListAdapter?.startListeningScroll()
+    }
+
+    open fun stopListeningScroll() {
+        this.messageListAdapter?.stopListeningScroll()
+    }
+
+    open fun deleteMessages(messages: List<ChatMessage>) {
+        this.messageListAdapter?.deleteByIds(messages.map { it.id }.toTypedArray())
     }
 
     fun getMessageStyle(): MessageStyle {
         return MessageStyle(this.avatarHiddenForOutgoingMessages, this.avatarHiddenForIncomingMessages, this.messageSenderTextColor)
     }
 
-    fun MessagesFromChatMessages(chatMessages: List<ChatMessage>, callback: ((messages: List<Message>) -> Unit)? ) {
-        val userIDs = chatMessages.map { it.record.ownerId }.distinct()
-        val multitypeMessages = chatMessages.map { MessageFactory.getMessage(it, getMessageStyle()) }
-        this.userCache?.getUsers(userIDs) { userMapping ->
-            multitypeMessages.forEach {
-                msg -> updateMessageAuthor(msg, userMapping)
-            }
-            callback?.invoke(multitypeMessages)
+    fun MessagesFromChatMessages(chatMessages: List<ChatMessage>): List<Message> {
+        val multitypeMessages = chatMessages.map {
+            MessageFactory.getMessage(it, getMessageStyle())
         }
+        multitypeMessages.forEach { updateMessageAuthor(it) }
+        return multitypeMessages
     }
 
-    fun MessageFromChatMessage(chatMessage: ChatMessage, uri: Uri?, callback: ((messages: Message) -> Unit)? ) {
-        this.userCache?.getUsers(listOf(chatMessage.record.ownerId)) { userIDs ->
-                var multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), uri)
-                updateMessageAuthor(multitypeMessage, userIDs)
-                callback?.invoke(multitypeMessage)
-            }
-
+    fun MessageFromChatMessage(chatMessage: ChatMessage, uri: Uri?): Message {
+        val multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), uri)
+        updateMessageAuthor(multitypeMessage)
+        return multitypeMessage
     }
 
-    fun updateMessageAuthor(message: Message, userIDs: Map<String, User>) {
+    fun updateMessageAuthor(message: Message) {
         val ownerId = message.chatMessage.record.ownerId
-        if (ownerId != null && userIDs.containsKey(ownerId)) {
-            message.author = userIDs[ownerId]
-        } else {
-            message.author = userBuilder.createUser(this.skygear?.auth?.currentUser!!)
+        message.author = when {
+            ownerId == null || ownerId == "" -> userBuilder.createUser(this.skygear?.auth?.currentUser!!)
+            userMap.containsKey(ownerId) -> userMap[ownerId]
+            else -> userBuilder.createUser(ownerId)
         }
+    }
+
+    fun updateAuthors(authors: List<Record>) {
+        authors.forEach {
+            userMap[it.ownerId] = userBuilder.createUser(it)
+        }
+        this.messageListAdapter?.updateMessagesAuthor(userMap)
     }
 
     class ContentTypeChecker : MessageHolders.ContentChecker<Message> {

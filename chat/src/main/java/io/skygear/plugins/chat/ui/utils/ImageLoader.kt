@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.widget.ImageView
 import com.squareup.picasso.Picasso
-import com.stfalcon.chatkit.commons.ImageLoader
+import io.skygear.chatkit.commons.ImageLoader
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.util.Base64

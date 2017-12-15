@@ -5,10 +5,9 @@ package io.skygear.plugins.chat.ui.holder
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.stfalcon.chatkit.R
+import io.skygear.chatkit.utils.DateFormatter
+import io.skygear.plugins.chat.R
 import io.skygear.plugins.chat.ui.model.Message
-import com.stfalcon.chatkit.commons.ImageLoader
-import com.stfalcon.chatkit.utils.DateFormatter;
 
 
 class ReceiverAvatarMessageView(itemView: View){

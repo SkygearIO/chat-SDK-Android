@@ -1,6 +1,6 @@
 package io.skygear.plugins.chat.ui.model
 
-import com.stfalcon.chatkit.commons.models.IUser
+import io.skygear.chatkit.commons.models.IUser
 
 import io.skygear.plugins.chat.ChatUser
 import io.skygear.plugins.chat.ui.AvatarType
@@ -15,7 +15,8 @@ class User : IUser {
         var DefaultAvatarField = "Unknown"
     }
 
-    val chatUser: ChatUser
+    val chatUser: ChatUser?
+    val chatUserId: String
     val avatarField: String?
     val displayNameField: String?
     var avatarType: AvatarType
@@ -31,25 +32,44 @@ class User : IUser {
         this.avatarField = avatarField
         this.displayNameField = displayNameField
         this.chatUser = ChatUser.fromJson(record.toJson())
+        this.chatUserId = record.id
         this.avatarType = avatarType
         this.avatarBackgroundColor = avatarBackgroundColor
         this.avatarTextColor = avatarInitialTextColor
     }
 
-    override fun getId() = this.chatUser.id
+    constructor(recordID: String,
+                displayNameField: String?,
+                avatarField: String? ,
+                avatarType: AvatarType,
+                avatarBackgroundColor: Int,
+                avatarInitialTextColor: Int) {
+        this.avatarField = avatarField
+        this.displayNameField = displayNameField
+        this.chatUser = null
+        this.chatUserId = recordID
+        this.avatarType = avatarType
+        this.avatarBackgroundColor = avatarBackgroundColor
+        this.avatarTextColor = avatarInitialTextColor
+    }
+
+    override fun getId() = this.chatUserId
 
     override fun getName(): String {
-        val userName = this.chatUser.record.get(this.displayNameField) as String?
-        if (userName != null) {
-            return userName
+        if (this.chatUser == null) {
+            return DefaultDisplayName
         }
 
-        return User.DefaultDisplayName
+        val userName = this.chatUser.record.get(this.displayNameField) as String?
+        return userName ?: User.DefaultDisplayName
     }
 
     override fun getAvatar(): String {
-        if (this.avatarType == AvatarType.IMAGE) {
+        if (this.chatUser == null) {
+            return AvatarBuilder.avatarUriForName("", this.avatarBackgroundColor, this.avatarTextColor)
+        }
 
+        if (this.avatarType == AvatarType.IMAGE) {
             var avatarUrl: String? = null
             val field = this.chatUser.record.get(this.avatarField)
 

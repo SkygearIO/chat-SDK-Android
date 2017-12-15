@@ -3,8 +3,8 @@ package io.skygear.plugins.chat.ui
 import android.content.Context
 import android.widget.ImageView
 import com.squareup.picasso.Picasso
+import io.skygear.chatkit.commons.ImageLoader
 import io.skygear.plugins.chat.ui.utils.AvatarBuilder
-import com.stfalcon.chatkit.commons.ImageLoader
 
 class DefaultAvatarImageLoader(
     val context: Context,

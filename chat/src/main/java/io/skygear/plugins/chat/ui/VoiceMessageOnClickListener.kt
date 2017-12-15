@@ -1,4 +1,4 @@
-package com.stfalcon.chatkit.messages
+package io.skygear.chatkit.messages
 
 import io.skygear.plugins.chat.ui.model.VoiceMessage
 

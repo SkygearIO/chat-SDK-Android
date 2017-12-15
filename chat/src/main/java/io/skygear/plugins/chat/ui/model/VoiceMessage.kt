@@ -2,7 +2,7 @@ package io.skygear.plugins.chat.ui.model
 
 import android.net.Uri
 import android.media.MediaRecorder
-import com.stfalcon.chatkit.commons.models.MessageContentType
+import io.skygear.chatkit.commons.models.MessageContentType
 import io.skygear.skygear.Asset
 import io.skygear.skygear.Record
 import io.skygear.plugins.chat.Message as ChatMessage

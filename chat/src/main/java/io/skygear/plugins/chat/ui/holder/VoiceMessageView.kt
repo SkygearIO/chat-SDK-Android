@@ -1,5 +1,6 @@
 package io.skygear.plugins.chat.ui.holder
 
+import android.support.v4.content.ContextCompat
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -24,7 +25,7 @@ class VoiceMessageView(itemView: View){
             this@VoiceMessageView.durationTextView?.text =
                     String.format("%02d:%02d", durationInSecond / 60, durationInSecond % 60)
 
-            this@VoiceMessageView.timeTextView?.setTextColor(com.stfalcon.chatkit.R.color.dark_gray)
+            this@VoiceMessageView.timeTextView?.setTextColor(ContextCompat.getColor(actionButton?.context, io.skygear.chatkit.R.color.dark_gray))
             val actionButtonIcon = when (msg.state) {
                 VoiceMessage.State.PLAYING -> io.skygear.plugins.chat.R.drawable.ic_pause_white
                 else -> io.skygear.plugins.chat.R.drawable.ic_play_white

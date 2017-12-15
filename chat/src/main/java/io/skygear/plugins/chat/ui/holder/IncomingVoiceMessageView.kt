@@ -1,7 +1,7 @@
 package io.skygear.plugins.chat.ui.holder
 
 import android.view.View
-import com.stfalcon.chatkit.messages.MessageHolders
+import io.skygear.chatkit.messages.MessageHolders
 import io.skygear.plugins.chat.ui.model.VoiceMessage
 
 class IncomingVoiceMessageView(view: View):
