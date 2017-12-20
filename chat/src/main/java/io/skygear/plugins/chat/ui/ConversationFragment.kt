@@ -187,11 +187,7 @@ open class ConversationFragment() :
 
 
         val view = createConversationView(inflater, container)
-        if (titleOption  == ConversationTitleOption.OTHER_PARTICIPANTS) {
-            view.getOtherParticipantsTitle { title ->
-                this.activity.title = title
-            }
-        } else {
+        if (titleOption  == ConversationTitleOption.DEFAULT) {
             this.activity.title = this.conversation?.title
         }
         // TODO: setup typing indicator subscription
@@ -218,6 +214,30 @@ open class ConversationFragment() :
         super.onPause()
 
         this.unsubscribeMessage()
+    }
+
+    private fun fetchParticipants() {
+        this.conversation?.let { conv ->
+            val userIDs = conv.participantIds.orEmpty()
+            if (userIDs.isEmpty()) {
+                return
+            }
+
+            val q = Query("user").contains("_id", userIDs.toList())
+            this.skygear?.publicDatabase?.query(q, object: RecordQueryResponseHandler(){
+                override fun onQueryError(error: Error?) {
+                }
+
+                override fun onQuerySuccess(records: Array<out Record>?) {
+                    records?.let {
+                        conversationView()?.updateAuthors(records.toList())
+                        if (titleOption  == ConversationTitleOption.OTHER_PARTICIPANTS) {
+                            this@ConversationFragment.activity.title = conversationView()?.getOtherParticipantsTitle()
+                        }
+                    }
+                }
+            })
+        }
     }
 
     private fun fetchMessages(

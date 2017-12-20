@@ -335,21 +335,18 @@ open class ConversationView: RelativeLayout{
         } else {
             message.author = userBuilder.createUser(this.skygear?.auth?.currentUser!!)
         }
+        this.messageListAdapter?.updateMessagesAuthor(userMap)
     }
 
-    open fun getOtherParticipantsTitle(callback: ((String?) -> Unit)? ) {
-        val currentUserId = this.skygear?.auth?.currentUser?.id
-        val otherParticipantIds = conversation?.participantIds?.filter { p -> p != currentUserId }
-        otherParticipantIds?.let { it ->
-            this.userCache?.getUsers(it, { userIDs ->
-                val names = otherParticipantIds?.map {
-                    val key = userIDs[it]?.displayNameField
-                    userIDs[it]?.chatUser?.record?.get(key) ?: userIDs[it]?.chatUser?.record?.get(User.DefaultUsernameField)
-                }
-                val newTitle = names?.joinToString(", ")
-                callback?.invoke(newTitle)
-            })
+    open fun getOtherParticipantsTitle(): String {
+        val names = userMap.values.filter {
+            it.chatUserId != this.skygear?.auth?.currentUser?.id
+        }.map {
+            val key = it.displayNameField
+            it.chatUser?.record?.get(key) ?: it.chatUser?.record?.get(User.DefaultUsernameField)
         }
+        return names?.joinToString(", ")
+
     }
 
     class ContentTypeChecker : MessageHolders.ContentChecker<Message> {
