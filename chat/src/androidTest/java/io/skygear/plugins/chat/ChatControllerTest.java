@@ -116,7 +116,7 @@ public class ChatControllerTest {
         Conversation conversation = new Conversation(new Record("conversation", "c0"));
         this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
             @Override
-            public void onSucc(@Nullable List<Message> messages) {
+            public void onSuccess(@Nullable List<Message> messages) {
                 Assert.assertEquals(messages.size(), 5);
                 for (int i = 0; i < 5; i++) {
                     Message message = messages.get(4 - i);
@@ -178,7 +178,7 @@ public class ChatControllerTest {
         this.cacheController.didGetMessages(messages, new Message[]{deletedMessage});
         this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
             @Override
-            public void onSucc(@Nullable List<Message> messages) {
+            public void onSuccess(@Nullable List<Message> messages) {
                 Assert.assertEquals(messages.size(), 7);
                 for (int i = 1; i < 8; i++) {
                     Message message = messages.get(7 - i);
@@ -228,7 +228,7 @@ public class ChatControllerTest {
 
         this.cacheController.saveMessage(messageToSave, new SaveCallback<Message>() {
             @Override
-            public void onSucc(@Nullable Message message) {
+            public void onSuccess(@Nullable Message message) {
                 Assert.assertEquals(message.getId(), messageToSave.getId());
                 Assert.assertEquals(message.getSendDate(), messageToSave.getSendDate());
 
@@ -249,7 +249,7 @@ public class ChatControllerTest {
 
         this.cacheController.getUnsentMessages(conversation, new GetCallback<List<Message>>() {
             @Override
-            public void onSucc(@Nullable List<Message> messages) {
+            public void onSuccess(@Nullable List<Message> messages) {
                 Assert.assertEquals(messages.size(), 1);
                 Assert.assertEquals(messages.get(0).getId(), messageToSave.getId());
 
@@ -264,7 +264,7 @@ public class ChatControllerTest {
 
         this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
             @Override
-            public void onSucc(@Nullable List<Message> messages) {
+            public void onSuccess(@Nullable List<Message> messages) {
                 Assert.assertEquals(messages.size(), 5);
 
                 for (Message message : messages) {
@@ -283,7 +283,7 @@ public class ChatControllerTest {
         this.cacheController.didSaveMessage(messageToSave, null);
         this.cacheController.getMessages(conversation, 1, null, null, new GetCallback<List<Message>>() {
             @Override
-            public void onSucc(@Nullable List<Message> messages) {
+            public void onSuccess(@Nullable List<Message> messages) {
                 Message message = messages.get(0);
                 Assert.assertEquals(message.getId(), messageToSave.getId());
                 Assert.assertEquals(message.getSendDate(), messageToSave.getSendDate());
@@ -323,7 +323,7 @@ public class ChatControllerTest {
         this.cacheController.didDeleteMessage(deletedMessage);
         this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
             @Override
-            public void onSucc(@Nullable List<Message> messages) {
+            public void onSuccess(@Nullable List<Message> messages) {
                 Assert.assertEquals(messages.size(), 4);
 
                 checkpoints[0] = true;
@@ -363,7 +363,7 @@ public class ChatControllerTest {
         this.cacheController.didDeleteMessage(deletedMessage);
         this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
             @Override
-            public void onSucc(@Nullable List<Message> messages) {
+            public void onSuccess(@Nullable List<Message> messages) {
                 Assert.assertEquals(messages.size(), 5);
 
                 checkpoints[0] = true;

@@ -48,7 +48,7 @@ class CreateConversationActivity : AppCompatActivity() {
         super.onResume()
 
         mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
-            override fun onSucc(list: List<ChatUser>?) {
+            override fun onSuccess(list: List<ChatUser>?) {
                 mAdapter.setChatUsers(list);
             }
 
@@ -78,7 +78,7 @@ class CreateConversationActivity : AppCompatActivity() {
             loading.show()
 
             mChatContainer.createConversation(participantIds, title, null, null, object : SaveCallback<Conversation> {
-                override fun onSucc(`object`: Conversation?) {
+                override fun onSuccess(`object`: Conversation?) {
                     loading.dismiss()
                     finish()
                 }

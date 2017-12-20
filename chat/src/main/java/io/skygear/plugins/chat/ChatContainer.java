@@ -118,7 +118,7 @@ public final class ChatContainer {
                         try {
                             Conversation conversation = Conversation.fromJson((JSONObject) result.get("conversation"));
                             if (callback != null) {
-                                callback.onSucc(conversation);
+                                callback.onSuccess(conversation);
                             }
                         } catch (JSONException e)
                         {
@@ -200,10 +200,10 @@ public final class ChatContainer {
                 getLastMessage,
                 new GetCallback<Conversation>() {
                     @Override
-                    public void onSucc(@Nullable Conversation conversation) {
+                    public void onSuccess(@Nullable Conversation conversation) {
                         if (callback != null) {
 
-                            callback.onSucc(conversation);
+                            callback.onSuccess(conversation);
                         }
                     }
 
@@ -257,7 +257,7 @@ public final class ChatContainer {
                         try {
                             Conversation conversation = Conversation.fromJson((JSONObject) result.get("conversation"));
                             if (callback != null) {
-                                callback.onSucc(conversation);
+                                callback.onSuccess(conversation);
                             }
                         } catch (JSONException e)
                         {
@@ -442,7 +442,7 @@ public final class ChatContainer {
                 new LambdaResponseHandler() {
                     @Override
                     public void onLambdaSuccess(JSONObject result) {
-                        callback.onSucc(true);
+                        callback.onSuccess(true);
                     }
 
                     @Override
@@ -468,7 +468,7 @@ public final class ChatContainer {
         final String conversationId = conversation.getId();
         this.getConversation(conversationId, true, new GetCallback<Conversation>() {
             @Override
-            public void onSucc(@Nullable final Conversation conversation) {
+            public void onSuccess(@Nullable final Conversation conversation) {
                 if (callback == null) {
                     // nothing to do
                     return;
@@ -523,7 +523,7 @@ public final class ChatContainer {
                 try {
                     int count = result.getInt("message");
                     if (callback != null) {
-                        callback.onSucc(count);
+                        callback.onSuccess(count);
                     }
                 } catch (JSONException e) {
                     if (callback != null) {
@@ -562,7 +562,7 @@ public final class ChatContainer {
                         try {
                             Conversation conversation = Conversation.fromJson(result.getJSONObject("conversation"));
                             if (callback != null) {
-                                callback.onSucc(conversation);
+                                callback.onSuccess(conversation);
                             }
                         } catch (JSONException e)
                         {
@@ -606,7 +606,7 @@ public final class ChatContainer {
                                 conversations.add(Conversation.fromJson(o));
                             }
                             if (callback != null) {
-                                callback.onSucc(conversations);
+                                callback.onSuccess(conversations);
                             }
                         } catch (JSONException e) {
                             if (callback != null) {
@@ -648,7 +648,7 @@ public final class ChatContainer {
 
         cacheController.getMessages(conversation, limitCount, before, order, new GetCallback<List<Message>>() {
             @Override
-            public void onSucc(@Nullable List<Message> object) {
+            public void onSuccess(@Nullable List<Message> object) {
                 if (callback != null) {
                     callback.onGetCachedResult(object);
                 }
@@ -687,7 +687,7 @@ public final class ChatContainer {
                 Message[] messageArray = new Message[messages.size()];
                 cacheController.didGetMessages(messages.toArray(messageArray), new Message[]{});
                 if (callback != null) {
-                    callback.onSucc(messages);
+                    callback.onSuccess(messages);
                 }
             }
 
@@ -713,13 +713,13 @@ public final class ChatContainer {
                                   @Nullable final GetCallback<List<Message>> callback) {
         this.cacheController.getUnsentMessages(conversation, new GetCallback<List<Message>>() {
             @Override
-            public void onSucc(@Nullable List<Message> messages) {
+            public void onSuccess(@Nullable List<Message> messages) {
                 for (Message message : messages) {
                     message.fail = true;
                 }
 
                 if (callback != null) {
-                    callback.onSucc(messages);
+                    callback.onSuccess(messages);
                 }
             }
 
@@ -934,7 +934,7 @@ public final class ChatContainer {
 
                         ChatContainer.this.cacheController.didDeleteMessage(message);
 
-                        callback.onSucc(message);
+                        callback.onSuccess(message);
                     }
 
                     @Override
@@ -959,7 +959,7 @@ public final class ChatContainer {
 
         SaveCallback<Message> wrappedCallback = new SaveCallback<Message>() {
             @Override
-            public void onSucc(@Nullable Message savedMessage) {
+            public void onSuccess(@Nullable Message savedMessage) {
                 if (savedMessage != null) {
                     savedMessage.alreadySyncToServer = true;
                     savedMessage.fail = false;
@@ -967,7 +967,7 @@ public final class ChatContainer {
                 }
 
                 if (callback != null) {
-                    callback.onSucc(savedMessage);
+                    callback.onSuccess(savedMessage);
                 }
             }
 
@@ -1042,7 +1042,7 @@ public final class ChatContainer {
                                 receiptList.add(MessageReceipt.fromJSON(eachReceiptJSON));
                             }
 
-                            callback.onSucc(receiptList);
+                            callback.onSuccess(receiptList);
                         } catch (JSONException e) {
                             callback.onFail(new JSONError());
                         }
@@ -1098,7 +1098,7 @@ public final class ChatContainer {
         if (typingSubscription.get(conversationId) == null) {
             getOrCreateUserChannel(new GetCallback<Record>() {
                 @Override
-                public void onSucc(@Nullable Record userChannelRecord) {
+                public void onSuccess(@Nullable Record userChannelRecord) {
                     if (userChannelRecord != null) {
                         Subscription subscription = new Subscription(
                                 conversationId,
@@ -1195,7 +1195,7 @@ public final class ChatContainer {
 
             getOrCreateUserChannel(new GetCallback<Record>() {
                 @Override
-                public void onSucc(@Nullable Record userChannelRecord) {
+                public void onSuccess(@Nullable Record userChannelRecord) {
                     if (userChannelRecord != null) {
                         Subscription subscription = new Subscription(
                                 conversationId,
@@ -1241,7 +1241,7 @@ public final class ChatContainer {
                 public void onQuerySuccess(Record[] records) {
                     if (records.length != 0) {
                         if (callback != null) {
-                            callback.onSucc(records[0]);
+                            callback.onSuccess(records[0]);
                         }
                     } else {
                         createUserChannel(callback);
@@ -1272,7 +1272,7 @@ public final class ChatContainer {
                 public void onSaveSuccess(Record[] records) {
                     Record record = records[0];
                     if (callback != null) {
-                        callback.onSucc(record);
+                        callback.onSuccess(record);
                     }
                 }
 

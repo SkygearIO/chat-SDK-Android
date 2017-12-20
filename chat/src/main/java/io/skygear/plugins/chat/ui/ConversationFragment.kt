@@ -276,7 +276,7 @@ open class ConversationFragment() :
                     before,
                     null,
                     object : GetMessagesCallback {
-                        override fun onSucc(chatMsgs: List<ChatMessage>?){
+                        override fun onSuccess(chatMsgs: List<ChatMessage>?){
                             successCallback(chatMsgs, false)
                         }
 
@@ -295,7 +295,7 @@ open class ConversationFragment() :
     private fun fetchUnsentMessages() {
         this.conversation?.let { conv ->
             this.skygearChat?.getUnsentMessages(conv, object : GetCallback<List<ChatMessage>> {
-                override fun onSucc(chatMsgs: List<ChatMessage>?) {
+                override fun onSuccess(chatMsgs: List<ChatMessage>?) {
                     chatMsgs?.let { this@ConversationFragment.addMessages(it) }
                 }
 
@@ -523,7 +523,7 @@ open class ConversationFragment() :
             addMessageToBottom(message, Uri.parse("file://" + voiceRecordingFileName))
 
             this.skygearChat?.addMessage(message, conv, object : SaveMessageCallback {
-                override fun onSucc(chatMsg: ChatMessage?) {
+                override fun onSuccess(chatMsg: ChatMessage?) {
                     voiceRecordingFile.delete()
                 }
 
@@ -546,7 +546,7 @@ open class ConversationFragment() :
             message.body = input.trim()
             this.addMessageToBottom(message)
             this.skygearChat?.addMessage(message, conv, object : SaveMessageCallback {
-                override fun onSucc(msg: io.skygear.plugins.chat.Message?) {
+                override fun onSuccess(msg: io.skygear.plugins.chat.Message?) {
                     msg?.let { this@ConversationFragment.conversationView()?.updateMessage(msg) }
                 }
 
@@ -597,7 +597,7 @@ open class ConversationFragment() :
                     this.conversation?.let { conv ->
                         val messageToResend = ChatMessage(message.record)
                         this.skygearChat?.addMessage(messageToResend, conv, object : SaveMessageCallback {
-                            override fun onSucc(msg: io.skygear.plugins.chat.Message?) {
+                            override fun onSuccess(msg: io.skygear.plugins.chat.Message?) {
                                 msg?.let { this@ConversationFragment.conversationView()?.updateMessage(msg) }
                             }
 

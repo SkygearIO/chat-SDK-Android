@@ -39,7 +39,7 @@ abstract class SaveResponseAdapter<T> extends RecordSaveResponseHandler {
     public void onSaveSuccess(Record[] records) {
         Record record = records[0];
         if (callback != null) {
-            callback.onSucc(convert(record));
+            callback.onSuccess(convert(record));
         }
     }
 

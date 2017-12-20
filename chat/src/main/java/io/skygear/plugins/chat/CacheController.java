@@ -20,14 +20,12 @@ package io.skygear.plugins.chat;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import io.realm.RealmQuery;
 import io.skygear.skygear.Error;
-import io.skygear.skygear.Record;
 
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_ALREADY_SYNC_TO_SERVER;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_CONVERSATION_ID;
@@ -102,7 +100,7 @@ class CacheController {
             this.store.getMessages(queryBuilder, limit, resolvedOrder, new RealmStore.ResultCallback<Message[]>() {
                 @Override
                 public void onResultGet(Message[] messages) {
-                    callback.onSucc(Arrays.asList(messages));
+                    callback.onSuccess(Arrays.asList(messages));
                 }
             });
         }
@@ -122,7 +120,7 @@ class CacheController {
         this.store.setMessages(new Message[]{message});
 
         if (callback != null) {
-            callback.onSucc(message);
+            callback.onSuccess(message);
         }
     }
 
@@ -181,7 +179,7 @@ class CacheController {
             this.store.getMessages(queryBuilder, -1, "creationDate", new RealmStore.ResultCallback<Message[]>() {
                 @Override
                 public void onResultGet(Message[] messages) {
-                    callback.onSucc(Arrays.asList(messages));
+                    callback.onSuccess(Arrays.asList(messages));
                 }
             });
         }

@@ -70,7 +70,7 @@ class ConversationsActivity : AppCompatActivity() {
 
     fun getAllConversations() {
         mChatContainer.getConversations(object : GetCallback<List<Conversation>> {
-            override fun onSucc(list: List<Conversation>?) {
+            override fun onSuccess(list: List<Conversation>?) {
                 mAdapter.setConversations(list)
             }
 
@@ -154,7 +154,7 @@ class ConversationsActivity : AppCompatActivity() {
 
     fun updateTitle(c: Conversation, t: String) {
         mChatContainer.setConversationTitle(c, t, object : SaveCallback<Conversation> {
-            override fun onSucc(new: Conversation?) {
+            override fun onSuccess(new: Conversation?) {
                 mAdapter.updateConversation(c, new)
             }
 
@@ -213,7 +213,7 @@ class ConversationsActivity : AppCompatActivity() {
                 failAlert.show()
             }
 
-            override fun onSucc(result: Boolean?) {
+            override fun onSuccess(result: Boolean?) {
                 Log.i(LOG_TAG, "Successfully delete the conversation")
                 getAllConversations()
             }
@@ -225,7 +225,7 @@ class ConversationsActivity : AppCompatActivity() {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
         f.setOnOkBtnClickedListener { ids ->
             mChatContainer.addConversationAdmins(c, ids, object : SaveCallback<Conversation> {
-                override fun onSucc(new: Conversation?) {
+                override fun onSuccess(new: Conversation?) {
                     mAdapter.updateConversation(c, new)
                 }
 
@@ -241,7 +241,7 @@ class ConversationsActivity : AppCompatActivity() {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_participants), c.participantIds)
         f.setOnOkBtnClickedListener { ids ->
             mChatContainer.addConversationParticipants(c, ids, object : SaveCallback<Conversation> {
-                override fun onSucc(new: Conversation?) {
+                override fun onSuccess(new: Conversation?) {
                     mAdapter.updateConversation(c, new)
                 }
 
