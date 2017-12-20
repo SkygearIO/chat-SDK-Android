@@ -12,6 +12,7 @@ import android.view.Menu
 import android.view.MenuItem
 import io.skygear.plugins.chat.*
 import io.skygear.plugins.chat.ui.ConversationActivity
+import io.skygear.plugins.chat.ui.ConversationTitleOption
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import io.skygear.skygear.LambdaResponseHandler
@@ -137,7 +138,20 @@ class ConversationsActivity : AppCompatActivity() {
     fun enter(c: Conversation) {
         val i = Intent(this, ConversationActivity::class.java)
         i.putExtra(ConversationActivity.ConversationIntentKey, c.toJson().toString())
+        i.putExtra(ConversationActivity.TitleOptionIntentKey, ConversationTitleOption.OTHER_PARTICIPANTS)
+        /*
+        i.putExtra(ConversationActivity.MessageSentListenerIntentKey, object: MessageSentListenerIntentKey, Serializable {
+            override fun onBeforeMessageSent(fragment: ConversationFragment, message: Message) {
 
+            }
+            override fun onMessageSentFailed(fragment: ConversationFragment, message: Message?, error: Error) {
+
+            }
+
+            override  fun onMessageSentSuccess(fragment: ConversationFragment, message: Message) {
+
+            }
+        })*/
         startActivity(i)
     }
 
