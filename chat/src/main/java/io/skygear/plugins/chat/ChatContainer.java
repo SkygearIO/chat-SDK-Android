@@ -745,7 +745,7 @@ public final class ChatContainer {
                             @Nullable final String body,
                             @Nullable final Asset asset,
                             @Nullable final JSONObject metadata,
-                            @Nullable final SaveMessageCallback callback) {
+                            @Nullable final SaveCallback<Message> callback) {
         if (!StringUtils.isEmpty(body) || asset != null || metadata != null) {
             Record record = new Record("message");
             Message message = new Message(record);
@@ -855,7 +855,7 @@ public final class ChatContainer {
 
     public void addMessage(@NonNull Message message,
                            @NonNull final Conversation conversation,
-                           @Nullable final SaveMessageCallback callback)
+                           @Nullable final SaveCallback<Message> callback)
     {
         Reference reference = new Reference("conversation", conversation.getId());
         message.record.set("conversation", reference);
@@ -878,7 +878,7 @@ public final class ChatContainer {
 
     public void editMessage(@NonNull Message message,
                             @NonNull String body,
-                            @Nullable final SaveMessageCallback callback)
+                            @Nullable final SaveCallback<Message> callback)
     {
         message.setBody(body);
         this.saveMessage(message, callback);
@@ -898,7 +898,7 @@ public final class ChatContainer {
                             @NonNull String body,
                             @Nullable final JSONObject metadata,
                             @Nullable final Asset asset,
-                            @Nullable final SaveMessageCallback callback)
+                            @Nullable final SaveCallback<Message> callback)
     {
         message.setBody(body);
         message.setMetadata(metadata);
@@ -949,13 +949,10 @@ public final class ChatContainer {
     }
 
     private void saveMessage(final Message message,
-                             @Nullable final SaveMessageCallback callback) {
+                             @Nullable final SaveCallback<Message> callback) {
         message.alreadySyncToServer = false;
         message.fail = false;
         this.cacheController.saveMessage(message, null);
-        if (callback != null) {
-            callback.onSaveResultCached(message);
-        }
 
         SaveCallback<Message> wrappedCallback = new SaveCallback<Message>() {
             @Override
@@ -997,7 +994,7 @@ public final class ChatContainer {
 
     private void saveMessage(final Message message,
                              final Asset asset,
-                             @Nullable final SaveMessageCallback callback) {
+                             @Nullable final SaveCallback<Message> callback) {
         this.skygear.getPublicDatabase().uploadAsset(asset, new AssetPostRequest.ResponseHandler() {
             @Override
             public void onPostSuccess(Asset asset, String response) {
