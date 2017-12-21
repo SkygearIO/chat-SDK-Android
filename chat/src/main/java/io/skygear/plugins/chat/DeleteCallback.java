@@ -14,7 +14,7 @@ public interface DeleteCallback<T> {
      *
      * @param object the object
      */
-    void onSucc(T object);
+    void onSuccess(T object);
 
     /**
      * Fail callback

@@ -3,9 +3,7 @@ package io.skygear.plugins.chat.ui
 import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
-import android.graphics.Color
 import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
 import android.net.Uri
@@ -18,7 +16,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import io.skygear.chatkit.messages.VoiceMessageOnClickListener
 import io.skygear.chatkit.messages.MessagesListAdapter
@@ -34,8 +31,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
@@ -276,7 +271,7 @@ open class ConversationFragment() :
                     before,
                     null,
                     object : GetMessagesCallback {
-                        override fun onSucc(chatMsgs: List<ChatMessage>?){
+                        override fun onSuccess(chatMsgs: List<ChatMessage>?){
                             successCallback(chatMsgs, false)
                         }
 
@@ -295,7 +290,7 @@ open class ConversationFragment() :
     private fun fetchUnsentMessages() {
         this.conversation?.let { conv ->
             this.skygearChat?.getUnsentMessages(conv, object : GetCallback<List<ChatMessage>> {
-                override fun onSucc(chatMsgs: List<ChatMessage>?) {
+                override fun onSuccess(chatMsgs: List<ChatMessage>?) {
                     chatMsgs?.let { this@ConversationFragment.addMessages(it) }
                 }
 
@@ -522,12 +517,9 @@ open class ConversationFragment() :
             message.metadata = meta
             addMessageToBottom(message, Uri.parse("file://" + voiceRecordingFileName))
 
-            this.skygearChat?.addMessage(message, conv, object : SaveMessageCallback {
-                override fun onSucc(chatMsg: ChatMessage?) {
+            this.skygearChat?.addMessage(message, conv, object : SaveCallback<ChatMessage> {
+                override fun onSuccess(chatMsg: ChatMessage?) {
                     voiceRecordingFile.delete()
-                }
-
-                override fun onSaveResultCached(message: io.skygear.plugins.chat.Message?) {
                 }
 
                 override fun onFail(error: Error) {
@@ -545,16 +537,14 @@ open class ConversationFragment() :
             val message = ChatMessage()
             message.body = input.trim()
             this.addMessageToBottom(message)
-            this.skygearChat?.addMessage(message, conv, object : SaveMessageCallback {
-                override fun onSucc(msg: io.skygear.plugins.chat.Message?) {
+            this.skygearChat?.addMessage(message, conv, object : SaveCallback<ChatMessage> {
+                override fun onSuccess(msg: io.skygear.plugins.chat.Message?) {
                     msg?.let { this@ConversationFragment.conversationView()?.updateMessage(msg) }
                 }
 
                 override fun onFail(error: Error) {
                     this@ConversationFragment.conversationView()?.updateMessage(message)
                 }
-
-                override fun onSaveResultCached(msg: io.skygear.plugins.chat.Message?) {}
             })
         }
 
@@ -596,16 +586,14 @@ open class ConversationFragment() :
                 .setPositiveButton("Resend", { dialogInterface, i ->
                     this.conversation?.let { conv ->
                         val messageToResend = ChatMessage(message.record)
-                        this.skygearChat?.addMessage(messageToResend, conv, object : SaveMessageCallback {
-                            override fun onSucc(msg: io.skygear.plugins.chat.Message?) {
+                        this.skygearChat?.addMessage(messageToResend, conv, object : SaveCallback<ChatMessage> {
+                            override fun onSuccess(msg: io.skygear.plugins.chat.Message?) {
                                 msg?.let { this@ConversationFragment.conversationView()?.updateMessage(msg) }
                             }
 
                             override fun onFail(error: Error) {
                                 this@ConversationFragment.conversationView()?.updateMessage(messageToResend)
                             }
-
-                            override fun onSaveResultCached(msg: io.skygear.plugins.chat.Message?) {}
                         })
                         this.deleteMessagesFromList(listOf(message))
                         this.addMessageToBottom(messageToResend)

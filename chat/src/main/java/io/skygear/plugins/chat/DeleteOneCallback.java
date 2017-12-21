@@ -13,7 +13,7 @@ public interface DeleteOneCallback {
      *
      * @param deletedId the deleted id
      */
-    void onSucc(@Nullable String deletedId);
+    void onSuccess(@Nullable String deletedId);
 
     /**
      * Fail callback.

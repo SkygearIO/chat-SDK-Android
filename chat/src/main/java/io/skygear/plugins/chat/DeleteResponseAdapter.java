@@ -26,7 +26,7 @@ final class DeleteResponseAdapter extends RecordDeleteResponseHandler {
     @Override
     public void onDeleteSuccess(String[] ids) {
         if (callback != null) {
-            callback.onSucc(ids[0]);
+            callback.onSuccess(ids[0]);
         }
     }
 

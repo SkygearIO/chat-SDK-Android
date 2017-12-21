@@ -82,7 +82,7 @@ class UserIdsFragment : DialogFragment() {
         super.onResume()
 
         mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
-            override fun onSucc(list: List<ChatUser>?) {
+            override fun onSuccess(list: List<ChatUser>?) {
                 mAdapter?.setUserIds(list, arguments.getStringArrayList(SELECT_IDS_KEY))
             }
 

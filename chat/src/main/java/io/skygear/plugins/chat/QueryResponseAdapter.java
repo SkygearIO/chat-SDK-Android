@@ -36,7 +36,7 @@ abstract class QueryResponseAdapter<T> extends RecordQueryResponseHandler {
     @Override
     public void onQuerySuccess(Record[] records) {
         if (callback != null) {
-            callback.onSucc(convert(records));
+            callback.onSuccess(convert(records));
         }
     }
 

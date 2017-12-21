@@ -16,7 +16,7 @@ public interface GetCallback<T> {
      *
      * @param object the object
      */
-    void onSucc(@Nullable T object);
+    void onSuccess(@Nullable T object);
 
     /**
      * Fail callback
