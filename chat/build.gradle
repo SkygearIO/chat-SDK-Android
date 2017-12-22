@@ -52,9 +52,10 @@ dependencies {
     compile 'io.skygear:chatkit:0.3.0'
     compile 'com.github.chrisbanes:PhotoView:2.0.0'
     compile 'com.dewarder:holdingbutton:0.0.9'
-
+    compile 'com.google.code.findbugs:jsr305:3.0.2'
     compile 'io.skygear:skygear:1.1.1'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    compile 'io.realm:realm-android-library:4.3.1'
 
     testCompile 'junit:junit:4.12'
 
