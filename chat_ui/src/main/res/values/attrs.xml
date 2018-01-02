@@ -12,5 +12,12 @@
         <attr name="avatarHiddenForIncomingMessages" format="boolean"/>
         <attr name="avatarHiddenForOutgoingMessages" format="boolean" />
         <attr name="messageSenderTextColor" format="color" />
+        <attr name="delivering" format="string" />
+        <attr name="delivered" format="string" />
+        <attr name="someRead" format="string" />
+        <attr name="allRead" format="string" />
+        <attr name="failed" format="string" />
+        <attr name="hint" format="string" />
+        <attr name="dateFormat" format="string" />
     </declare-styleable>
 </resources>

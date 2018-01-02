@@ -111,6 +111,13 @@ open class ConversationView: RelativeLayout{
     private var messageHolders: MessageHolders? = null
 
     private var userMap: MutableMap<String, User> = mutableMapOf()
+    private var delivering: String? = null
+    private var delivered: String? = null
+    private var someRead: String? = null
+    private var allRead: String? = null
+    private var failedText: String? = null
+    private var hint: String? = null
+    private var dateFormat: String
 
 
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
@@ -128,6 +135,15 @@ open class ConversationView: RelativeLayout{
             userAvatarType = AvatarType.fromInt(a.getInt(R.styleable.ConversationView_userAvatarType, AvatarType.INITIAL.value))
             avatarTextColor = a.getColor(R.styleable.ConversationView_avatarTextColor, Color.WHITE)
             avatarBackgroundColor = a.getColor(R.styleable.ConversationView_avatarBackgroundColor, ContextCompat.getColor(context, R.color.blue_1))
+
+            delivering = a.getString(R.styleable.ConversationView_delivering)
+            delivered = a.getString(R.styleable.ConversationView_delivered)
+            someRead = a.getString(R.styleable.ConversationView_someRead)
+            allRead = a.getString(R.styleable.ConversationView_allRead)
+            failedText = a.getString(R.styleable.ConversationView_failed)
+            hint = a.getString(R.styleable.ConversationView_hint)
+            dateFormat = a.getString(R.styleable.ConversationView_dateFormat) ?: "HH:mm"
+
         } finally {
             a.recycle()
         }
@@ -152,6 +168,8 @@ open class ConversationView: RelativeLayout{
 
 
         val conversationView = this
+
+        hint?.let{ this.messageEditText?.hint = it }
         this.messageEditText?.addTextChangedListener(object : TextBaseWatcher() {
             override fun afterTextChanged(s: Editable?) {
                 super.afterTextChanged(s)
@@ -307,8 +325,12 @@ open class ConversationView: RelativeLayout{
         this.messageListAdapter?.deleteByIds(messages.map { it.id }.toTypedArray())
     }
 
+    fun getMessageStatusText(): MessageStatusText {
+        return MessageStatusText(delivering, delivered, someRead, allRead, failedText)
+    }
+
     fun getMessageStyle(): MessageStyle {
-        return MessageStyle(this.avatarHiddenForOutgoingMessages, this.avatarHiddenForIncomingMessages, this.messageSenderTextColor)
+        return MessageStyle(this.avatarHiddenForOutgoingMessages, this.avatarHiddenForIncomingMessages, this.messageSenderTextColor, getMessageStatusText(), dateFormat)
     }
 
     fun MessagesFromChatMessages(chatMessages: List<ChatMessage>): List<Message> {

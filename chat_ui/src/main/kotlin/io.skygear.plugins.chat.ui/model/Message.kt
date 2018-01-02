@@ -1,18 +1,20 @@
 package io.skygear.plugins.chat.ui.model
 
 import io.skygear.chatkit.commons.models.IMessage
+import io.skygear.plugins.chat.Message.Status
 import java.util.*
 import io.skygear.plugins.chat.Message as ChatMessage
 
 open class Message: IMessage {
-
     val chatMessage: ChatMessage
     var author: User? = null
     var style: MessageStyle
+    var statusText: MessageStatusText
 
     constructor(m: ChatMessage, style: MessageStyle) {
         this.chatMessage = m
         this.style = style
+        this.statusText = style.statusText
     }
 
     override fun getId(): String = this.chatMessage.id
@@ -28,9 +30,13 @@ open class Message: IMessage {
             return "Failed"
         }
 
-        this.chatMessage.status?.getName()?.let {
-            return it.replace("_", " ", true).capitalize()
+        this.chatMessage.status?.let {
+            when (it) {
+                Status.DELIVERED -> return statusText.deliveredText
+                Status.ALL_READ -> return statusText.allReadText
+                Status.SOME_READ -> return statusText.someReadText
+            }
         }
-        return "Delivering"
+        return statusText.deliveringText
     }
 }

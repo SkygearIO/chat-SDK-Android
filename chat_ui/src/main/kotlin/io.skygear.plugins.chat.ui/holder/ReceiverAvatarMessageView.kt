@@ -29,7 +29,7 @@ class ReceiverAvatarMessageView(itemView: View){
             userAvatar!!.visibility = if (isAvatarExists) View.VISIBLE else View.GONE
         }
 
-        time?.text = message.getStatus() + " " + DateFormatter.format(message.getCreatedAt(), DateFormatter.Template.TIME)
+        time?.text = message.getStatus() + " " + DateFormatter.format(message.getCreatedAt(), message.style.dateFormat)
 
     }
 }
