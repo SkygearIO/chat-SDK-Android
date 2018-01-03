@@ -8,15 +8,21 @@ class OutgoingVoiceMessageView(view: View): MessageHolders.OutcomingTextMessageV
 {
     var voiceMessageView: VoiceMessageView? = null
     var receiverAvatarMessageView: ReceiverAvatarMessageView? = null
+    var timeMessageView: OutgoingTimeMessageView? = null
+    var bubbleView: OutgoingBubbleMessageView? = null
 
     init {
         voiceMessageView = VoiceMessageView(itemView)
+        timeMessageView = OutgoingTimeMessageView(itemView)
         receiverAvatarMessageView = ReceiverAvatarMessageView(itemView)
+        bubbleView = OutgoingBubbleMessageView(itemView)
     }
 
     override fun onBind(message: VoiceMessage) {
         super.onBind(message)
         voiceMessageView?.onBind(message)
         receiverAvatarMessageView?.onBind(message)
+        timeMessageView?.onBind(message)
+        bubbleView?.onBind(message)
     }
 }

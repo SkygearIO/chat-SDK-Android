@@ -9,10 +9,14 @@ class IncomingTextMessageView(itemView: View) : MessageHolders.IncomingTextMessa
 
     var senderAvatarMessageView: SenderAvatarMessageView? = null
     var usernameMessageView: UsernameMessageView? = null
+    var timeMessageView: IncomingTimeMessageView? = null
+    var bubbleView: IncomingBubbleMessageView? = null
 
     init {
         usernameMessageView = UsernameMessageView(itemView)
         senderAvatarMessageView = SenderAvatarMessageView(itemView)
+        timeMessageView = IncomingTimeMessageView(itemView)
+        bubbleView = IncomingBubbleMessageView(itemView)
 
     }
 
@@ -22,5 +26,8 @@ class IncomingTextMessageView(itemView: View) : MessageHolders.IncomingTextMessa
 
         usernameMessageView?.onBind(message)
         senderAvatarMessageView?.onBind(message)
+        timeMessageView?.onBind(message)
+        bubbleView?.onBind(message)
+
     }
 }
