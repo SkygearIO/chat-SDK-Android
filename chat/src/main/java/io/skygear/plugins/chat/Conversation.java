@@ -267,7 +267,7 @@ public class Conversation {
      * The Option Key for Conversation Creation.
      */
     public enum OptionKey {
-        ADMIN_IDS("admin_ids"),
+        ADMIN_IDS("adminIDs"),
         DISTINCT_BY_PARTICIPANTS("distinctByParticipants");
 
         private final String value;
