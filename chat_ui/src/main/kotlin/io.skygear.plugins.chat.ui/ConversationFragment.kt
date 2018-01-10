@@ -46,6 +46,7 @@ open class ConversationFragment() :
         val ConversationBundleKey = "CONVERSATION"
         val LayoutResIdBundleKey = "LAYOUT"
         val AvatarAdapterBundleKey = "AVATAR_ADAPTER"
+        val TitleOptionBundleKey = "TITLE_OPTION"
         private val TAG = "ConversationFragment"
         private val MESSAGE_SUBSCRIPTION_MAX_RETRY = 10
         private val REQUEST_PICK_IMAGES = 5001
@@ -77,6 +78,8 @@ open class ConversationFragment() :
     protected var layoutResID: Int = -1
     protected var customAvatarAdapter: AvatarAdapter? = null
 
+    protected var titleOption: ConversationTitleOption? = ConversationTitleOption.DEFAULT
+
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,6 +90,11 @@ open class ConversationFragment() :
         arguments.getSerializable(AvatarAdapterBundleKey)?.let { adapter ->
             customAvatarAdapter = adapter as AvatarAdapter
         }
+
+        arguments.getSerializable(TitleOptionBundleKey)?.let { option ->
+            titleOption = option as ConversationTitleOption
+        }
+
     }
 
     override fun onAttach(context: Context?) {
@@ -174,9 +182,12 @@ open class ConversationFragment() :
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        this.activity.title = this.conversation?.title
+
 
         val view = createConversationView(inflater, container)
+        if (titleOption  == ConversationTitleOption.DEFAULT) {
+            this.activity.title = this.conversation?.title
+        }
         // TODO: setup typing indicator subscription
 
         this.takePhotoPermissionManager = createPhotoPermissionManager(this.activity)
@@ -219,7 +230,12 @@ open class ConversationFragment() :
                 }
 
                 override fun onQuerySuccess(records: Array<out Record>?) {
-                    records?.let { conversationView()?.updateAuthors(it.toList()) }
+                    records?.let {
+                        conversationView()?.updateAuthors(records.toList())
+                        if (titleOption  == ConversationTitleOption.OTHER_PARTICIPANTS) {
+                            this@ConversationFragment.activity.title = conversationView()?.getOtherParticipantsTitle()
+                        }
+                    }
                 }
             })
         }

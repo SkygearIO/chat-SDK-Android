@@ -12,6 +12,7 @@ class ConversationActivity : AppCompatActivity() {
         @JvmField val ConversationIntentKey = "CONVERSATION"
         @JvmField val LayoutIntentKey = "LAYOUT"
         @JvmField val AvatarAdapterIntentKey = "AVATAR_ADAPTER"
+        @JvmField val TitleOptionIntentKey = "TITLE_OPTION"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +32,10 @@ class ConversationActivity : AppCompatActivity() {
                     bundle.putSerializable(ConversationFragment.AvatarAdapterBundleKey,
                             this.intent?.getSerializableExtra(ConversationFragment.AvatarAdapterBundleKey))
                 }
-
+                if (intent?.hasExtra(TitleOptionIntentKey) ?: false) {
+                    bundle.putSerializable(ConversationFragment.TitleOptionBundleKey,
+                            this.intent?.getSerializableExtra(ConversationFragment.TitleOptionBundleKey))
+                }
                 fragment.arguments = bundle
             }
 
