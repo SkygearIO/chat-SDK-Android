@@ -78,7 +78,7 @@ open class ConversationFragment() :
     protected var layoutResID: Int = -1
     protected var customAvatarAdapter: AvatarAdapter? = null
 
-    protected var titleOption: ConversationTitleOption? = null
+    protected var titleOption: ConversationTitleOption? = ConversationTitleOption.DEFAULT
 
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
