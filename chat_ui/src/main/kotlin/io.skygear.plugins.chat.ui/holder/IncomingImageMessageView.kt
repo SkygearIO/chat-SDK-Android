@@ -5,7 +5,7 @@ import io.skygear.chatkit.messages.MessageHolders
 import io.skygear.plugins.chat.ui.model.ImageMessage
 
 
-class IncomingImageMessageView(itemView: View) : MessageHolders.IncomingTextMessageViewHolder<ImageMessage>(itemView) {
+class IncomingImageMessageView(itemView: View) : MessageHolders.IncomingImageMessageViewHolder<ImageMessage>(itemView) {
 
     var usernameMessageView: UsernameMessageView? = null
 
