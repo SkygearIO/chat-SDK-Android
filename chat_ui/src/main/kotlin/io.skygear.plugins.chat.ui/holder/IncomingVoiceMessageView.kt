@@ -18,6 +18,7 @@ class IncomingVoiceMessageView(view: View):
         usernameMessageView = UsernameMessageView(itemView)
         senderAvatarMessageView = SenderAvatarMessageView(itemView)
         bubbleView = IncomingBubbleMessageView(itemView)
+        timeMessageView = IncomingTimeMessageView(itemView)
     }
 
     override fun onBind(message: VoiceMessage) {

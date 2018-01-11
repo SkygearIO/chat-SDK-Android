@@ -5,6 +5,6 @@ import io.skygear.plugins.chat.ui.model.MessageTimeStyle
 
 class OutgoingTimeMessageView(itemView: View): BaseTimeMessageView(itemView) {
     override fun textColor(style: MessageTimeStyle): Int {
-        return style.incomingTextColor
+        return style.outgoingTextColor
     }
 }
