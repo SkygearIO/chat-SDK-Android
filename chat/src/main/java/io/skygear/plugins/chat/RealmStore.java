@@ -18,6 +18,7 @@
 package io.skygear.plugins.chat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -34,6 +35,8 @@ import io.realm.Sort;
 import io.realm.annotations.RealmModule;
 
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_RECORD_ID;
+import static io.skygear.plugins.chat.MessageOperationCacheObject.KEY_OPERATION_ID;
+import io.skygear.skygear.Error;
 
 class RealmStore {
 
@@ -218,6 +221,178 @@ class RealmStore {
         }
     }
 
+    private void getMessageOperations(final RealmResults<MessageOperationCacheObject> results,
+                                      final int limit,
+                                      final ResultCallback<MessageOperation[]> callback) {
+        OrderedRealmCollectionSnapshot<MessageOperationCacheObject> snapshot = results.createSnapshot();
+
+        int resolvedLimit = limit;
+        int size = snapshot.size();
+        if (limit == -1 || limit > size) {
+            resolvedLimit = size;
+        }
+
+        List<MessageOperation> operations = new ArrayList<>(resolvedLimit);
+        List<MessageOperationCacheObject> faultyCacheObjects = new ArrayList<>();
+        for (int i = 0; i < resolvedLimit; i++) {
+            MessageOperationCacheObject cacheObject = snapshot.get(i);
+            if (cacheObject == null) {
+                throw new RuntimeException("Unexpected null object when getting message query result");
+            }
+
+            MessageOperation operation;
+            try {
+                operation = cacheObject.toMessageOperation();
+                operations.add(operation);
+            } catch (Exception e) {
+                faultyCacheObjects.add(cacheObject);
+            }
+        }
+
+        if (faultyCacheObjects.size() > 0) {
+            Realm realm = getRealm();
+            realm.beginTransaction();
+
+            // clear up faulty cache objects
+            for (MessageOperationCacheObject cacheObject : faultyCacheObjects) {
+                cacheObject.deleteFromRealm();
+            }
+
+            realm.commitTransaction();
+        }
+
+        MessageOperation[] operationArray = new MessageOperation[operations.size()];
+        callback.onResultGet(operations.toArray(operationArray));
+    }
+
+    void getMessageOperations(@Nonnull final QueryBuilder<MessageOperationCacheObject> queryBuilder,
+                              final int limit,
+                              @Nonnull final String order,
+                              @Nonnull final ResultCallback<MessageOperation[]> callback) {
+        RealmQuery<MessageOperationCacheObject> query = getRealm().where(MessageOperationCacheObject.class);
+        query = queryBuilder.buildQueryFrom(query);
+        if (this.async) {
+            final RealmResults<MessageOperationCacheObject> results = query.findAllSortedAsync(order, Sort.DESCENDING);
+            results.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<MessageOperationCacheObject>>() {
+                @Override
+                public void onChange(RealmResults<MessageOperationCacheObject> operationCacheObjects, @Nullable OrderedCollectionChangeSet changeSet) {
+                    results.removeAllChangeListeners();
+                    RealmStore.this.getMessageOperations(operationCacheObjects, limit, callback);
+                }
+            });
+        } else {
+            final RealmResults<MessageOperationCacheObject> results = query.findAllSorted(order, Sort.DESCENDING);
+            this.getMessageOperations(results, limit, callback);
+        }
+    }
+
+    void getMessageOperationWithID(@Nonnull final String operationID,
+                                   @Nonnull final ResultCallback<MessageOperation> callback) {
+        final ResultCallback<MessageOperation[]> wrappedCallback = new ResultCallback<MessageOperation[]>() {
+            @Override
+            public void onResultGet(MessageOperation[] result) {
+                if (result.length == 0) {
+                    callback.onResultGet(null);
+                } else {
+                    callback.onResultGet(result[0]);
+                }
+            }
+        };
+
+        if (this.async) {
+            final RealmResults<MessageOperationCacheObject> results = getRealm().where(MessageOperationCacheObject.class).equalTo(KEY_OPERATION_ID, operationID).findAllAsync();
+            results.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<MessageOperationCacheObject>>() {
+                @Override
+                public void onChange(RealmResults<MessageOperationCacheObject> operationCacheObjects, @Nullable OrderedCollectionChangeSet changeSet) {
+                    results.removeAllChangeListeners();
+                    RealmStore.this.getMessageOperations(operationCacheObjects, 1, wrappedCallback);
+                }
+            });
+        } else {
+            final RealmResults<MessageOperationCacheObject> results = getRealm().where(MessageOperationCacheObject.class).equalTo(KEY_OPERATION_ID, operationID).findAll();
+            this.getMessageOperations(results, 1, wrappedCallback);
+        }
+    }
+
+    private void setMessageOperations(final Realm realm, final MessageOperation[] operations) {
+        List<MessageOperationCacheObject> cacheObjects = new ArrayList<>(operations.length);
+        for (MessageOperation operation : operations) {
+            MessageOperationCacheObject cacheObject = new MessageOperationCacheObject(operation);
+            cacheObjects.add(cacheObject);
+        }
+
+        realm.insertOrUpdate(cacheObjects);
+    }
+
+    void setMessageOperations(final MessageOperation[] operations) {
+        Realm.Transaction transaction = new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                RealmStore.this.setMessageOperations(realm, operations);
+            }
+        };
+
+        if (this.async) {
+            getRealm().executeTransactionAsync(transaction);
+        } else {
+            getRealm().executeTransaction(transaction);
+        }
+    }
+
+    private void deleteMessageOperations(final Realm realm, final MessageOperation[] operations) {
+        String[] operationIDs = new String[operations.length];
+        for (int i = 0; i < operations.length; i++) {
+            operationIDs[i] = operations[i].getId();
+        }
+
+        RealmResults<MessageOperationCacheObject> cacheObjects =
+                realm.where(MessageOperationCacheObject.class).in(KEY_OPERATION_ID, operationIDs).findAll();
+        cacheObjects.deleteAllFromRealm();
+    }
+
+    void deleteMessageOperations(final MessageOperation[] operations) {
+        Realm.Transaction transaction = new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                RealmStore.this.deleteMessageOperations(realm, operations);
+            }
+        };
+
+        if (this.async) {
+            getRealm().executeTransactionAsync(transaction);
+        } else {
+            getRealm().executeTransaction(transaction);
+        }
+    }
+
+    private void markMessageOperationsAsFailed(final Realm realm,
+                                               @Nonnull final QueryBuilder<MessageOperationCacheObject> queryBuilder,
+                                               @Nullable final Error error) {
+        RealmQuery<MessageOperationCacheObject> query = realm.where(MessageOperationCacheObject.class);
+        query = queryBuilder.buildQueryFrom(query);
+
+        final RealmResults<MessageOperationCacheObject> results = query.findAll();
+        for (MessageOperationCacheObject cacheObject: results) {
+            cacheObject.status = MessageOperation.Status.FAILED.toString();
+            cacheObject.errorData = error != null ? ErrorSerializer.serialize(error).toString() : null;
+        }
+        realm.copyToRealmOrUpdate(results);
+    }
+
+    void markMessageOperationsAsFailed(@Nonnull final QueryBuilder<MessageOperationCacheObject> queryBuilder,
+                                       @Nullable final Error error) {
+        Realm.Transaction transaction = new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+            RealmStore.this.markMessageOperationsAsFailed(realm, queryBuilder, error);
+            }
+        };
+
+        // This operation only supports sync query because the operation is done on the main
+        // thread before the looper is instantiated.
+        getRealm().executeTransaction(transaction);
+    }
+
     void deleteAll() {
         Realm.Transaction transaction = new Realm.Transaction() {
             @Override
@@ -233,7 +408,7 @@ class RealmStore {
         }
     }
 
-    @RealmModule(library = true, classes = {MessageCacheObject.class})
+    @RealmModule(library = true, classes = {MessageCacheObject.class, MessageOperationCacheObject.class})
     private static class SkygearChatModule {
 
     }
