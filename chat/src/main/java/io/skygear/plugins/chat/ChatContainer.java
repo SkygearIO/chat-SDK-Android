@@ -517,7 +517,7 @@ public final class ChatContainer {
      * @param callback the callback
      */
     public void getTotalUnreadMessageCount(@Nullable final GetCallback<Integer> callback) {
-        this.skygear.callLambdaFunction("chat:total_unread", null, new LambdaResponseHandler() {
+        this.skygear.callLambdaFunction("chat:total_unread", new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {
                 try {
@@ -660,7 +660,11 @@ public final class ChatContainer {
             }
         });
 
-        Object[] args = new Object[]{conversation.getId(), limitCount, beforeTimeISO8601, order};
+        HashMap<String, Object> args = new HashMap<String, Object>();
+        args.put("conversation_id", conversation.getId());
+        args.put("limit", limitCount);
+        args.put("before_time", beforeTimeISO8601);
+        args.put("order", order);
         this.skygear.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {
