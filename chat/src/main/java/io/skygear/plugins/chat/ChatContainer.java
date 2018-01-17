@@ -973,6 +973,82 @@ public final class ChatContainer {
         });
     }
 
+    /* --- Message Operation --- */
+
+    //region Message Operation
+
+    public void fetchOutstandingMessageOperations(@NonNull Conversation conversation,
+                                                  @NonNull MessageOperation.Type operationType,
+                                                  @Nullable GetCallback<List<MessageOperation>> callback) {
+        this.cacheController.fetchMessageOperations(conversation, operationType, callback);
+    }
+
+    public void fetchOutstandingMessageOperations(@NonNull Message message,
+                                                  @NonNull MessageOperation.Type operationType,
+                                                  @Nullable GetCallback<List<MessageOperation>> callback) {
+        this.cacheController.fetchMessageOperations(message, operationType, callback);
+    }
+
+    public void retryMessageOperation(@NonNull final MessageOperation operation, @NonNull final MessageOperationCallback callback) {
+        if (operation.status == MessageOperation.Status.PENDING) {
+            Log.w(TAG, String.format("Message operation %s is still pending. Pending operations cannot be cancelled.", operation.operationId));
+            return;
+        }
+
+        this.cacheController.didCancelMessageOperation(operation);
+
+        switch(operation.type) {
+            case ADD:
+            case EDIT:
+                this.saveMessage(operation.getMessage(),
+                        operation.type == MessageOperation.Type.ADD,
+                        new SaveCallback<Message>() {
+                            @Override
+                            public void onSuccess(@Nullable Message object) {
+                                if (callback != null) {
+                                    callback.onSuccess(operation, object);
+                                }
+                            }
+
+                            @Override
+                            public void onFail(@NonNull Error error) {
+                                if (callback != null) {
+                                    callback.onFail(error);
+                                }
+                            }
+                        });
+                break;
+            case DELETE:
+                this.deleteMessage(operation.getMessage(),
+                        new DeleteCallback<Message>() {
+                            @Override
+                            public void onSuccess(Message object) {
+                                if (callback != null) {
+                                    callback.onSuccess(operation, object);
+                                }
+                            }
+
+                            @Override
+                            public void onFail(@NonNull Error error) {
+                                if (callback != null) {
+                                    callback.onFail(error);
+                                }
+                            }
+                        });
+                break;
+        }
+    }
+
+    public void cancelMessageOperation(@NonNull MessageOperation operation) {
+        if (operation.status == MessageOperation.Status.PENDING) {
+            Log.w(TAG, String.format("Message operation %s is still pending. Pending operations cannot be cancelled.", operation.operationId));
+            return;
+        }
+        this.cacheController.didCancelMessageOperation(operation);
+    }
+
+    //endregion
+
     /* --- Message Receipt --- */
 
     /**
