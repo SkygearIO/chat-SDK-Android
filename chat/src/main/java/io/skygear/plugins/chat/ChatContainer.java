@@ -701,38 +701,6 @@ public final class ChatContainer {
     }
 
     /**
-     *  Gets unsent messages in a conversation.
-     *
-     *  There are two types of unsent messages. First is pending messages that are added but no server
-     *  response yet. Second is messages that are failed saved to server.
-     *
-     * @param conversation conversation
-     * @param callback callback
-     */
-    public void getUnsentMessages(@NonNull final Conversation conversation,
-                                  @Nullable final GetCallback<List<Message>> callback) {
-        this.cacheController.getUnsentMessages(conversation, new GetCallback<List<Message>>() {
-            @Override
-            public void onSuccess(@Nullable List<Message> messages) {
-                for (Message message : messages) {
-                    message.fail = true;
-                }
-
-                if (callback != null) {
-                    callback.onSuccess(messages);
-                }
-            }
-
-            @Override
-            public void onFail(@NonNull Error error) {
-                if (callback != null) {
-                    callback.onFail(error);
-                }
-            }
-        });
-    }
-
-    /**
      * Send message.
      *
      * @param conversation the conversation
@@ -862,9 +830,9 @@ public final class ChatContainer {
         message.sendDate = new Date();
 
         if (message.getAsset() == null) {
-            this.saveMessage(message, callback);
+            this.saveMessage(message, true, callback);
         } else {
-            this.saveMessage(message, message.getAsset(), callback);
+            this.saveMessage(message, message.getAsset(), true, callback);
         }
     }
 
@@ -881,7 +849,7 @@ public final class ChatContainer {
                             @Nullable final SaveCallback<Message> callback)
     {
         message.setBody(body);
-        this.saveMessage(message, callback);
+        this.saveMessage(message, false, callback);
     }
 
     /**
@@ -903,7 +871,7 @@ public final class ChatContainer {
         message.setBody(body);
         message.setMetadata(metadata);
         message.setAsset(asset);
-        this.saveMessage(message, callback);
+        this.saveMessage(message, false, callback);
     }
 
 
@@ -916,11 +884,8 @@ public final class ChatContainer {
 
     public void deleteMessage(@NonNull final Message message, @Nullable final DeleteCallback<Message> callback)
     {
-        // if the message is marked as failed, it is stored locally only
-        if (message.isFail()) {
-            this.cacheController.didDeleteMessage(message);
-            return;
-        }
+        final MessageOperation operation = this.cacheController.didStartMessageOperation(message,
+                message.getConversationId(), MessageOperation.Type.DELETE);
 
         this.skygear.callLambdaFunction(
                 "chat:delete_message",
@@ -933,12 +898,14 @@ public final class ChatContainer {
                         }
 
                         ChatContainer.this.cacheController.didDeleteMessage(message);
+                        ChatContainer.this.cacheController.didCompleteMessageOperation(operation);
 
                         callback.onSuccess(message);
                     }
 
                     @Override
                     public void onLambdaFail(Error error) {
+                        ChatContainer.this.cacheController.didFailMessageOperation(operation, error);
                         if (callback != null) {
                             callback.onFail(new MessageOperationError(error));
                         }
@@ -949,18 +916,18 @@ public final class ChatContainer {
     }
 
     private void saveMessage(final Message message,
+                             Boolean isNewMessage,
                              @Nullable final SaveCallback<Message> callback) {
-        message.alreadySyncToServer = false;
-        message.fail = false;
-        this.cacheController.saveMessage(message, null);
+        final MessageOperation operation = this.cacheController.didStartMessageOperation(message,
+                message.getConversationId(),
+                isNewMessage ? MessageOperation.Type.ADD : MessageOperation.Type.EDIT);
 
         SaveCallback<Message> wrappedCallback = new SaveCallback<Message>() {
             @Override
             public void onSuccess(@Nullable Message savedMessage) {
                 if (savedMessage != null) {
-                    savedMessage.alreadySyncToServer = true;
-                    savedMessage.fail = false;
                     ChatContainer.this.cacheController.didSaveMessage(savedMessage, null);
+                    ChatContainer.this.cacheController.didCompleteMessageOperation(operation);
                 }
 
                 if (callback != null) {
@@ -970,10 +937,7 @@ public final class ChatContainer {
 
             @Override
             public void onFail(@NonNull Error error) {
-                message.alreadySyncToServer = false;
-                message.fail = true;
-
-                ChatContainer.this.cacheController.didSaveMessage(message, error);
+                ChatContainer.this.cacheController.didFailMessageOperation(operation, error);
 
                 if (callback != null) {
                     callback.onFail(error);
@@ -994,18 +958,19 @@ public final class ChatContainer {
 
     private void saveMessage(final Message message,
                              final Asset asset,
+                             final Boolean isNewMessage,
                              @Nullable final SaveCallback<Message> callback) {
         this.skygear.getPublicDatabase().uploadAsset(asset, new AssetPostRequest.ResponseHandler() {
             @Override
             public void onPostSuccess(Asset asset, String response) {
                 message.setAsset(asset);
-                ChatContainer.this.saveMessage(message, callback);
+                ChatContainer.this.saveMessage(message, isNewMessage, callback);
             }
 
             @Override
             public void onPostFail(Asset asset, Error error) {
                 Log.w(TAG, "Fail to upload asset: " + error.getMessage());
-                ChatContainer.this.saveMessage(message, callback);
+                ChatContainer.this.saveMessage(message, isNewMessage, callback);
             }
         });
     }
