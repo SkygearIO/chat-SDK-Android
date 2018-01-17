@@ -86,6 +86,9 @@ public final class ChatContainer {
         }
 
         Realm.init(container.getContext());
+        // Since we are initiating Realm, we make use of this opportunity to clean
+        // up the cache.
+        cacheController.cleanUpOnLaunch();
         this.cacheController = cacheController;
     }
 

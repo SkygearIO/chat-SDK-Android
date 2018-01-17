@@ -62,6 +62,15 @@ class CacheController {
         this.store = store;
     }
 
+    void cleanUpOnLaunch() {
+        // Mark pending message operations as failed.
+        //
+        // Message operations that is pending will not progress to failed/success
+        // state because the app is just launched. Therefore we need to move them
+        // to failed state so that the in the clean up.
+        this.markPendingMessageOperationsAsFailed();
+    }
+
     //region Message
 
     void getMessages(@NonNull final Conversation conversation,
