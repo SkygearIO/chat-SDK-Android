@@ -30,12 +30,10 @@ import javax.annotation.Nonnull;
 import io.realm.RealmQuery;
 import io.skygear.skygear.Error;
 
-import static io.skygear.plugins.chat.MessageCacheObject.KEY_ALREADY_SYNC_TO_SERVER;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_CONVERSATION_ID;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_CREATION_DATE;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_DELETED;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_EDITION_DATE;
-import static io.skygear.plugins.chat.MessageCacheObject.KEY_FAIL;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEND_DATE;
 
 import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_CREATE;
@@ -76,15 +74,7 @@ class CacheController {
             public RealmQuery<MessageCacheObject> buildQueryFrom(RealmQuery<MessageCacheObject> baseQuery) {
                 RealmQuery<MessageCacheObject> query = baseQuery
                         .equalTo(KEY_CONVERSATION_ID, conversation.getId())
-                        .equalTo(KEY_DELETED, false)
-                        .beginGroup()
-                            .beginGroup()
-                                .equalTo(KEY_ALREADY_SYNC_TO_SERVER, true)
-                                .equalTo(KEY_FAIL, false)
-                            .endGroup()
-                            .or()
-                            .isNull(KEY_SEND_DATE)
-                        .endGroup();
+                        .equalTo(KEY_DELETED, false);
 
                 if (before != null) {
                     query.lessThan(KEY_CREATION_DATE, before);
@@ -120,26 +110,7 @@ class CacheController {
     }
 
 
-    void saveMessage(final Message message,
-                     @Nullable final SaveCallback<Message> callback) {
-        this.store.setMessages(new Message[]{message});
-
-        if (callback != null) {
-            callback.onSuccess(message);
-        }
-    }
-
-    void didSaveMessage(final Message message,
-                        @Nullable Error error) {
-        if (error != null) {
-            // invalidate unsaved message
-            message.alreadySyncToServer = false;
-            message.fail = true;
-        } else {
-            message.alreadySyncToServer = true;
-            message.fail = false;
-        }
-
+    void didSaveMessage(final Message message) {
         this.store.setMessages(new Message[]{message});
     }
 
@@ -151,11 +122,11 @@ class CacheController {
 
     void handleMessageChange(Message message, String eventType) {
         if (eventType.equals(EVENT_TYPE_CREATE)) {
-            this.didSaveMessage(message, null);
+            this.didSaveMessage(message);
         }
 
         if (eventType.equals(EVENT_TYPE_UPDATE)) {
-            this.didSaveMessage(message, null);
+            this.didSaveMessage(message);
         }
 
         if (eventType.equals(EVENT_TYPE_DELETE)) {

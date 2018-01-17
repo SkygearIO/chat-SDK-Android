@@ -674,8 +674,6 @@ public final class ChatContainer {
                             JSONObject object = results.getJSONObject(i);
                             Record record = Record.fromJson(object);
                             Message message = new Message(record);
-                            message.alreadySyncToServer = true;
-                            message.fail = false;
                             messages.add(message);
                         } catch (JSONException e) {
                             Log.e(TAG, "Fail to get message: " + e.getMessage());
@@ -926,7 +924,7 @@ public final class ChatContainer {
             @Override
             public void onSuccess(@Nullable Message savedMessage) {
                 if (savedMessage != null) {
-                    ChatContainer.this.cacheController.didSaveMessage(savedMessage, null);
+                    ChatContainer.this.cacheController.didSaveMessage(savedMessage);
                     ChatContainer.this.cacheController.didCompleteMessageOperation(operation);
                 }
 
