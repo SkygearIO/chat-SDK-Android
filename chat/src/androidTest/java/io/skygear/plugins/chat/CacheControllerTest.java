@@ -139,6 +139,8 @@ public class CacheControllerTest {
         Assert.assertTrue(checkpoints[0]);
     }
 
+    //region Message Cache
+
     @Test
     public void testGetMessagesUpdateCache() throws Exception {
         final boolean[] checkpoints = new boolean[] { false };
@@ -212,7 +214,7 @@ public class CacheControllerTest {
 
     @Test
     public void testSaveMessageUpdateCache() throws JSONException {
-        final boolean[] checkpoints = new boolean[] { false, false, false, false };
+        final boolean[] checkpoints = new boolean[] { false };
         Conversation conversation = new Conversation(new Record("conversation", "c0"));
 
         JSONObject messageJson = new JSONObject();
@@ -226,20 +228,7 @@ public class CacheControllerTest {
         final Message messageToSave = new Message(record);
         messageToSave.sendDate = new Date(50000);
 
-        this.cacheController.saveMessage(messageToSave, new SaveCallback<Message>() {
-            @Override
-            public void onSuccess(@Nullable Message message) {
-                Assert.assertEquals(message.getId(), messageToSave.getId());
-                Assert.assertEquals(message.getSendDate(), messageToSave.getSendDate());
-
-                checkpoints[0] = true;
-            }
-
-            @Override
-            public void onFail(@NonNull Error error) {
-                Assert.fail("Should not get fail callback");
-            }
-        });
+        this.cacheController.didSaveMessage(messageToSave);
 
         Realm realm = this.cacheController.store.getRealm();
         MessageCacheObject result = realm.where(MessageCacheObject.class).equalTo("recordID", "mm1").findFirst();
@@ -247,49 +236,14 @@ public class CacheControllerTest {
 
         Assert.assertEquals(realm.where(MessageCacheObject.class).findAll().size(), 11);
 
-        this.cacheController.getUnsentMessages(conversation, new GetCallback<List<Message>>() {
-            @Override
-            public void onSuccess(@Nullable List<Message> messages) {
-                Assert.assertEquals(messages.size(), 1);
-                Assert.assertEquals(messages.get(0).getId(), messageToSave.getId());
-
-                checkpoints[1] = true;
-            }
-
-            @Override
-            public void onFail(@NonNull Error error) {
-                Assert.fail("Should not get fail callback");
-            }
-        });
-
-        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
-            @Override
-            public void onSuccess(@Nullable List<Message> messages) {
-                Assert.assertEquals(messages.size(), 5);
-
-                for (Message message : messages) {
-                    Assert.assertNotSame(message.getId(), messageToSave.getId());
-                }
-
-                checkpoints[2] = true;
-            }
-
-            @Override
-            public void onFail(@NonNull Error error) {
-                Assert.fail("Should not get fail callback");
-            }
-        });
-
-        this.cacheController.didSaveMessage(messageToSave, null);
         this.cacheController.getMessages(conversation, 1, null, null, new GetCallback<List<Message>>() {
             @Override
             public void onSuccess(@Nullable List<Message> messages) {
                 Message message = messages.get(0);
                 Assert.assertEquals(message.getId(), messageToSave.getId());
                 Assert.assertEquals(message.getSendDate(), messageToSave.getSendDate());
-                Assert.assertTrue(message.alreadySyncToServer);
 
-                checkpoints[3] = true;
+                checkpoints[0] = true;
             }
 
             @Override
@@ -383,6 +337,85 @@ public class CacheControllerTest {
         Assert.assertTrue(checkpoints[0]);
     }
 
+    //endregion
+
+    //region Message Operation Cache
+
+    @Test
+    public void testStartMessageOperation() throws Exception {
+        Record record = new Record("message");
+        record.set("conversation", new Reference("conversation", "c0"));
+
+        Message message = new Message(record);
+        MessageOperation createdOperation = this.cacheController.didStartMessageOperation(message, "c0", MessageOperation.Type.ADD);
+        Assert.assertEquals(createdOperation.conversationId, "c0");
+        Assert.assertEquals(createdOperation.message.getId(), record.getId());
+        Assert.assertEquals(createdOperation.type, MessageOperation.Type.ADD);
+        Assert.assertEquals(createdOperation.status, MessageOperation.Status.PENDING);
+
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageOperationCacheObject> results = realm.where(MessageOperationCacheObject.class).findAll();
+        Assert.assertEquals(results.size(), 1);
+
+        MessageOperation fetchedOperation = results.first().toMessageOperation();
+        Assert.assertEquals(fetchedOperation.operationId, createdOperation.operationId);
+        Assert.assertEquals(fetchedOperation.conversationId, "c0");
+        Assert.assertEquals(fetchedOperation.message.getId(), record.getId());
+        Assert.assertEquals(fetchedOperation.type, MessageOperation.Type.ADD);
+        Assert.assertEquals(fetchedOperation.status, MessageOperation.Status.PENDING);
+    }
+
+    @Test
+    public void testCompleteMessageOperation() throws Exception {
+        Record record = new Record("message");
+        record.set("conversation", new Reference("conversation", "c0"));
+
+        Message message = new Message(record);
+        MessageOperation createdOperation = this.cacheController.didStartMessageOperation(message, "c0", MessageOperation.Type.ADD);
+        this.cacheController.didCompleteMessageOperation(createdOperation);
+
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageOperationCacheObject> results = realm.where(MessageOperationCacheObject.class).findAll();
+        Assert.assertEquals(results.size(), 0);
+    }
+
+    @Test
+    public void testCancelMessageOperation() throws Exception {
+        Record record = new Record("message");
+        record.set("conversation", new Reference("conversation", "c0"));
+
+        Message message = new Message(record);
+        MessageOperation createdOperation = this.cacheController.didStartMessageOperation(message, "c0", MessageOperation.Type.ADD);
+        this.cacheController.didCancelMessageOperation(createdOperation);
+
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageOperationCacheObject> results = realm.where(MessageOperationCacheObject.class).findAll();
+        Assert.assertEquals(results.size(), 0);
+    }
+
+    @Test
+    public void testFailMessageOperation() throws Exception {
+        Record record = new Record("message");
+        record.set("conversation", new Reference("conversation", "c0"));
+
+        Message message = new Message(record);
+        MessageOperation createdOperation = this.cacheController.didStartMessageOperation(message, "c0", MessageOperation.Type.EDIT);
+        this.cacheController.didFailMessageOperation(createdOperation, new Error("error occurred"));
+
+        Realm realm = this.cacheController.store.getRealm();
+        RealmResults<MessageOperationCacheObject> results = realm.where(MessageOperationCacheObject.class).findAll();
+        Assert.assertEquals(results.size(), 1);
+
+        MessageOperation fetchedOperation = results.first().toMessageOperation();
+        Assert.assertEquals(fetchedOperation.operationId, createdOperation.operationId);
+        Assert.assertEquals(fetchedOperation.type, MessageOperation.Type.EDIT);
+        Assert.assertEquals(fetchedOperation.status, MessageOperation.Status.FAILED);
+    }
+
+    //endregion
+
+    //region Subscriptions
+
     @Test
     public void testHandleSubscription() throws JSONException {
         Realm realm = this.cacheController.store.getRealm();
@@ -450,4 +483,6 @@ public class CacheControllerTest {
         Assert.assertEquals(results.get(0).editionDate, new Date(0));
         Assert.assertEquals(results.get(0).deleted, false);
     }
+
+    //endregion
 }
