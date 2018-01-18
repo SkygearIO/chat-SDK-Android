@@ -61,6 +61,7 @@ open class ConversationFragment() :
     private var skygearChat: ChatContainer? = null
 
     private var messageIDs: HashSet<String> = HashSet()
+    private var messageErrorByIDs: HashMap<String, Error> = hashMapOf()
 
     private var voiceRecorder: MediaRecorder? = null
     private var voiceRecordingFileName: String? = null
@@ -264,7 +265,7 @@ open class ConversationFragment() :
                         fetchedMessages.none { it.id.equals(message.id) } && chatMsgs.any { it.id.equals(message.id) }
                     }
 
-                    this@ConversationFragment.deleteMessagesFromList(cachedResultToRemove)
+                    this@ConversationFragment.deleteMessages(cachedResultToRemove)
                 }
             }
 
@@ -304,9 +305,22 @@ open class ConversationFragment() :
 
     private fun fetchUnsentMessages() {
         this.conversation?.let { conv ->
-            this.skygearChat?.getUnsentMessages(conv, object : GetCallback<List<ChatMessage>> {
-                override fun onSuccess(chatMsgs: List<ChatMessage>?) {
-                    chatMsgs?.let { this@ConversationFragment.addMessages(it) }
+            this.skygearChat?.fetchOutstandingMessageOperations(conv,
+                    MessageOperation.Type.ADD, object : GetCallback<List<MessageOperation>> {
+                override fun onSuccess(operations: List<MessageOperation>?) {
+                    if (operations != null) {
+                        for (operation: MessageOperation in operations) {
+                            if (operation.status != MessageOperation.Status.FAILED) {
+                                continue
+                            }
+
+                            var error: Error = when (operation.error) {
+                                null -> Error("Error occurred sending message.")
+                                else -> operation.error
+                            }
+                            this@ConversationFragment.addMessages(listOf(operation.message), error)
+                        }
+                    }
                 }
 
                 override fun onFail(error: Error) {
@@ -322,7 +336,7 @@ open class ConversationFragment() :
     private fun addMessageToBottom(message: ChatMessage, uri: Uri? = null) {
         val view = conversationView()
         if (messageIDs.contains(message.id)) {
-            view?.updateMessage(message)
+            view?.updateMessages(listOf(message))
         } else {
             view?.addMessageToBottom(message, uri)
             messageIDs.add(message.id)
@@ -335,27 +349,49 @@ open class ConversationFragment() :
         this.skygearChat?.markMessageAsRead(message)
     }
 
+    private fun addMessages(messages: List<ChatMessage>) {
+        addMessages(messages, null)
+    }
+
     /**
      * This function is for loading more previous messages.
      */
-    private fun addMessages(messages: List<ChatMessage>) {
+    private fun addMessages(messages: List<ChatMessage>, error: Error?) {
         if (messages.isEmpty()) {
             return
         }
 
         val view = conversationView()
         val messagesAddToEnd = mutableListOf<ChatMessage>()
+        val messagesToUpdate = mutableListOf<ChatMessage>()
         messages.forEach { msg ->
             when {
-                messageIDs.contains(msg.id) -> view?.updateMessage(msg)
+                messageIDs.contains(msg.id) -> messagesToUpdate.add(msg)
                 else -> messagesAddToEnd.add(msg)
             }
 
             messageIDs.add(msg.id)
+            if (error is Error) {
+                messageErrorByIDs[msg.id] = error
+            } else {
+                messageErrorByIDs.remove(msg.id)
+            }
+        }
+
+        if (messagesToUpdate.isNotEmpty()) {
+            if (error is Error) {
+                view?.updateMessages(messagesToUpdate, error)
+            } else {
+                view?.updateMessages(messagesToUpdate)
+            }
         }
 
         if (messagesAddToEnd.isNotEmpty()) {
-            view?.mergeMessagesToList(messagesAddToEnd)
+            if (error is Error) {
+                view?.mergeMessages(messagesAddToEnd, error)
+            } else {
+                view?.mergeMessages(messagesAddToEnd)
+            }
         }
 
         // mark last read message
@@ -367,14 +403,34 @@ open class ConversationFragment() :
         this.skygearChat?.markMessagesAsRead(messages)
     }
 
-    private fun deleteMessagesFromList(messages: List<ChatMessage>) {
+    private fun updateMessage(message: ChatMessage) {
+        messageIDs.add(message.id)
+        messageErrorByIDs.remove(message.id)
+
+        conversationView()?.updateMessages(listOf(message))
+    }
+
+    private fun updateMessage(message: ChatMessage, error: Error) {
+        if (messageErrorByIDs.containsKey(message.id)) {
+            return
+        }
+        messageIDs.add(message.id)
+        messageErrorByIDs[message.id] = error
+
+        conversationView()?.updateMessages(listOf(message), error)
+    }
+
+    private fun deleteMessages(messages: List<ChatMessage>) {
         if (messages.isEmpty()) {
             return
         }
 
         val view = conversationView()
         view?.deleteMessages(messages)
-        messages?.map { this.messageIDs.remove(it.id) }
+        messages?.map {
+            this.messageIDs.remove(it.id)
+            this.messageErrorByIDs.remove(it.id)
+        }
     }
 
     private fun subscribeMessage() {
@@ -416,7 +472,7 @@ open class ConversationFragment() :
     }
 
     private fun onUpdateChatMessage(message: ChatMessage) {
-        conversationView()?.updateMessage(message)
+        this.updateMessage(message)
     }
 
     override fun onLoadMore(totalItemsCount: Int) {
@@ -554,11 +610,11 @@ open class ConversationFragment() :
             this.addMessageToBottom(message)
             this.skygearChat?.addMessage(message, conv, object : SaveCallback<ChatMessage> {
                 override fun onSuccess(msg: io.skygear.plugins.chat.Message?) {
-                    msg?.let { this@ConversationFragment.conversationView()?.updateMessage(msg) }
+                    msg?.let { this@ConversationFragment.updateMessage(msg) }
                 }
 
                 override fun onFail(error: Error) {
-                    this@ConversationFragment.conversationView()?.updateMessage(message)
+                    this@ConversationFragment.updateMessage(message, error)
                 }
             })
         }
@@ -584,7 +640,7 @@ open class ConversationFragment() :
 
     override fun onMessageLongClick(message: Message?) {
         message?.let { msg ->
-            when (msg.chatMessage.isFail) {
+            when (this.messageErrorByIDs[msg.chatMessage.id] != null) {
                 true -> {
                     showFailedMessageDialog(msg.chatMessage)
                 }
@@ -599,28 +655,59 @@ open class ConversationFragment() :
         AlertDialog.Builder(this.context)
                 .setTitle("Action")
                 .setPositiveButton("Resend", { dialogInterface, i ->
-                    this.conversation?.let { conv ->
-                        val messageToResend = ChatMessage(message.record)
-                        this.skygearChat?.addMessage(messageToResend, conv, object : SaveCallback<ChatMessage> {
-                            override fun onSuccess(msg: io.skygear.plugins.chat.Message?) {
-                                msg?.let { this@ConversationFragment.conversationView()?.updateMessage(msg) }
-                            }
-
-                            override fun onFail(error: Error) {
-                                this@ConversationFragment.conversationView()?.updateMessage(messageToResend)
-                            }
-                        })
-                        this.deleteMessagesFromList(listOf(message))
-                        this.addMessageToBottom(messageToResend)
-                    }
+                    this.resendMessage(message)
                 })
                 .setNegativeButton("Delete", { dialogInterface, i ->
-                    this.skygearChat?.deleteMessage(message, null)
-                    this.deleteMessagesFromList(listOf(message))
+                    this.cancelMessage(message)
                 })
                 .show()
     }
 
+    fun resendMessage(message: ChatMessage) {
+        val messageToResend = ChatMessage(message.record)
+
+        this.skygearChat?.fetchOutstandingMessageOperations(message, MessageOperation.Type.ADD, object : GetCallback<List<MessageOperation>> {
+            override fun onSuccess(operations: List<MessageOperation>?) {
+                var firstOperation = operations?.firstOrNull()
+                if (firstOperation is MessageOperation) {
+                    this@ConversationFragment.skygearChat?.retryMessageOperation(firstOperation, object : MessageOperationCallback {
+                        override fun onSuccess(operation: MessageOperation, message: io.skygear.plugins.chat.Message) {
+                            message.let { this@ConversationFragment.updateMessage(message) }
+                        }
+
+                        override fun onFail(error: Error) {
+                            this@ConversationFragment.updateMessage(messageToResend, error)
+                        }
+                    })
+                }
+
+            }
+
+            override fun onFail(error: Error) {
+                Log.w(TAG, "Failed to get message operation: %s".format(error.message))
+            }
+        });
+
+        this.deleteMessages(listOf(message))
+        this.addMessageToBottom(messageToResend)
+    }
+
+    fun cancelMessage(message: ChatMessage) {
+        this.skygearChat?.fetchOutstandingMessageOperations(message, MessageOperation.Type.ADD, object : GetCallback<List<MessageOperation>> {
+            override fun onSuccess(operations: List<MessageOperation>?) {
+                var firstOperation = operations?.firstOrNull()
+                if (firstOperation is MessageOperation) {
+                    this@ConversationFragment.skygearChat?.cancelMessageOperation(firstOperation)
+                }
+            }
+
+            override fun onFail(error: Error) {
+                Log.w(TAG, "Failed to get message operation: %s".format(error.message))
+            }
+        });
+
+        this.deleteMessages(listOf(message))
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
