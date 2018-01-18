@@ -19,5 +19,9 @@
         <attr name="failed" format="string" />
         <attr name="hint" format="string" />
         <attr name="dateFormat" format="string" />
+        <attr name="timeTextColorForOutgoingMessages" format="color"/>
+        <attr name="timeTextColorForIncomingMessages" format="color"/>
+        <attr name="backgroundColorForOutgoingMessages" format="color"/>
+        <attr name="backgroundColorForIncomingMessages" format="color"/>
     </declare-styleable>
 </resources>
