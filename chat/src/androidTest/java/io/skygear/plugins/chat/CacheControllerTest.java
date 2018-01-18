@@ -51,7 +51,7 @@ import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_DEL
 import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_UPDATE;
 
 @RunWith(AndroidJUnit4.class)
-public class ChatControllerTest {
+public class CacheControllerTest {
     static Context context;
     static DateTimeFormatter formatterWithMS;
     CacheController cacheController;
