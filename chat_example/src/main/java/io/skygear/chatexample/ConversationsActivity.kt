@@ -10,8 +10,9 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import io.skygear.plugins.chat.*
-import io.skygear.plugins.chat.ui.ConversationActivity
+import io.skygear.plugins.chat.ui.*
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import io.skygear.skygear.LambdaResponseHandler
@@ -136,7 +137,46 @@ class ConversationsActivity : AppCompatActivity() {
     fun enter(c: Conversation) {
         val i = Intent(this, ConversationActivity::class.java)
         i.putExtra(ConversationActivity.ConversationIntentKey, c.toJson().toString())
+        i.putExtra(ConversationActivity.ConnectionListenerIntentKey, object: ConnectionListener {
+            override fun onClose(fragment: ConversationFragment) {
+                Toast.makeText(fragment.activity, "Connection Closed", Toast.LENGTH_LONG).show()
+            }
 
+            override fun onError(fragment: ConversationFragment, e: Exception?) {
+                Toast.makeText(fragment.activity, "Connection Error", Toast.LENGTH_LONG).show()
+
+            }
+
+            override fun onOpen(fragment: ConversationFragment) {
+                Toast.makeText(fragment.activity, "Connection Open", Toast.LENGTH_LONG).show()
+            }
+        })
+        i.putExtra(ConversationActivity.MessageSentListenerIntentKey, object: MessageSentListener {
+            override fun onBeforeMessageSent(fragment: ConversationFragment, message: Message) {
+
+            }
+
+            override fun onMessageSentSuccess(fragment: ConversationFragment, message: Message) {
+                Toast.makeText(fragment.activity, "Message Sent", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onMessageSentFailed(fragment: ConversationFragment, message: Message?, error: Error) {
+                Toast.makeText(fragment.activity, "Message Sending Failed", Toast.LENGTH_LONG).show()
+            }
+        })
+        i.putExtra(ConversationActivity.MessageFetchListenerIntentKey, object: MessageFetchListener {
+            override fun onBeforeMessageFetch(fragment: ConversationFragment) {
+
+            }
+
+            override fun onMessageFetchFailed(fragment: ConversationFragment, error: Error) {
+                Toast.makeText(fragment.activity, "Message Loading Failed", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onMessageFetchSuccess(fragment: ConversationFragment, messages: List<Message>, isCached: Boolean) {
+                Toast.makeText(fragment.activity, "Message Loaded", Toast.LENGTH_LONG).show()
+            }
+        })
         startActivity(i)
     }
 
