@@ -2,7 +2,6 @@ package io.skygear.plugins.chat.ui
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import io.skygear.plugins.chat.ui.R
 import io.skygear.plugins.chat.Conversation as ChatConversation
 
 
@@ -13,6 +12,7 @@ class ConversationActivity : AppCompatActivity() {
         @JvmField val LayoutIntentKey = "LAYOUT"
         @JvmField val AvatarAdapterIntentKey = "AVATAR_ADAPTER"
         @JvmField val TitleOptionIntentKey = "TITLE_OPTION"
+        @JvmField val ConversationViewAdapterIntentKey = "VIEW_ADAPTER"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +35,10 @@ class ConversationActivity : AppCompatActivity() {
                 if (intent?.hasExtra(TitleOptionIntentKey) ?: false) {
                     bundle.putSerializable(ConversationFragment.TitleOptionBundleKey,
                             this.intent?.getSerializableExtra(ConversationFragment.TitleOptionBundleKey))
+                }
+                if (intent?.hasExtra(ConversationViewAdapterIntentKey) ?: false) {
+                    bundle.putSerializable(ConversationFragment.ConversationViewAdapterBundleKey,
+                            this.intent?.getSerializableExtra(ConversationFragment.ConversationViewAdapterBundleKey))
                 }
                 fragment.arguments = bundle
             }

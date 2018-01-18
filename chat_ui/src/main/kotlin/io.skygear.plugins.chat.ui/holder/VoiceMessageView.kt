@@ -8,16 +8,18 @@ import io.skygear.plugins.chat.ui.R
 import io.skygear.plugins.chat.ui.model.VoiceMessage
 
 
-class VoiceMessageView(itemView: View){
+class VoiceMessageView(itemView: View, isIncoming: Boolean){
 
     var actionButton: ImageView? = null
     var durationTextView: TextView? = null
     var timeTextView: TextView? = null
+    var isIncoming: Boolean
 
     init {
         this.actionButton = itemView.findViewById<ImageView>(R.id.action_button)
         this.durationTextView = itemView.findViewById<TextView>(R.id.duration)
         this.timeTextView = itemView.findViewById<TextView>(R.id.messageTime)
+        this.isIncoming = isIncoming
     }
 
     fun onBind(message: VoiceMessage) {
@@ -32,6 +34,9 @@ class VoiceMessageView(itemView: View){
                 else -> R.drawable.ic_play_white
             }
             this@VoiceMessageView.actionButton?.setImageResource(actionButtonIcon)
+            val buttonTintColor = if (isIncoming) msg.style.voiceMessageStyle.buttonColorForIncomingMessages
+                                  else msg.style.voiceMessageStyle.buttonColorForOutgoingMessages
+            this@VoiceMessageView.actionButton?.setColorFilter(buttonTintColor)
         }
     }
 }

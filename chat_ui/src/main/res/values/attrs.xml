@@ -23,5 +23,9 @@
         <attr name="timeTextColorForIncomingMessages" format="color"/>
         <attr name="backgroundColorForOutgoingMessages" format="color"/>
         <attr name="backgroundColorForIncomingMessages" format="color"/>
+        <attr name="textColorForIncomingMessages" format="color"/>
+        <attr name="textColorForOutgoingMessages" format="color"/>
+        <attr name="voiceMessageButtonColorForOutgoingMessages" format="color"/>
+        <attr name="voiceMessageButtonColorForIncomingMessages" format="color"/>
     </declare-styleable>
 </resources>

@@ -47,6 +47,7 @@ open class ConversationFragment() :
         val LayoutResIdBundleKey = "LAYOUT"
         val AvatarAdapterBundleKey = "AVATAR_ADAPTER"
         val TitleOptionBundleKey = "TITLE_OPTION"
+        val ConversationViewAdapterBundleKey = "VIEW_ADAPTER"
         private val TAG = "ConversationFragment"
         private val MESSAGE_SUBSCRIPTION_MAX_RETRY = 10
         private val REQUEST_PICK_IMAGES = 5001
@@ -77,6 +78,7 @@ open class ConversationFragment() :
 
     protected var layoutResID: Int = -1
     protected var customAvatarAdapter: AvatarAdapter? = null
+    protected var customViewAdapter: ConversationViewAdapter? = null
 
     protected var titleOption: ConversationTitleOption? = ConversationTitleOption.DEFAULT
 
@@ -90,11 +92,12 @@ open class ConversationFragment() :
         arguments.getSerializable(AvatarAdapterBundleKey)?.let { adapter ->
             customAvatarAdapter = adapter as AvatarAdapter
         }
-
         arguments.getSerializable(TitleOptionBundleKey)?.let { option ->
             titleOption = option as ConversationTitleOption
         }
-
+        arguments.getSerializable(ConversationViewAdapterBundleKey)?.let { adapter ->
+            customViewAdapter = adapter as ConversationViewAdapter
+        }
     }
 
     override fun onAttach(context: Context?) {
@@ -169,6 +172,10 @@ open class ConversationFragment() :
         view.setConversation(conversation)
         customAvatarAdapter?.let {
             adapter ->  view.setAvatarAdapter(adapter)
+        }
+
+        customViewAdapter?.let {
+            adapter -> view.setViewAdapter(adapter)
         }
         return view
     }
@@ -718,6 +725,10 @@ open class ConversationFragment() :
 
     open fun setAvatarAdapter(newAdapter: AvatarAdapter?) {
         customAvatarAdapter = newAdapter
+    }
+
+    open fun setViewAdapter(newAdapter: ConversationViewAdapter?) {
+        customViewAdapter = newAdapter
     }
 }
 

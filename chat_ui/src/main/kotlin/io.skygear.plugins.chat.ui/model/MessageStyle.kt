@@ -9,8 +9,9 @@ class MessageStyle {
     var dateFormat: String
     var timeStyle: MessageTimeStyle
     var bubbleStyle: MessageBubbleStyle
+    val voiceMessageStyle: VoiceMessageStyle
 
-    constructor(hideOutgoing: Boolean, hideIncoming: Boolean, senderTextColor: Int, statusText: MessageStatusText, dateFormat: String, timeStyle: MessageTimeStyle, bubbleStyle: MessageBubbleStyle) {
+    constructor(hideOutgoing: Boolean, hideIncoming: Boolean, senderTextColor: Int, statusText: MessageStatusText, dateFormat: String, timeStyle: MessageTimeStyle, bubbleStyle: MessageBubbleStyle, voiceMessageStyle: VoiceMessageStyle) {
         this.hideOutgoing = hideOutgoing
         this.hideIncoming = hideIncoming
         this.senderTextColor = senderTextColor
@@ -18,5 +19,6 @@ class MessageStyle {
         this.dateFormat = dateFormat
         this.timeStyle = timeStyle
         this.bubbleStyle = bubbleStyle
+        this.voiceMessageStyle = voiceMessageStyle
     }
 }

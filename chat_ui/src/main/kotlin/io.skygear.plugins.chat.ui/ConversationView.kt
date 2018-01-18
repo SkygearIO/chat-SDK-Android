@@ -15,6 +15,7 @@ import com.dewarder.holdinglibrary.HoldingButtonLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
 import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.widget.*
 import io.skygear.plugins.chat.ui.holder.*
@@ -125,6 +126,15 @@ open class ConversationView: RelativeLayout{
     private var backgroundColorForIncomingMessages: Int
     private var backgroundColorForOutgoingMessages: Int
 
+    private var voiceMessageButtonColorForIncomingMessages: Int
+    private var voiceMessageButtonColorForOutgoingMessages: Int
+
+    private var viewAdapter: ConversationViewAdapter? = null
+    private var backgroundImageView: ImageView
+
+    private var textColorForIncomingMessages: Int
+    private var textColorForOutgoingMessages: Int
+
 
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
         val a = context.theme.obtainStyledAttributes(
@@ -135,7 +145,7 @@ open class ConversationView: RelativeLayout{
         try {
             avatarNameField = a.getString(R.styleable.ConversationView_userNameField) ?: User.DefaultUsernameField
             avatarImageField = a.getString(R.styleable.ConversationView_userAvatarField) ?: User.DefaultAvatarField
-            avatarHiddenForOutgoingMessages = a.getBoolean(R.styleable.ConversationView_avatarHiddenForOutgoingMessages, false)
+            avatarHiddenForOutgoingMessages = a.getBoolean(R.styleable.ConversationView_avatarHiddenForOutgoingMessages, true)
             avatarHiddenForIncomingMessages = a.getBoolean(R.styleable.ConversationView_avatarHiddenForIncomingMessages, true)
             messageSenderTextColor = a.getColor(R.styleable.ConversationView_messageSenderTextColor, Color.BLACK)
             userAvatarType = AvatarType.fromInt(a.getInt(R.styleable.ConversationView_userAvatarType, AvatarType.INITIAL.value))
@@ -153,7 +163,10 @@ open class ConversationView: RelativeLayout{
             timeTextColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_timeTextColorForOutgoingMessages, ContextCompat.getColor(context, R.color.gray_dark))
             backgroundColorForIncomingMessages = a.getColor(R.styleable.ConversationView_backgroundColorForIncomingMessages, ContextCompat.getColor(context, R.color.white_two))
             backgroundColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_backgroundColorForOutgoingMessages, ContextCompat.getColor(context, R.color.cornflower_blue_two))
-
+            voiceMessageButtonColorForIncomingMessages = a.getColor(R.styleable.ConversationView_voiceMessageButtonColorForIncomingMessages, ContextCompat.getColor(context, R.color.white))
+            voiceMessageButtonColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_voiceMessageButtonColorForOutgoingMessages, ContextCompat.getColor(context, R.color.white))
+            textColorForIncomingMessages = a.getColor(R.styleable.ConversationView_textColorForIncomingMessages, ContextCompat.getColor(context, R.color.black))
+            textColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_textColorForOutgoingMessages, ContextCompat.getColor(context, R.color.white))
 
         } finally {
             a.recycle()
@@ -169,7 +182,7 @@ open class ConversationView: RelativeLayout{
         this.addAttachmentButton = findViewById<ImageButton>(R.id.add_attachment_btn)
         this.messageSendButton = findViewById<ImageButton>(R.id.msg_send_btn)
         this.messageEditText = findViewById<EditText>(R.id.msg_edit_text)
-
+        this.backgroundImageView = findViewById<ImageView>(R.id.background)
         this.voiceButtonHolderHint = findViewById(R.id.voice_recording_btn_holder_hint)
         this.voiceButtonHolder = findViewById<HoldingButtonLayout>(R.id.voice_recording_btn_holder)
 
@@ -272,6 +285,11 @@ open class ConversationView: RelativeLayout{
         avatarAdapter = newAdapter
     }
 
+    open fun setViewAdapter(newAdapter: ConversationViewAdapter) {
+        this.viewAdapter = newAdapter
+        this.viewAdapter?.setBackground(this, this.conversation !!, userBuilder.createUser(this.skygear?.auth?.currentUser !!), backgroundImageView)
+    }
+
     open fun setConversation(newConversation: Conversation?) {
         conversation = newConversation
     }
@@ -342,8 +360,9 @@ open class ConversationView: RelativeLayout{
 
     fun getMessageStyle(): MessageStyle {
         val timeStyle = MessageTimeStyle(timeTextColorForIncomingMessages, timeTextColorForOutgoingMessages)
-        val bubbleStyle = MessageBubbleStyle(backgroundColorForIncomingMessages, backgroundColorForOutgoingMessages)
-        return MessageStyle(this.avatarHiddenForOutgoingMessages, this.avatarHiddenForIncomingMessages, this.messageSenderTextColor, getMessageStatusText(), dateFormat, timeStyle, bubbleStyle)
+        val bubbleStyle = MessageBubbleStyle(backgroundColorForIncomingMessages, backgroundColorForOutgoingMessages, textColorForIncomingMessages, textColorForOutgoingMessages)
+        val voiceMessageStyle = VoiceMessageStyle(voiceMessageButtonColorForIncomingMessages, voiceMessageButtonColorForOutgoingMessages)
+        return MessageStyle(this.avatarHiddenForOutgoingMessages, this.avatarHiddenForIncomingMessages, this.messageSenderTextColor, getMessageStatusText(), dateFormat, timeStyle, bubbleStyle, voiceMessageStyle)
     }
 
     fun MessagesFromChatMessages(chatMessages: List<ChatMessage>): List<Message> {

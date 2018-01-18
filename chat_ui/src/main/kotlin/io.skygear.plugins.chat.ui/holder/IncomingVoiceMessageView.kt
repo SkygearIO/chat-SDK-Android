@@ -14,7 +14,7 @@ class IncomingVoiceMessageView(view: View):
     var bubbleView: IncomingBubbleMessageView? = null
 
     init {
-        voiceMessageView = VoiceMessageView(itemView)
+        voiceMessageView = VoiceMessageView(itemView, true)
         usernameMessageView = UsernameMessageView(itemView)
         senderAvatarMessageView = SenderAvatarMessageView(itemView)
         bubbleView = IncomingBubbleMessageView(itemView)
