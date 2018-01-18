@@ -12,9 +12,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import io.skygear.plugins.chat.*
-import io.skygear.plugins.chat.ui.ConnectionListener
-import io.skygear.plugins.chat.ui.ConversationActivity
-import io.skygear.plugins.chat.ui.ConversationFragment
+import io.skygear.plugins.chat.ui.*
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import io.skygear.skygear.LambdaResponseHandler
@@ -151,6 +149,32 @@ class ConversationsActivity : AppCompatActivity() {
 
             override fun onOpen(fragment: ConversationFragment) {
                 Toast.makeText(fragment.activity, "Connection Open", Toast.LENGTH_LONG).show()
+            }
+        })
+        i.putExtra(ConversationActivity.MessageSentListenerIntentKey, object: MessageSentListener {
+            override fun onBeforeMessageSent(fragment: ConversationFragment, message: Message) {
+
+            }
+
+            override fun onMessageSentSuccess(fragment: ConversationFragment, message: Message) {
+                Toast.makeText(fragment.activity, "Message Sent", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onMessageSentFailed(fragment: ConversationFragment, message: Message?, error: Error) {
+                Toast.makeText(fragment.activity, "Message Sending Failed", Toast.LENGTH_LONG).show()
+            }
+        })
+        i.putExtra(ConversationActivity.MessageFetchListenerIntentKey, object: MessageFetchListener {
+            override fun onBeforeMessageFetch(fragment: ConversationFragment) {
+
+            }
+
+            override fun onMessageFetchFailed(fragment: ConversationFragment, error: Error) {
+                Toast.makeText(fragment.activity, "Message Loading Failed", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onMessageFetchSuccess(fragment: ConversationFragment, messages: List<Message>, isCached: Boolean) {
+                Toast.makeText(fragment.activity, "Message Loaded", Toast.LENGTH_LONG).show()
             }
         })
         startActivity(i)
