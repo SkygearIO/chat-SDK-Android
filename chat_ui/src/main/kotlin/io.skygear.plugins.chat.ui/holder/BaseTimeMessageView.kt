@@ -23,6 +23,7 @@ open class BaseTimeMessageView(itemView: View){
 
         statusTextView?.setTextColor(statusTextColor(message.style.statusStyle))
         statusTextView?.text = message.getStatus()
+        statusTextView?.visibility = if (message.style.statusStyle.enabled) View.VISIBLE else View.GONE
     }
 
     open fun textColor(style: MessageTimeStyle): Int {

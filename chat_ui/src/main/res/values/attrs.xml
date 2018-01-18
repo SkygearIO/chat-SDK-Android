@@ -29,5 +29,8 @@
         <attr name="voiceMessageButtonColorForIncomingMessages" format="color"/>
         <attr name="statusTextColorForIncomingMessages" format="color"/>
         <attr name="statusTextColorForOutgoingMessages" format="color"/>
+        <attr name="cameraButtonShouldShow" format="boolean"/>
+        <attr name="voiceMessageButtonShouldShow" format="boolean" />
+        <attr name="messageStatusShouldShow" format="boolean"/>
     </declare-styleable>
 </resources>

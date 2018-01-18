@@ -15,7 +15,6 @@ import com.dewarder.holdinglibrary.HoldingButtonLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
 import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.widget.*
 import io.skygear.plugins.chat.ui.holder.*
@@ -138,6 +137,10 @@ open class ConversationView: RelativeLayout{
     private var statusTextColorForIncomingMessages: Int
     private var statusTextColorForOutgoingMessages: Int
 
+    private var voiceMessageButtonShouldShow: Boolean
+    private var cameraButtonShouldShow: Boolean
+    private var messageStatusShouldShow: Boolean
+
 
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
         val a = context.theme.obtainStyledAttributes(
@@ -149,7 +152,7 @@ open class ConversationView: RelativeLayout{
             avatarNameField = a.getString(R.styleable.ConversationView_userNameField) ?: User.DefaultUsernameField
             avatarImageField = a.getString(R.styleable.ConversationView_userAvatarField) ?: User.DefaultAvatarField
             avatarHiddenForOutgoingMessages = a.getBoolean(R.styleable.ConversationView_avatarHiddenForOutgoingMessages, true)
-            avatarHiddenForIncomingMessages = a.getBoolean(R.styleable.ConversationView_avatarHiddenForIncomingMessages, true)
+            avatarHiddenForIncomingMessages = a.getBoolean(R.styleable.ConversationView_avatarHiddenForIncomingMessages, false)
             messageSenderTextColor = a.getColor(R.styleable.ConversationView_messageSenderTextColor, Color.BLACK)
             userAvatarType = AvatarType.fromInt(a.getInt(R.styleable.ConversationView_userAvatarType, AvatarType.INITIAL.value))
             avatarTextColor = a.getColor(R.styleable.ConversationView_avatarTextColor, Color.WHITE)
@@ -172,6 +175,9 @@ open class ConversationView: RelativeLayout{
             textColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_textColorForOutgoingMessages, ContextCompat.getColor(context, R.color.white))
             statusTextColorForIncomingMessages = a.getColor(R.styleable.ConversationView_statusTextColorForIncomingMessages, timeTextColorForIncomingMessages)
             statusTextColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_statusTextColorForOutgoingMessages, timeTextColorForOutgoingMessages)
+            voiceMessageButtonShouldShow = a.getBoolean(R.styleable.ConversationView_voiceMessageButtonShouldShow, true)
+            cameraButtonShouldShow = a.getBoolean(R.styleable.ConversationView_cameraButtonShouldShow, true)
+            messageStatusShouldShow = a.getBoolean(R.styleable.ConversationView_messageStatusShouldShow, true)
 
         } finally {
             a.recycle()
@@ -198,17 +204,20 @@ open class ConversationView: RelativeLayout{
 
         val conversationView = this
 
+        toggleVoiceButton(voiceMessageButtonShouldShow)
+        toggleCameraButton(cameraButtonShouldShow)
+
         hint?.let{ this.messageEditText?.hint = it }
         this.messageEditText?.addTextChangedListener(object : TextBaseWatcher() {
             override fun afterTextChanged(s: Editable?) {
                 super.afterTextChanged(s)
                 conversationView.messageEditText?.text?.let { msgContent ->
-                    if (msgContent.isEmpty()) {
-                        conversationView.voiceButtonHolder?.visibility = View.VISIBLE
-                        conversationView.messageSendButton?.visibility = View.INVISIBLE
-                    } else {
-                        conversationView.voiceButtonHolder?.visibility = View.INVISIBLE
-                        conversationView.messageSendButton?.visibility = View.VISIBLE
+                    if (voiceMessageButtonShouldShow) {
+                        if (msgContent.isEmpty()) {
+                            toggleVoiceButton(true)
+                        } else {
+                            toggleVoiceButton(false)
+                        }
                     }
                 }
             }
@@ -239,6 +248,20 @@ open class ConversationView: RelativeLayout{
             (this.messagesListView?.layoutManager as LinearLayoutManager).isAutoMeasureEnabled = false
             this.messagesListView?.addOnScrollListener(this.messagesListViewReachBottomListener)
         }
+    }
+
+    fun toggleVoiceButton(flag: Boolean) {
+        if (flag) {
+            voiceButtonHolder?.visibility = View.VISIBLE
+            messageSendButton?.visibility = View.INVISIBLE
+        } else {
+            voiceButtonHolder?.visibility = View.INVISIBLE
+            messageSendButton?.visibility = View.VISIBLE
+        }
+    }
+
+    fun toggleCameraButton(flag: Boolean) {
+        addAttachmentButton?.visibility = if (flag) View.VISIBLE else View.GONE
     }
 
     open fun setAddAttachmentButtonOnClickListener(action: (View) -> Unit) {
@@ -367,7 +390,7 @@ open class ConversationView: RelativeLayout{
         val timeStyle = MessageTimeStyle(timeTextColorForIncomingMessages, timeTextColorForOutgoingMessages)
         val bubbleStyle = MessageBubbleStyle(backgroundColorForIncomingMessages, backgroundColorForOutgoingMessages, textColorForIncomingMessages, textColorForOutgoingMessages)
         val voiceMessageStyle = VoiceMessageStyle(voiceMessageButtonColorForIncomingMessages, voiceMessageButtonColorForOutgoingMessages)
-        val statusStyle = MessageStatusStyle(statusTextColorForIncomingMessages, statusTextColorForOutgoingMessages)
+        val statusStyle = MessageStatusStyle(statusTextColorForIncomingMessages, statusTextColorForOutgoingMessages, messageStatusShouldShow)
         return MessageStyle(this.avatarHiddenForOutgoingMessages, this.avatarHiddenForIncomingMessages, this.messageSenderTextColor, getMessageStatusText(), dateFormat, timeStyle, bubbleStyle, voiceMessageStyle, statusStyle)
     }
 
