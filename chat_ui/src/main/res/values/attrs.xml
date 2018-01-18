@@ -27,5 +27,7 @@
         <attr name="textColorForOutgoingMessages" format="color"/>
         <attr name="voiceMessageButtonColorForOutgoingMessages" format="color"/>
         <attr name="voiceMessageButtonColorForIncomingMessages" format="color"/>
+        <attr name="statusTextColorForIncomingMessages" format="color"/>
+        <attr name="statusTextColorForOutgoingMessages" format="color"/>
     </declare-styleable>
 </resources>

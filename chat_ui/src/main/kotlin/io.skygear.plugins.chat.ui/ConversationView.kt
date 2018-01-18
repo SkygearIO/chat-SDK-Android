@@ -135,6 +135,9 @@ open class ConversationView: RelativeLayout{
     private var textColorForIncomingMessages: Int
     private var textColorForOutgoingMessages: Int
 
+    private var statusTextColorForIncomingMessages: Int
+    private var statusTextColorForOutgoingMessages: Int
+
 
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
         val a = context.theme.obtainStyledAttributes(
@@ -167,6 +170,8 @@ open class ConversationView: RelativeLayout{
             voiceMessageButtonColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_voiceMessageButtonColorForOutgoingMessages, ContextCompat.getColor(context, R.color.white))
             textColorForIncomingMessages = a.getColor(R.styleable.ConversationView_textColorForIncomingMessages, ContextCompat.getColor(context, R.color.black))
             textColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_textColorForOutgoingMessages, ContextCompat.getColor(context, R.color.white))
+            statusTextColorForIncomingMessages = a.getColor(R.styleable.ConversationView_statusTextColorForIncomingMessages, timeTextColorForIncomingMessages)
+            statusTextColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_statusTextColorForOutgoingMessages, timeTextColorForOutgoingMessages)
 
         } finally {
             a.recycle()
@@ -362,7 +367,8 @@ open class ConversationView: RelativeLayout{
         val timeStyle = MessageTimeStyle(timeTextColorForIncomingMessages, timeTextColorForOutgoingMessages)
         val bubbleStyle = MessageBubbleStyle(backgroundColorForIncomingMessages, backgroundColorForOutgoingMessages, textColorForIncomingMessages, textColorForOutgoingMessages)
         val voiceMessageStyle = VoiceMessageStyle(voiceMessageButtonColorForIncomingMessages, voiceMessageButtonColorForOutgoingMessages)
-        return MessageStyle(this.avatarHiddenForOutgoingMessages, this.avatarHiddenForIncomingMessages, this.messageSenderTextColor, getMessageStatusText(), dateFormat, timeStyle, bubbleStyle, voiceMessageStyle)
+        val statusStyle = MessageStatusStyle(statusTextColorForIncomingMessages, statusTextColorForOutgoingMessages)
+        return MessageStyle(this.avatarHiddenForOutgoingMessages, this.avatarHiddenForIncomingMessages, this.messageSenderTextColor, getMessageStatusText(), dateFormat, timeStyle, bubbleStyle, voiceMessageStyle, statusStyle)
     }
 
     fun MessagesFromChatMessages(chatMessages: List<ChatMessage>): List<Message> {

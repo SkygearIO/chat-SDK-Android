@@ -17,7 +17,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
-        android:layout_alignBottom="@id/messageTime"/>
+        android:layout_alignBottom="@id/messageStatusTime"/>
 
     <LinearLayout
         android:id="@id/bubble"
@@ -52,16 +52,11 @@
         </com.google.android.flexbox.FlexboxLayout>
 
     </LinearLayout>
-
-    <TextView
-        android:id="@id/messageTime"
+    <include layout="@layout/message_status_time"
+        android:id="@id/messageStatusTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignStart="@id/bubble"
         android:layout_alignLeft="@id/bubble"
-        android:layout_below="@id/bubble"
-        android:layout_marginLeft="16dp"
-        android:layout_marginStart="16dp"
-        android:textColor="@color/gray_dark"
-        android:textSize="14sp"/>
+        android:layout_below="@id/bubble"/>
 </RelativeLayout>
