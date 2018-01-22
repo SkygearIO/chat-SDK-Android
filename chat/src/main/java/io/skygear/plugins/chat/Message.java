@@ -31,8 +31,6 @@ public class Message {
      * Transient fields that are not saved to the server
      */
     Date sendDate;
-    boolean alreadySyncToServer;
-    boolean fail;
 
     /**
      * Instantiates a new Message with new Skygear Record.
@@ -179,24 +177,6 @@ public class Message {
      */
     public Date getSendDate() {
         return this.sendDate;
-    }
-
-    /**
-     * Gets if message already sync to server.
-     *
-     * @return if message already sync to server
-     */
-    public boolean isAlreadySyncToServer() {
-        return this.alreadySyncToServer;
-    }
-
-    /**
-     * Gets if failed to message sync to server.
-     *
-     * @return if failed to message sync to server
-     */
-    public boolean isFail() {
-        return this.fail;
     }
 
     /**

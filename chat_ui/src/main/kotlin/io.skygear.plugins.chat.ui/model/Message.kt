@@ -4,12 +4,14 @@ import io.skygear.chatkit.commons.models.IMessage
 import io.skygear.plugins.chat.Message.Status
 import java.util.*
 import io.skygear.plugins.chat.Message as ChatMessage
+import io.skygear.skygear.Error
 
 open class Message: IMessage {
     val chatMessage: ChatMessage
     var author: User? = null
     var style: MessageStyle
     var statusText: MessageStatusText
+    var error: Error? = null
 
     constructor(m: ChatMessage, style: MessageStyle) {
         this.chatMessage = m
@@ -26,7 +28,7 @@ open class Message: IMessage {
     override fun getText(): String? = this.chatMessage.body
 
     fun getStatus(): String {
-        if (this.chatMessage.isFail) {
+        if (this.error != null) {
             return "Failed"
         }
 

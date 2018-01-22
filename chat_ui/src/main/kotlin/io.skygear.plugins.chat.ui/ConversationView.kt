@@ -28,6 +28,7 @@ import io.skygear.chatkit.messages.VoiceMessageOnClickListener
 import io.skygear.chatkit.messages.MessageHolders
 import io.skygear.chatkit.messages.MessagesList
 import io.skygear.chatkit.messages.MessagesListAdapter
+import io.skygear.skygear.Error
 import io.skygear.skygear.Record
 
 
@@ -86,6 +87,7 @@ enum class AvatarType(val value: Int) {
 
 open class ConversationView: RelativeLayout{
     private var messagesListView: MessagesList? = null
+    private var messageErrorByIDs: MutableMap<String, Error> = mutableMapOf()
     private var addAttachmentButton: ImageButton? = null
     private var messageSendButton: ImageButton? = null
     private var messageEditText: EditText? = null
@@ -307,8 +309,17 @@ open class ConversationView: RelativeLayout{
         this.voiceButtonHolder?.cancel()
     }
 
-    open fun updateMessage(message: ChatMessage) {
-        this.messageListAdapter?.update(MessagesFromChatMessages(listOf(message)).first())
+    open fun updateMessages(chatMessages: List<ChatMessage>) {
+        for (message: Message in MessagesFromChatMessages(chatMessages)) {
+            this.messageListAdapter?.update(message)
+        }
+    }
+
+    open fun updateMessages(chatMessages: List<ChatMessage>, error: Error) {
+        for (message: Message in MessagesFromChatMessages(chatMessages)) {
+            message.error = error
+            this.messageListAdapter?.update(message)
+        }
     }
 
     open fun updateVoiceMessage(voiceMessage: VoiceMessage) {
@@ -316,8 +327,16 @@ open class ConversationView: RelativeLayout{
         this.messageListAdapter?.update(voiceMessage)
     }
 
-    open fun mergeMessagesToList(messages: List<ChatMessage>) {
-        this.messageListAdapter?.merge(MessagesFromChatMessages(messages))
+    open fun mergeMessages(chatMessages: List<ChatMessage>) {
+        this.messageListAdapter?.merge(MessagesFromChatMessages(chatMessages))
+    }
+
+    open fun mergeMessages(chatMessages: List<ChatMessage>, error: Error) {
+        var messages = MessagesFromChatMessages(chatMessages)
+        for (message: Message in messages) {
+            message.error = error
+        }
+        this.messageListAdapter?.merge(messages)
     }
 
     open fun addMessageToBottom(message: ChatMessage, imageUri: Uri? = null) {
@@ -354,10 +373,25 @@ open class ConversationView: RelativeLayout{
         return multitypeMessages
     }
 
+    fun MessagesFromChatMessages(chatMessages: List<ChatMessage>, error: Error): List<Message> {
+        val multitypeMessages = chatMessages.map {
+            MessageFactory.getMessage(it, getMessageStyle())
+        }
+        multitypeMessages.forEach {
+            updateMessageAuthor(it)
+            updateMessageError(it, error)
+        }
+        return multitypeMessages
+    }
+
     fun MessageFromChatMessage(chatMessage: ChatMessage, uri: Uri?): Message {
         val multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), uri)
         updateMessageAuthor(multitypeMessage)
         return multitypeMessage
+    }
+
+    fun updateMessageError(message: Message, error: Error) {
+        message.error = error
     }
 
     fun updateMessageAuthor(message: Message) {

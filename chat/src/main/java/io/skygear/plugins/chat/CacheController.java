@@ -24,15 +24,16 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
+
 import io.realm.RealmQuery;
 import io.skygear.skygear.Error;
 
-import static io.skygear.plugins.chat.MessageCacheObject.KEY_ALREADY_SYNC_TO_SERVER;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_CONVERSATION_ID;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_CREATION_DATE;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_DELETED;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_EDITION_DATE;
-import static io.skygear.plugins.chat.MessageCacheObject.KEY_FAIL;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEND_DATE;
 
 import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_CREATE;
@@ -61,6 +62,17 @@ class CacheController {
         this.store = store;
     }
 
+    void cleanUpOnLaunch() {
+        // Mark pending message operations as failed.
+        //
+        // Message operations that is pending will not progress to failed/success
+        // state because the app is just launched. Therefore we need to move them
+        // to failed state so that the in the clean up.
+        this.markPendingMessageOperationsAsFailed();
+    }
+
+    //region Message
+
     void getMessages(@NonNull final Conversation conversation,
                             final int limit,
                             @Nullable final Date before,
@@ -71,15 +83,7 @@ class CacheController {
             public RealmQuery<MessageCacheObject> buildQueryFrom(RealmQuery<MessageCacheObject> baseQuery) {
                 RealmQuery<MessageCacheObject> query = baseQuery
                         .equalTo(KEY_CONVERSATION_ID, conversation.getId())
-                        .equalTo(KEY_DELETED, false)
-                        .beginGroup()
-                            .beginGroup()
-                                .equalTo(KEY_ALREADY_SYNC_TO_SERVER, true)
-                                .equalTo(KEY_FAIL, false)
-                            .endGroup()
-                            .or()
-                            .isNull(KEY_SEND_DATE)
-                        .endGroup();
+                        .equalTo(KEY_DELETED, false);
 
                 if (before != null) {
                     query.lessThan(KEY_CREATION_DATE, before);
@@ -115,26 +119,7 @@ class CacheController {
     }
 
 
-    void saveMessage(final Message message,
-                     @Nullable final SaveCallback<Message> callback) {
-        this.store.setMessages(new Message[]{message});
-
-        if (callback != null) {
-            callback.onSuccess(message);
-        }
-    }
-
-    void didSaveMessage(final Message message,
-                        @Nullable Error error) {
-        if (error != null) {
-            // invalidate unsaved message
-            message.alreadySyncToServer = false;
-            message.fail = true;
-        } else {
-            message.alreadySyncToServer = true;
-            message.fail = false;
-        }
-
+    void didSaveMessage(final Message message) {
         this.store.setMessages(new Message[]{message});
     }
 
@@ -146,11 +131,11 @@ class CacheController {
 
     void handleMessageChange(Message message, String eventType) {
         if (eventType.equals(EVENT_TYPE_CREATE)) {
-            this.didSaveMessage(message, null);
+            this.didSaveMessage(message);
         }
 
         if (eventType.equals(EVENT_TYPE_UPDATE)) {
-            this.didSaveMessage(message, null);
+            this.didSaveMessage(message);
         }
 
         if (eventType.equals(EVENT_TYPE_DELETE)) {
@@ -158,30 +143,90 @@ class CacheController {
         }
     }
 
-    void getUnsentMessages(final Conversation conversation, final GetCallback<List<Message>> callback) {
-        RealmStore.QueryBuilder<MessageCacheObject> queryBuilder = new RealmStore.QueryBuilder<MessageCacheObject>() {
-            @Override
-            public RealmQuery<MessageCacheObject> buildQueryFrom(RealmQuery<MessageCacheObject> baseQuery) {
-                RealmQuery<MessageCacheObject> query = baseQuery
-                        .equalTo(KEY_CONVERSATION_ID, conversation.getId())
-                        .isNotNull(KEY_SEND_DATE)
-                        .beginGroup()
-                            .equalTo(KEY_ALREADY_SYNC_TO_SERVER, false)
-                            .or()
-                            .equalTo(KEY_FAIL, true)
-                        .endGroup();
+    //endregion
 
+    //region Message Operation
+
+    private void fetchMessageOperations(final @NonNull RealmStore.QueryBuilder<MessageOperationCacheObject> queryBuilder,
+                                        final @Nullable GetCallback<List<MessageOperation>> callback) {
+        this.store.getMessageOperations(queryBuilder, -1, MessageOperationCacheObject.KEY_SEND_DATE, new RealmStore.ResultCallback<MessageOperation[]>() {
+            @Override
+            public void onResultGet(MessageOperation[] operations) {
+                if (callback != null) {
+                    callback.onSuccess(Arrays.asList(operations));
+                }
+            }
+        });
+    }
+
+    void fetchMessageOperations(final @NonNull Conversation conversation,
+                                final @NonNull MessageOperation.Type operationType,
+                                @Nullable GetCallback<List<MessageOperation>> callback) {
+        RealmStore.QueryBuilder<MessageOperationCacheObject> queryBuilder = new RealmStore.QueryBuilder<MessageOperationCacheObject>() {
+            @Override
+            public RealmQuery<MessageOperationCacheObject> buildQueryFrom(RealmQuery<MessageOperationCacheObject> baseQuery) {
+                RealmQuery<MessageOperationCacheObject> query = baseQuery
+                        .equalTo(MessageOperationCacheObject.KEY_CONVERSATION_ID, conversation.getId())
+                        .equalTo(MessageOperationCacheObject.KEY_TYPE, operationType.getName());
                 return query;
             }
         };
 
-        if (callback != null) {
-            this.store.getMessages(queryBuilder, -1, "creationDate", new RealmStore.ResultCallback<Message[]>() {
-                @Override
-                public void onResultGet(Message[] messages) {
-                    callback.onSuccess(Arrays.asList(messages));
-                }
-            });
-        }
+        this.fetchMessageOperations(queryBuilder, callback);
     }
+
+    void fetchMessageOperations(final @NonNull Message message,
+                                final @NonNull MessageOperation.Type operationType,
+                                @Nullable GetCallback<List<MessageOperation>> callback) {
+        RealmStore.QueryBuilder<MessageOperationCacheObject> queryBuilder = new RealmStore.QueryBuilder<MessageOperationCacheObject>() {
+            @Override
+            public RealmQuery<MessageOperationCacheObject> buildQueryFrom(RealmQuery<MessageOperationCacheObject> baseQuery) {
+                RealmQuery<MessageOperationCacheObject> query = baseQuery
+                        .equalTo(MessageOperationCacheObject.KEY_MESSAGE_ID, message.getId())
+                        .equalTo(MessageOperationCacheObject.KEY_TYPE, operationType.getName());
+                return query;
+            }
+        };
+
+        this.fetchMessageOperations(queryBuilder, callback);
+    }
+
+    MessageOperation didStartMessageOperation(@NonNull Message message,
+                                              @NonNull String conversationId,
+                                              @NonNull MessageOperation.Type type) {
+        MessageOperation operation = new MessageOperation(message, conversationId, type);
+        this.store.setMessageOperations(new MessageOperation[]{operation});
+        return operation;
+    }
+
+    void didCompleteMessageOperation(@NonNull MessageOperation operation) {
+        // Completed message operation is removed from cache store.
+        operation.status = MessageOperation.Status.SUCCESS;
+        this.store.deleteMessageOperations(new MessageOperation[]{operation});
+    }
+
+    void didFailMessageOperation(@NonNull MessageOperation operation, @Nullable Error error) {
+        operation.status = MessageOperation.Status.FAILED;
+        operation.error = error;
+        this.store.setMessageOperations(new MessageOperation[]{operation});
+    }
+
+    void didCancelMessageOperation(@NonNull MessageOperation operation) {
+        this.store.deleteMessageOperations(new MessageOperation[]{operation});
+    }
+
+    void markPendingMessageOperationsAsFailed() {
+        RealmStore.QueryBuilder<MessageOperationCacheObject> queryBuilder = new RealmStore.QueryBuilder<MessageOperationCacheObject>() {
+            @Override
+            public RealmQuery<MessageOperationCacheObject> buildQueryFrom(RealmQuery<MessageOperationCacheObject> baseQuery) {
+                RealmQuery<MessageOperationCacheObject> query = baseQuery
+                        .equalTo(MessageOperationCacheObject.KEY_STATUS, MessageOperation.Status.PENDING.toString());
+                return query;
+            }
+        };
+
+        this.store.markMessageOperationsAsFailed(queryBuilder, null);
+    }
+
+    //endregion
 }

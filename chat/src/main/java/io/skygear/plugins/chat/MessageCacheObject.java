@@ -40,8 +40,6 @@ public class MessageCacheObject extends RealmObject {
     static String KEY_EDITION_DATE = "editionDate";
     static String KEY_SEND_DATE = "sendDate";
     static String KEY_DELETED = "deleted";
-    static String KEY_ALREADY_SYNC_TO_SERVER = "alreadySyncToServer";
-    static String KEY_FAIL = "fail";
     static String KEY_JSON_DATA = "jsonData";
 
     @PrimaryKey
@@ -56,10 +54,6 @@ public class MessageCacheObject extends RealmObject {
     Date sendDate;
 
     boolean deleted;
-
-    boolean alreadySyncToServer;
-
-    boolean fail;
 
     String jsonData;
 
@@ -76,8 +70,6 @@ public class MessageCacheObject extends RealmObject {
         this.deleted = deleted == null ? false : deleted;
         this.jsonData = message.toJson().toString();
         this.sendDate = message.sendDate;
-        this.alreadySyncToServer = message.alreadySyncToServer;
-        this.fail = message.fail;
 
         // creationDate of the record originally represents the message creation date on server
         // this overloads the meaning of creationDate, to also represents local creation date.
@@ -95,8 +87,6 @@ public class MessageCacheObject extends RealmObject {
         Record record = Record.fromJson(json);
         Message message = new Message(record);
         message.sendDate = this.sendDate;
-        message.alreadySyncToServer = this.alreadySyncToServer;
-        message.fail = this.fail;
         return message;
     }
 }
