@@ -66,7 +66,7 @@ public class CacheControllerTest {
             messageJson.put("_id", "message/m" + i);
             Date createdAt = new Date(i * 1000);
             messageJson.put("_created_at", formatterWithMS.print(new DateTime(createdAt)));
-
+            messageJson.put("seq", i + 1);
             Record record = Record.fromJson(messageJson);
             Reference conversationRef = new Reference("conversation", "c" + (i % 2));
             record.set("conversation", conversationRef);
@@ -114,7 +114,7 @@ public class CacheControllerTest {
     public void testInitialState() {
         final boolean[] checkpoints = new boolean[] { false };
         Conversation conversation = new Conversation(new Record("conversation", "c0"));
-        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
+        this.cacheController.getMessages(conversation, 100, null, null,null, new GetCallback<List<Message>>() {
             @Override
             public void onSuccess(@Nullable List<Message> messages) {
                 Assert.assertEquals(messages.size(), 5);
@@ -178,7 +178,7 @@ public class CacheControllerTest {
         Message deletedMessage = new Message(record);
 
         this.cacheController.didGetMessages(messages, new Message[]{deletedMessage});
-        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
+        this.cacheController.getMessages(conversation, 100, null, null, null, new GetCallback<List<Message>>() {
             @Override
             public void onSuccess(@Nullable List<Message> messages) {
                 Assert.assertEquals(messages.size(), 7);
@@ -236,7 +236,7 @@ public class CacheControllerTest {
 
         Assert.assertEquals(realm.where(MessageCacheObject.class).findAll().size(), 11);
 
-        this.cacheController.getMessages(conversation, 1, null, null, new GetCallback<List<Message>>() {
+        this.cacheController.getMessages(conversation, 1, null, null, null, new GetCallback<List<Message>>() {
             @Override
             public void onSuccess(@Nullable List<Message> messages) {
                 Message message = messages.get(0);
@@ -275,7 +275,7 @@ public class CacheControllerTest {
         Message deletedMessage = new Message(record);
 
         this.cacheController.didDeleteMessage(deletedMessage);
-        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
+        this.cacheController.getMessages(conversation, 100, null, null, null, new GetCallback<List<Message>>() {
             @Override
             public void onSuccess(@Nullable List<Message> messages) {
                 Assert.assertEquals(messages.size(), 4);
@@ -315,7 +315,7 @@ public class CacheControllerTest {
         Message deletedMessage = new Message(record);
 
         this.cacheController.didDeleteMessage(deletedMessage);
-        this.cacheController.getMessages(conversation, 100, null, null, new GetCallback<List<Message>>() {
+        this.cacheController.getMessages(conversation, 100, null, null, null, new GetCallback<List<Message>>() {
             @Override
             public void onSuccess(@Nullable List<Message> messages) {
                 Assert.assertEquals(messages.size(), 5);
@@ -455,6 +455,45 @@ public class CacheControllerTest {
         Assert.assertEquals(results.size(), 1);
         Assert.assertEquals(results.get(0).editionDate, new Date(1000));
         Assert.assertEquals(results.get(0).deleted, true);
+    }
+
+    @Test
+    public void testCacheControllerGetMessagesWithSeq() {
+        Conversation conversation = new Conversation(new Record("conversation", "c0"));
+        this.cacheController.getMessages(conversation, 100, null, 5, null, new GetCallback<List<Message>>() {
+            @Override
+            public void onSuccess(@Nullable List<Message> messages) {
+                int expectedTotal =  2;
+                Assert.assertEquals(messages.size(), expectedTotal);
+                for (int i = 0 ; i < expectedTotal; i++) {
+                    Message message = messages.get(expectedTotal - i - 1);
+                    Assert.assertEquals(i * 2  + 1, message.getSeq());
+                }
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
+
+        conversation = new Conversation(new Record("conversation", "c1"));
+        this.cacheController.getMessages(conversation, 100, null, 5, null, new GetCallback<List<Message>>() {
+            @Override
+            public void onSuccess(@Nullable List<Message> messages) {
+                int expectedTotal =  2;
+                Assert.assertEquals(expectedTotal, messages.size());
+                for (int i = 0 ; i < expectedTotal; i++) {
+                    Message message = messages.get(expectedTotal - i - 1);
+                    Assert.assertEquals((i + 1) * 2, message.getSeq());
+                }
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Assert.fail("Should not get fail callback");
+            }
+        });
     }
 
     @Test

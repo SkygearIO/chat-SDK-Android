@@ -627,10 +627,55 @@ public final class ChatContainer {
                     }
                 });
     }
+
+    /**
+     * Gets messages.
+     * @param conversation  the conversation
+     * @param limit         the limit
+     * @param beforeMessage the before message
+     * @param order         the order, either 'edited_at' or '_created_at'
+     * @param callback      the callback
+     */
+    public void getMessages(@NonNull final Conversation conversation,
+                            final int limit,
+                            @Nullable final Message beforeMessage,
+                            @Nullable final String order,
+                            @Nullable final GetMessagesCallback callback) {
+        getMessages(conversation, limit, beforeMessage == null ? null : beforeMessage.getId(), order, callback);
+    }
+
+    /**
+     * Gets messages.
+     * @param conversation     the conversation
+     * @param limit            the limit
+     * @param beforeMessageId  the before message
+     * @param order            the order, either 'edited_at' or '_created_at'
+     * @param callback         the callback
+     */
+    public void getMessages(@NonNull final Conversation conversation,
+                            final int limit,
+                            @Nullable final String beforeMessageId,
+                            @Nullable final String order,
+                            @Nullable final GetMessagesCallback callback) {
+        int limitCount = limit;
+        if (limitCount <= 0) {
+            limitCount = GET_MESSAGES_DEFAULT_LIMIT;
+        }
+
+        cacheController.getMessages(conversation, limitCount, beforeMessageId, order, CreateGetCallback(callback));
+
+        HashMap<String, Object> args = new HashMap<String, Object>();
+        args.put("conversation_id", conversation.getId());
+        args.put("limit", limitCount);
+        args.put("before_message_id", beforeMessageId);
+        args.put("order", order);
+        getMessages(args, callback);
+
+    }
+
     /* --- Message --- */
     /**
      * Gets messages.
-     *
      * @param conversation the conversation
      * @param limit        the limit
      * @param before       the before
@@ -649,7 +694,19 @@ public final class ChatContainer {
             limitCount = GET_MESSAGES_DEFAULT_LIMIT;
         }
 
-        cacheController.getMessages(conversation, limitCount, before, order, new GetCallback<List<Message>>() {
+        cacheController.getMessages(conversation, limitCount, before, order, CreateGetCallback(callback));
+
+        HashMap<String, Object> args = new HashMap<String, Object>();
+        args.put("conversation_id", conversation.getId());
+        args.put("limit", limitCount);
+        args.put("before_time", beforeTimeISO8601);
+        args.put("order", order);
+        getMessages(args, callback);
+
+    }
+
+    private GetCallback<List<Message>> CreateGetCallback(@Nullable  final GetMessagesCallback callback) {
+        return new GetCallback<List<Message>>() {
             @Override
             public void onSuccess(@Nullable List<Message> object) {
                 if (callback != null) {
@@ -659,15 +716,12 @@ public final class ChatContainer {
 
             @Override
             public void onFail(@NonNull Error error) {
-
+                Log.e(TAG, "Failed to load message from cache: " + error.getMessage());
             }
-        });
+        };
+    }
 
-        HashMap<String, Object> args = new HashMap<String, Object>();
-        args.put("conversation_id", conversation.getId());
-        args.put("limit", limitCount);
-        args.put("before_time", beforeTimeISO8601);
-        args.put("order", order);
+    private void getMessages(@NonNull HashMap<String, Object> args, @Nullable final GetMessagesCallback callback) {
         this.skygear.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {

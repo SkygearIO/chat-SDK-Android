@@ -68,7 +68,7 @@ open class ConversationFragment() :
     private var voicePlayer: VoiceMessagePlayer? = null
 
 
-    private var messageLoadMoreBefore: Date = Date()
+    private var messageLoadMoreBefore: ChatMessage? = null
     private var messageSubscriptionRetryCount = 0
 
     private var mCameraPhotoUri: Uri? = null
@@ -243,7 +243,7 @@ open class ConversationFragment() :
     }
 
     private fun fetchMessages(
-            before: Date? = null,
+            before: ChatMessage? = null,
             complete: ((msgs: List<ChatMessage>?, error: String?) -> Unit)? = null
     ) {
         val cachedResult: MutableList<ChatMessage> = mutableListOf()
@@ -269,11 +269,15 @@ open class ConversationFragment() :
                 }
             }
 
-            chatMsgs?.let { this@ConversationFragment.addMessages(it) }
-            chatMsgs?.map { it.createdTime }?.min()?.let { newBefore ->
-                // update load more cursor
-                if (newBefore.before(this@ConversationFragment.messageLoadMoreBefore)) {
-                    this@ConversationFragment.messageLoadMoreBefore = newBefore
+
+            chatMsgs?.let {
+                this@ConversationFragment.addMessages(it)
+                val minMessage = it.minBy { m -> m.seq }
+                minMessage?.let {
+                    val oldBefore = this@ConversationFragment.messageLoadMoreBefore
+                    if (oldBefore == null || minMessage.seq < oldBefore.seq ) {
+                        messageLoadMoreBefore = minMessage
+                    }
                 }
             }
 
