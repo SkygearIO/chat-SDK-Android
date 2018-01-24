@@ -41,6 +41,7 @@ public class MessageCacheObject extends RealmObject {
     static String KEY_SEND_DATE = "sendDate";
     static String KEY_DELETED = "deleted";
     static String KEY_JSON_DATA = "jsonData";
+    static String KEY_SEQ = "seq";
 
     @PrimaryKey
     String recordID;

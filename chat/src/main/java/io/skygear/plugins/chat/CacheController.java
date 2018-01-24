@@ -32,9 +32,7 @@ import static io.skygear.plugins.chat.MessageCacheObject.KEY_CONVERSATION_ID;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_CREATION_DATE;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_DELETED;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_EDITION_DATE;
-import static io.skygear.plugins.chat.MessageCacheObject.KEY_FAIL;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_RECORD_ID;
-import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEND_DATE;
 
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEQ;
 import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_CREATE;
