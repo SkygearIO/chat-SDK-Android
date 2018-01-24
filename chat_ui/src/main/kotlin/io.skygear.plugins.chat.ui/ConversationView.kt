@@ -165,16 +165,17 @@ open class ConversationView: RelativeLayout{
             failedText = a.getString(R.styleable.ConversationView_failed)
             hint = a.getString(R.styleable.ConversationView_hint)
             dateFormat = a.getString(R.styleable.ConversationView_dateFormat) ?: "HH:mm"
-            timeTextColorForIncomingMessages = a.getColor(R.styleable.ConversationView_timeTextColorForIncomingMessages, ContextCompat.getColor(context, R.color.gray_dark))
-            timeTextColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_timeTextColorForOutgoingMessages, ContextCompat.getColor(context, R.color.gray_dark))
+            val grayDarkColor = ContextCompat.getColor(context, R.color.gray_dark)
+            timeTextColorForIncomingMessages = a.getColor(R.styleable.ConversationView_timeTextColorForIncomingMessages, grayDarkColor)
+            timeTextColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_timeTextColorForOutgoingMessages, grayDarkColor)
             backgroundColorForIncomingMessages = a.getColor(R.styleable.ConversationView_backgroundColorForIncomingMessages, ContextCompat.getColor(context, R.color.white_two))
             backgroundColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_backgroundColorForOutgoingMessages, ContextCompat.getColor(context, R.color.cornflower_blue_two))
             voiceMessageButtonColorForIncomingMessages = a.getColor(R.styleable.ConversationView_voiceMessageButtonColorForIncomingMessages, ContextCompat.getColor(context, R.color.white))
             voiceMessageButtonColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_voiceMessageButtonColorForOutgoingMessages, ContextCompat.getColor(context, R.color.white))
             textColorForIncomingMessages = a.getColor(R.styleable.ConversationView_textColorForIncomingMessages, ContextCompat.getColor(context, R.color.black))
             textColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_textColorForOutgoingMessages, ContextCompat.getColor(context, R.color.white))
-            statusTextColorForIncomingMessages = a.getColor(R.styleable.ConversationView_statusTextColorForIncomingMessages, timeTextColorForIncomingMessages)
-            statusTextColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_statusTextColorForOutgoingMessages, timeTextColorForOutgoingMessages)
+            statusTextColorForIncomingMessages = a.getColor(R.styleable.ConversationView_statusTextColorForIncomingMessages, grayDarkColor)
+            statusTextColorForOutgoingMessages = a.getColor(R.styleable.ConversationView_statusTextColorForOutgoingMessages, grayDarkColor)
             voiceMessageButtonShouldShow = a.getBoolean(R.styleable.ConversationView_voiceMessageButtonShouldShow, true)
             cameraButtonShouldShow = a.getBoolean(R.styleable.ConversationView_cameraButtonShouldShow, true)
             messageStatusShouldShow = a.getBoolean(R.styleable.ConversationView_messageStatusShouldShow, true)
@@ -315,7 +316,7 @@ open class ConversationView: RelativeLayout{
 
     open fun setViewAdapter(newAdapter: ConversationViewAdapter) {
         this.viewAdapter = newAdapter
-        this.viewAdapter?.setBackground(this, this.conversation !!, userBuilder.createUser(this.skygear?.auth?.currentUser !!), backgroundImageView)
+        this.viewAdapter?.setBackground(this, this.conversation !!, backgroundImageView)
     }
 
     open fun setConversation(newConversation: Conversation?) {

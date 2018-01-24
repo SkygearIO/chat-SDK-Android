@@ -15,12 +15,12 @@ import java.io.Serializable
 open class ConversationViewAdapter : Serializable {
     var target: Target? = null
 
-    open fun backgroundImageURL(conversation: Conversation, user: User): String? {
+    open fun backgroundImageURL(conversation: Conversation): String? {
         return null
     }
 
-    fun setBackground(view: ConversationView, conversation: Conversation, user: User, imageView: ImageView?) {
-        val backgroundImageURL = this.backgroundImageURL(conversation, user)
+    fun setBackground(view: ConversationView, conversation: Conversation, imageView: ImageView?) {
+        val backgroundImageURL = this.backgroundImageURL(conversation)
         backgroundImageURL?.let {
             val picasso = Picasso.with(view.context)
             picasso.load(backgroundImageURL).into(imageView)

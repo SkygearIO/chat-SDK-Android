@@ -13,6 +13,7 @@
         android:layout_alignLeft="@id/bubble"
         android:layout_below="@id/bubble"
         android:textColor="@color/gray_dark"
+        android:paddingRight="4sp"
         android:textSize="14sp"/>
     <TextView
         android:id="@id/messageTime"
