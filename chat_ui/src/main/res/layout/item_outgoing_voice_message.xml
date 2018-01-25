@@ -48,16 +48,10 @@
 
     </LinearLayout>
 
-    <TextView
-        android:id="@id/messageTime"
+    <include layout="@layout/message_status_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignEnd="@id/bubble"
         android:layout_alignRight="@id/bubble"
-        android:layout_below="@id/bubble"
-        android:layout_marginLeft="16dp"
-        android:layout_marginStart="16dp"
-        android:textColor="@color/gray_dark"
-        android:textSize="14sp"/>
-
+        android:layout_below="@id/bubble" />
 </RelativeLayout>

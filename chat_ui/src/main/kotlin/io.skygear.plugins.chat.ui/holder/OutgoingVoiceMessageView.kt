@@ -12,7 +12,7 @@ class OutgoingVoiceMessageView(view: View): MessageHolders.OutcomingTextMessageV
     var bubbleView: OutgoingBubbleMessageView? = null
 
     init {
-        voiceMessageView = VoiceMessageView(itemView)
+        voiceMessageView = VoiceMessageView(itemView, false)
         timeMessageView = OutgoingTimeMessageView(itemView)
         receiverAvatarMessageView = ReceiverAvatarMessageView(itemView)
         bubbleView = OutgoingBubbleMessageView(itemView)
