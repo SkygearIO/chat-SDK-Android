@@ -467,7 +467,7 @@ public class CacheControllerTest {
                 Assert.assertEquals(messages.size(), expectedTotal);
                 for (int i = 0 ; i < expectedTotal; i++) {
                     Message message = messages.get(expectedTotal - i - 1);
-                    Assert.assertEquals(i * 2  + 1, message.getSeq());
+                    Assert.assertEquals(i * 2  + 1, message.getSequence());
                 }
             }
 
@@ -485,7 +485,7 @@ public class CacheControllerTest {
                 Assert.assertEquals(expectedTotal, messages.size());
                 for (int i = 0 ; i < expectedTotal; i++) {
                     Message message = messages.get(expectedTotal - i - 1);
-                    Assert.assertEquals((i + 1) * 2, message.getSeq());
+                    Assert.assertEquals((i + 1) * 2, message.getSequence());
                 }
             }
 

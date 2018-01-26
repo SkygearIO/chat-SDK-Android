@@ -676,6 +676,7 @@ public final class ChatContainer {
     /* --- Message --- */
     /**
      * Gets messages.
+     * 
      * @param conversation the conversation
      * @param limit        the limit
      * @param before       the before

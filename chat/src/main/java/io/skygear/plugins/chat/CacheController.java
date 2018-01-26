@@ -34,7 +34,7 @@ import static io.skygear.plugins.chat.MessageCacheObject.KEY_DELETED;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_EDITION_DATE;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_RECORD_ID;
 
-import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEQ;
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEQUENCE;
 import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_CREATE;
 import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_DELETE;
 import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_UPDATE;
@@ -99,7 +99,7 @@ class CacheController {
                 }
 
                 if (beforeMessageIdSeq != null) {
-                    query.lessThan(KEY_SEQ, beforeMessageIdSeq);
+                    query.lessThan(KEY_SEQUENCE, beforeMessageIdSeq);
                 }
 
 
@@ -123,7 +123,7 @@ class CacheController {
                             callback.onSuccess(new ArrayList<Message>());
                         } else {
                             Message message = messages.get(0);
-                            getMessages(conversation, limit, null, message.getSeq(), order, callback);
+                            getMessages(conversation, limit, null, message.getSequence(), order, callback);
                         }
                     }
 

@@ -272,10 +272,10 @@ open class ConversationFragment() :
 
             chatMsgs?.let {
                 this@ConversationFragment.addMessages(it)
-                val minMessage = it.minBy { m -> m.seq }
+                val minMessage = it.minBy { m -> m.sequence }
                 minMessage?.let {
                     val oldBefore = this@ConversationFragment.messageLoadMoreBefore
-                    if (oldBefore == null || minMessage.seq < oldBefore.seq ) {
+                    if (oldBefore == null || minMessage.sequence < oldBefore.sequence) {
                         messageLoadMoreBefore = minMessage
                     }
                 }

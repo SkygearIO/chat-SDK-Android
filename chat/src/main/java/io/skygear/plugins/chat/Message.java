@@ -186,7 +186,7 @@ public class Message {
      * @return the seq
      */
     @NonNull
-    public int getSeq() {
+    public int getSequence() {
         Object value = record.get(SEQ_KEY);
         return value == null ? 0 : (Integer) value;
     }
