@@ -31,6 +31,7 @@ before_script:
 script:
   - ./gradlew :chat:build --info --stacktrace
   - ./gradlew :chat_ui:build --info --stacktrace
+  - ./gradlew :chat:check --info --stacktrace
   - ./gradlew :chat:connectedAndroidTest --info --stacktrace
 
 before_deploy:

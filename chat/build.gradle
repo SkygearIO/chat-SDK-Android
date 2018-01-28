@@ -8,6 +8,7 @@ buildscript {
     }
 }
 
+apply plugin: 'checkstyle'
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jetbrains.dokka-android'
@@ -84,4 +85,20 @@ repositories {
         url 'https://maven.google.com/'
         name 'Google'
     }
+}
+
+task checkstyleMain(type: Checkstyle, group: "verification") {
+    source = android.sourceSets.main.java.srcDirs
+    classpath = files()
+}
+
+check {
+    dependsOn checkstyleMain
+}
+
+checkstyle {
+    toolVersion '8.7'
+    configFile file("${rootProject.rootDir}/checkstyle.xml")
+    // Should uncomment this line when we fixed all warnings:
+    //maxWarnings 0
 }
