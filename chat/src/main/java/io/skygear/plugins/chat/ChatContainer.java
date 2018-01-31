@@ -630,6 +630,7 @@ public final class ChatContainer {
 
     /**
      * Gets messages.
+     *
      * @param conversation  the conversation
      * @param limit         the limit
      * @param beforeMessage the before message
@@ -646,6 +647,7 @@ public final class ChatContainer {
 
     /**
      * Gets messages.
+     *
      * @param conversation     the conversation
      * @param limit            the limit
      * @param beforeMessageId  the before message
