@@ -522,7 +522,7 @@ public final class ChatContainer {
      * @param callback the callback
      */
     public void getTotalUnreadMessageCount(@Nullable final GetCallback<Integer> callback) {
-        this.skygear.callLambdaFunction("chat:total_unread", new HashMap<String, Object>(), new LambdaResponseHandler() {
+        this.skygear.callLambdaFunction("chat:total_unread", new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {
                 try {

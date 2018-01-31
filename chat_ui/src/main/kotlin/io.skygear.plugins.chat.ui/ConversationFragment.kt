@@ -687,7 +687,7 @@ open class ConversationFragment() :
                 override fun onFail(error: Error) {
                     this@ConversationFragment.fragmentMessageSentListener?.
                             onMessageSentFailed(this@ConversationFragment, message, error)
-                    message?.let { this@ConversationFragment.updateMessage(message) }
+                    message?.let { this@ConversationFragment.updateMessage(message, error) }
                 }
             })
         }
