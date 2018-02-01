@@ -72,6 +72,7 @@ public class SortedMessageListAdapter extends MessagesListAdapter<Message> {
                 }
             }
         }
+        notifyDataSetChanged();
     }
 
     private void removeDateHeaders() {

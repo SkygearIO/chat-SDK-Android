@@ -10,7 +10,7 @@ import io.skygear.skygear.Record
 
 class User : IUser {
     companion object {
-        var DefaultDisplayName = "Unknown"
+        var DefaultDisplayName = ""
         var DefaultUsernameField = "username"
         var DefaultAvatarField = "Unknown"
     }
