@@ -39,11 +39,14 @@ class UserIdsAdapter(val currentUserId: String?) : RecyclerView.Adapter<UserIdsA
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val chatUser: ChatUser = chatUsers[position]
-
         holder.idTv.text = chatUser.id
+
         holder.idCb.isChecked = chatUser.id in selectedIds
-        holder.idCb.setOnCheckedChangeListener { compoundButton, b ->
-            if (b) {
+
+        holder.idCb.setOnClickListener { it: View? ->
+            val cb = (it as AppCompatCheckBox)
+
+            if(cb.isChecked) {
                 selectedIds.add(chatUser.id)
             } else {
                 selectedIds.remove(chatUser.id)
