@@ -20,12 +20,10 @@ package io.skygear.plugins.chat;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-
-import javax.annotation.Nonnegative;
-import javax.annotation.Nonnull;
 
 import io.realm.RealmQuery;
 import io.skygear.skygear.Error;
@@ -34,8 +32,9 @@ import static io.skygear.plugins.chat.MessageCacheObject.KEY_CONVERSATION_ID;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_CREATION_DATE;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_DELETED;
 import static io.skygear.plugins.chat.MessageCacheObject.KEY_EDITION_DATE;
-import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEND_DATE;
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_RECORD_ID;
 
+import static io.skygear.plugins.chat.MessageCacheObject.KEY_SEQUENCE;
 import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_CREATE;
 import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_DELETE;
 import static io.skygear.plugins.chat.MessageSubscriptionCallback.EVENT_TYPE_UPDATE;
@@ -74,10 +73,20 @@ class CacheController {
     //region Message
 
     void getMessages(@NonNull final Conversation conversation,
+                     final int limit,
+                     @Nullable final Date before,
+                     @Nullable final String order,
+                     @Nullable final GetCallback<List<Message>> callback) {
+        getMessages(conversation, limit, before, null, order, callback);
+    }
+
+    void getMessages(@NonNull final Conversation conversation,
                             final int limit,
                             @Nullable final Date before,
+                            @Nullable final Integer beforeMessageIdSeq,
                             @Nullable final String order,
                             @Nullable final GetCallback<List<Message>> callback) {
+
         RealmStore.QueryBuilder<MessageCacheObject> queryBuilder = new RealmStore.QueryBuilder<MessageCacheObject>() {
             @Override
             public RealmQuery<MessageCacheObject> buildQueryFrom(RealmQuery<MessageCacheObject> baseQuery) {
@@ -89,18 +98,66 @@ class CacheController {
                     query.lessThan(KEY_CREATION_DATE, before);
                 }
 
+                if (beforeMessageIdSeq != null) {
+                    query.lessThan(KEY_SEQUENCE, beforeMessageIdSeq);
+                }
+
+
                 return query;
             }
         };
+        getMessages(queryBuilder, limit, order, callback);
+    }
 
-        String resolvedOrder = order;
-        if (resolvedOrder != null && resolvedOrder.equalsIgnoreCase("edited_at")) {
-            resolvedOrder = KEY_EDITION_DATE;
-        } else {
-            resolvedOrder = KEY_CREATION_DATE;
-        }
-
+    void getMessages(@NonNull final Conversation conversation,
+                     final int limit,
+                     @Nullable final String beforeMessageId,
+                     @Nullable final String order,
+                     @Nullable final GetCallback<List<Message>> callback) {
         if (callback != null) {
+            if (beforeMessageId != null) {
+                getMessage(beforeMessageId, new GetCallback<List<Message>>() {
+                    @Override
+                    public void onSuccess(@Nullable List<Message> messages) {
+                        if (messages.isEmpty()) {
+                            callback.onSuccess(new ArrayList<Message>());
+                        } else {
+                            Message message = messages.get(0);
+                            getMessages(conversation, limit, null, message.getSequence(), order, callback);
+                        }
+                    }
+
+                    @Override
+                    public void onFail(@NonNull Error error) {
+                        callback.onSuccess(new ArrayList<Message>());
+                    }
+                });
+            } else {
+                getMessages(conversation, limit, null, null, order, callback);
+            }
+        }
+    }
+
+    private void getMessage(@NonNull final String messageId, @Nullable  final GetCallback<List<Message>> callback) {
+        RealmStore.QueryBuilder<MessageCacheObject> queryBuilder = new RealmStore.QueryBuilder<MessageCacheObject>() {
+            @Override
+            public RealmQuery<MessageCacheObject> buildQueryFrom(RealmQuery<MessageCacheObject> baseQuery) {
+                RealmQuery<MessageCacheObject> query = baseQuery
+                        .equalTo(KEY_RECORD_ID, messageId);
+                return query;
+            }
+        };
+        getMessages(queryBuilder, 1, null, callback);
+    }
+
+    private void getMessages(@NonNull RealmStore.QueryBuilder<MessageCacheObject> queryBuilder, int limit, String order, @Nullable final GetCallback<List<Message>> callback) {
+        if (callback != null) {
+            String resolvedOrder = order;
+            if (resolvedOrder != null && resolvedOrder.equalsIgnoreCase("edited_at")) {
+                resolvedOrder = KEY_EDITION_DATE;
+            } else {
+                resolvedOrder = KEY_CREATION_DATE;
+            }
             this.store.getMessages(queryBuilder, limit, resolvedOrder, new RealmStore.ResultCallback<Message[]>() {
                 @Override
                 public void onResultGet(Message[] messages) {

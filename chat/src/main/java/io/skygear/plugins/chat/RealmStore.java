@@ -68,7 +68,9 @@ class RealmStore {
         RealmConfiguration.Builder configBuilder = new RealmConfiguration.Builder()
                 .name(this.name)
                 .schemaVersion(1)
-                .modules(new SkygearChatModule());
+                .modules(new SkygearChatModule())
+                .schemaVersion(2)
+                .migration(new SequenceMigration());
 
         if (this.inMemory) {
             configBuilder = configBuilder.inMemory();

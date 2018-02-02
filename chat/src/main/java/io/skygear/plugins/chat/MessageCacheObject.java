@@ -41,6 +41,7 @@ public class MessageCacheObject extends RealmObject {
     static String KEY_SEND_DATE = "sendDate";
     static String KEY_DELETED = "deleted";
     static String KEY_JSON_DATA = "jsonData";
+    static String KEY_SEQUENCE = "seq";
 
     @PrimaryKey
     String recordID;
@@ -52,6 +53,8 @@ public class MessageCacheObject extends RealmObject {
     Date editionDate;
 
     Date sendDate;
+
+    Integer seq;
 
     boolean deleted;
 
@@ -70,7 +73,7 @@ public class MessageCacheObject extends RealmObject {
         this.deleted = deleted == null ? false : deleted;
         this.jsonData = message.toJson().toString();
         this.sendDate = message.sendDate;
-
+        this.seq = message.getSequence();
         // creationDate of the record originally represents the message creation date on server
         // this overloads the meaning of creationDate, to also represents local creation date.
         // Then creationDate can also be used to sort messages even not uploaded to server yet.

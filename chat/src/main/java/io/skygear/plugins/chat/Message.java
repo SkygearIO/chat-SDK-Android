@@ -24,6 +24,7 @@ public class Message {
     static final String METADATA_KEY = "metadata";
     static final String ATTACHMENT_KEY = "attachment";
     static final String MESSAGE_STATUS_KEY = "message_status";
+    static final String SEQ_KEY = "seq";
 
     final Record record;
 
@@ -177,6 +178,17 @@ public class Message {
      */
     public Date getSendDate() {
         return this.sendDate;
+    }
+
+    /**
+     * Gets seq.
+     *
+     * @return the seq
+     */
+    @NonNull
+    public int getSequence() {
+        Object value = record.get(SEQ_KEY);
+        return value == null ? 0 : (Integer) value;
     }
 
     /**
