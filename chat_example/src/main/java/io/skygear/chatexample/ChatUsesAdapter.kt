@@ -38,6 +38,9 @@ class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAda
         val chatUser: ChatUser = mChatUsers[position]
 
         holder.idTv.text = chatUser.id
+        if (chatUser.record.get("username") != null) {
+            holder.idTv.text = chatUser.record.get("username").toString()
+        }
         holder.idCb.isChecked = chatUser in mSelectedChatUsers
 
         holder.idCb.setOnClickListener { it: View? ->

@@ -39,7 +39,7 @@ class UserIdsAdapter(val currentUserId: String?) : RecyclerView.Adapter<UserIdsA
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val chatUser: ChatUser = chatUsers[position]
-        holder.idTv.text = chatUser.id
+        holder.idTv.text = chatUser.record.get("username").toString()
 
         holder.idCb.isChecked = chatUser.id in selectedIds
 

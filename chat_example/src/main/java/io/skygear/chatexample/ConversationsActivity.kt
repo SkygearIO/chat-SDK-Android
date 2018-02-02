@@ -69,9 +69,22 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     fun getAllConversations() {
+
+        val username = mSkygear.auth.currentUser.get("username").toString()
+        val greetUserMessage = String.format("Hi, %s!", username)
+        Toast.makeText(this@ConversationsActivity, greetUserMessage, Toast.LENGTH_SHORT).show()
+
         mChatContainer.getConversations(object : GetCallback<List<Conversation>> {
             override fun onSuccess(list: List<Conversation>?) {
                 mAdapter.setConversations(list)
+
+                if (list?.isEmpty()!!) {
+                    Toast.makeText(this@ConversationsActivity, "No conversations. You may create one with other users.", Toast.LENGTH_SHORT).show()
+                } else {
+                    val listSize: Int = list!!.size
+                    val message = String.format("%d conversations loaded.", listSize)
+                    Toast.makeText(this@ConversationsActivity, message, Toast.LENGTH_SHORT).show()
+                }
             }
 
             override fun onFail(error: Error) {
