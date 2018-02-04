@@ -23,13 +23,13 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
         if (messages != null) {
             mMessages = messages.toMutableList()
         } else {
-            mMessages = mutableListOf();
+            mMessages = mutableListOf()
         }
 
         notifyDataSetChanged()
     }
 
-    fun getLatestMessage(): Message?{
+    fun getLatestMessage(): Message? {
         return mMessages.firstOrNull()
     }
 
@@ -48,10 +48,9 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
         }
     }
 
-    fun deleteMessage(message:Message) {
+    fun deleteMessage(message: Message) {
         val idx = mMessages.indexOfFirst { it.id == message.id }
-        if (idx != - 1)
-        {
+        if (idx != - 1) {
             mMessages.removeAt(idx)
             notifyDataSetChanged()
         }
@@ -91,8 +90,7 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
             }
         }
 
-        with (holder.itemView)
-        {
+        with (holder.itemView) {
             tag = message
             setOnClickListener { v ->
                 val m = v.tag as Message
@@ -105,7 +103,7 @@ class ConversationAdapter : RecyclerView.Adapter<ConversationAdapter.ViewHolder>
         return mMessages.size
     }
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view)  {
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val bodyTv = view.findViewById<TextView>(R.id.message_body_tv)
         val statusIv = view.findViewById<ImageView>(R.id.message_status_iv)
         val assetIv = view.findViewById<ImageView>(R.id.message_asset_iv)

@@ -56,4 +56,3 @@ class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAda
         var idTv = view.findViewById<TextView>(R.id.user_id_tv)
     }
 }
-

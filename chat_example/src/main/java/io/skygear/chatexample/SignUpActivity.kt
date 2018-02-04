@@ -7,8 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.text.Editable
 import android.widget.Button
 import android.widget.EditText
-import io.skygear.skygear.*
-
+import io.skygear.skygear.* // ktlint-disable no-wildcard-imports
 
 class SignUpActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "SignUpActivity"
@@ -39,7 +38,6 @@ class SignUpActivity : AppCompatActivity() {
             loading.setMessage(getString(R.string.signing_up))
             loading.show()
 
-
             val authFail = fun (_: Error?) {
                 loading.dismiss()
                 this@SignUpActivity.signupFail()
@@ -63,7 +61,6 @@ class SignUpActivity : AppCompatActivity() {
                             }
 
                             override fun onSaveFail(error: Error?) = authFail(error)
-
                         })
                 return
             }
@@ -72,11 +69,9 @@ class SignUpActivity : AppCompatActivity() {
                     username.toString(),
                     password.toString(),
                     object : AuthResponseHandler() {
-                        override fun onAuthSuccess(user: Record)
-                                = authSuccess(user, username.toString())
+                        override fun onAuthSuccess(user: Record) = authSuccess(user, username.toString())
 
-                        override fun onAuthFail(error: Error)
-                                = authFail(error)
+                        override fun onAuthFail(error: Error) = authFail(error)
                     })
         }
     }

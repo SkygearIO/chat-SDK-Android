@@ -69,7 +69,7 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
         return mConversations.size
     }
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view)  {
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val nameTv = view.findViewById<TextView>(R.id.conversation_name_tv)
         val idTv = view.findViewById<TextView>(R.id.conversation_id_tv)
         val lastMsgTv = view.findViewById<TextView>(R.id.conversation_last_msg_tv)

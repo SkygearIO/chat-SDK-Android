@@ -56,7 +56,6 @@ class LogInActivity : AppCompatActivity() {
         }
     }
 
-
     fun loginSuccess() {
         finish()
     }
