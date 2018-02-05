@@ -7,10 +7,10 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.Button
 import android.widget.Toast
-import io.skygear.plugins.chat.*
+import io.skygear.plugins.chat.* // ktlint-disable no-wildcard-imports
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 
 class CreateConversationActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "CreateConversation"
@@ -49,11 +49,10 @@ class CreateConversationActivity : AppCompatActivity() {
 
         mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
             override fun onSuccess(list: List<ChatUser>?) {
-                mAdapter.setChatUsers(list);
+                mAdapter.setChatUsers(list)
             }
 
             override fun onFail(error: Error) {
-
             }
         })
     }

@@ -61,5 +61,3 @@ class TitleFragment : DialogFragment() {
         mListener = listener
     }
 }
-
-

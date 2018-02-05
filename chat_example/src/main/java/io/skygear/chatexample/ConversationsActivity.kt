@@ -11,8 +11,8 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
-import io.skygear.plugins.chat.*
-import io.skygear.plugins.chat.ui.*
+import io.skygear.plugins.chat.* // ktlint-disable no-wildcard-imports
+import io.skygear.plugins.chat.ui.* // ktlint-disable no-wildcard-imports
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import io.skygear.skygear.LambdaResponseHandler
@@ -55,7 +55,7 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when(item?.itemId) {
+        when (item?.itemId) {
             R.id.log_out_menu -> {
                 confirmLogOut()
                 return true
@@ -75,7 +75,6 @@ class ConversationsActivity : AppCompatActivity() {
             }
 
             override fun onFail(error: Error) {
-
             }
         })
     }
@@ -121,7 +120,7 @@ class ConversationsActivity : AppCompatActivity() {
     fun showOptions(c: Conversation) {
         val builder = AlertDialog.Builder(this)
         val items = resources.getStringArray(R.array.conversation_options)
-        builder.setItems(items, { d, i -> when(i) {
+        builder.setItems(items, { d, i -> when (i) {
             0 -> enter(c)
             1 -> viewMeta(c)
             2 -> edit(c)
@@ -137,23 +136,21 @@ class ConversationsActivity : AppCompatActivity() {
     fun enter(c: Conversation) {
         val i = Intent(this, ConversationActivity::class.java)
         i.putExtra(ConversationActivity.ConversationIntentKey, c.toJson().toString())
-        i.putExtra(ConversationActivity.ConnectionListenerIntentKey, object: ConnectionListener {
+        i.putExtra(ConversationActivity.ConnectionListenerIntentKey, object : ConnectionListener {
             override fun onClose(fragment: ConversationFragment) {
                 Toast.makeText(fragment.activity, "Connection Closed", Toast.LENGTH_LONG).show()
             }
 
             override fun onError(fragment: ConversationFragment, e: Exception?) {
                 Toast.makeText(fragment.activity, "Connection Error", Toast.LENGTH_LONG).show()
-
             }
 
             override fun onOpen(fragment: ConversationFragment) {
                 Toast.makeText(fragment.activity, "Connection Open", Toast.LENGTH_LONG).show()
             }
         })
-        i.putExtra(ConversationActivity.MessageSentListenerIntentKey, object: MessageSentListener {
+        i.putExtra(ConversationActivity.MessageSentListenerIntentKey, object : MessageSentListener {
             override fun onBeforeMessageSent(fragment: ConversationFragment, message: Message) {
-
             }
 
             override fun onMessageSentSuccess(fragment: ConversationFragment, message: Message) {
@@ -164,9 +161,8 @@ class ConversationsActivity : AppCompatActivity() {
                 Toast.makeText(fragment.activity, "Message Sending Failed", Toast.LENGTH_LONG).show()
             }
         })
-        i.putExtra(ConversationActivity.MessageFetchListenerIntentKey, object: MessageFetchListener {
+        i.putExtra(ConversationActivity.MessageFetchListenerIntentKey, object : MessageFetchListener {
             override fun onBeforeMessageFetch(fragment: ConversationFragment) {
-
             }
 
             override fun onMessageFetchFailed(fragment: ConversationFragment, error: Error) {
@@ -198,7 +194,6 @@ class ConversationsActivity : AppCompatActivity() {
             }
 
             override fun onFail(error: Error) {
-
             }
         })
     }
@@ -228,7 +223,7 @@ class ConversationsActivity : AppCompatActivity() {
                 Log.i(LOG_TAG, "Successfully leave the conversation")
                 getAllConversations()
             }
-        } )
+        })
     }
 
     fun confirmDelete(c: Conversation) {
@@ -256,9 +251,8 @@ class ConversationsActivity : AppCompatActivity() {
                 Log.i(LOG_TAG, "Successfully delete the conversation")
                 getAllConversations()
             }
-        } )
+        })
     }
-
 
     fun updateAdmins(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
@@ -269,7 +263,6 @@ class ConversationsActivity : AppCompatActivity() {
                 }
 
                 override fun onFail(error: Error) {
-
                 }
             })
         }
@@ -285,7 +278,6 @@ class ConversationsActivity : AppCompatActivity() {
                 }
 
                 override fun onFail(error: Error) {
-
                 }
             })
         }

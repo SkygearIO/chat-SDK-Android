@@ -1,6 +1,5 @@
 package io.skygear.chatexample
 
-import android.text.TextUtils
 import io.skygear.skygear.SkygearApplication
 
 class MainApp() : SkygearApplication() {

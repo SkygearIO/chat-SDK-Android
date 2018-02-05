@@ -16,7 +16,7 @@ import io.skygear.plugins.chat.ChatUser
 import io.skygear.plugins.chat.GetCallback
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 
 class UserIdsFragment : DialogFragment() {
     private var mListener: (List<String>) -> Unit = {}
@@ -87,7 +87,6 @@ class UserIdsFragment : DialogFragment() {
             }
 
             override fun onFail(error: Error) {
-
             }
         })
     }

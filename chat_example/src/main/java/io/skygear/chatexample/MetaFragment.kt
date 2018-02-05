@@ -58,5 +58,4 @@ class MetaFragment : DialogFragment() {
 
         super.onResume()
     }
-
 }
