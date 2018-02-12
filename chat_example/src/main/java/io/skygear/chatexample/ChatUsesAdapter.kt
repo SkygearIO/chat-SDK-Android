@@ -38,8 +38,15 @@ class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAda
         val chatUser: ChatUser = mChatUsers[position]
 
         holder.idTv.text = chatUser.id
-        holder.idCb.setOnCheckedChangeListener { compoundButton, b ->
-            if (b) {
+        if (!chatUser.record.get("username")?.toString().isNullOrEmpty()) {
+                holder.idTv.text = chatUser.record.get("username").toString()
+        }
+        holder.idCb.isChecked = chatUser in mSelectedChatUsers
+
+        holder.idCb.setOnClickListener { it: View? ->
+            val cb = (it as AppCompatCheckBox)
+
+            if(cb.isChecked) {
                 mSelectedChatUsers.add(chatUser)
             } else {
                 mSelectedChatUsers.remove(chatUser)

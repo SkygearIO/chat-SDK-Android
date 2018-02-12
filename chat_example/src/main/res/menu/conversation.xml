@@ -5,6 +5,6 @@
           android:title="@string/log_out"
           app:showAsAction="ifRoom"/>
     <item android:id="@+id/add_conversation_menu"
-          android:title="@string/create"
+          android:title="@string/create_title"
           app:showAsAction="ifRoom"/>
 </menu>

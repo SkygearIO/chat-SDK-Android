@@ -39,7 +39,13 @@ class CreateConversationActivity : AppCompatActivity() {
         mCreateBtn?.setOnClickListener {
             val selectedUsers = mAdapter.getSelected()
             if (selectedUsers.isNotEmpty()) {
-                createTitleDialog()
+                var usernames = selectedUsers.map{user -> user.record.get("username")}.joinToString(separator = ", ")
+                // add myself
+                usernames += " and "
+                usernames += mSkygear.auth.currentUser.get("username")
+
+                val defaultTitle = String.format("💬 %s", usernames)
+                createTitleDialog(defaultTitle)
             }
         }
     }
@@ -57,8 +63,11 @@ class CreateConversationActivity : AppCompatActivity() {
         })
     }
 
-    fun createTitleDialog() {
+    fun createTitleDialog(defaultTitle: String) {
         val f = TitleFragment()
+        val mArgs = Bundle()
+        mArgs.putString("text_key", defaultTitle)
+        f.setArguments(mArgs)
         f.setOnOkBtnClickedListener { t -> createConversation(mAdapter.getSelected(), t) }
         f.show(supportFragmentManager, "create_conversation")
     }
@@ -79,6 +88,7 @@ class CreateConversationActivity : AppCompatActivity() {
             mChatContainer.createConversation(participantIds, title, null, null, object : SaveCallback<Conversation> {
                 override fun onSuccess(`object`: Conversation?) {
                     loading.dismiss()
+                    toast("Conversation created!")
                     finish()
                 }
 

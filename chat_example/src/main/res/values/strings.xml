@@ -10,8 +10,11 @@
     <!-- log out button -->
     <string name="log_out">Log Out</string>
 
+    <!-- create conversation title -->
+    <string name="create_title">Create</string>
+
     <!-- create conversation button -->
-    <string name="create">Create</string>
+    <string name="create">Create Group Conversation</string>
 
     <!-- ok button -->
     <string name="ok">OK</string>
@@ -61,16 +64,17 @@
     <string name="no">NO</string>
 
     <!-- login failed -->
-    <string name="login_failed">Login failed!</string>
+    <string name="login_failed">Couldn\'t login. Please check your username and password.</string>
 
     <!-- signup failed -->
-    <string name="signup_failed">Signup failed!</string>
+    <string name="signup_failed">Couldn\'t signup. Please check your username and password.</string>
 
     <!-- logout failed -->
     <string name="logout_failed">Logout failed!</string>
 
+
     <!-- conversation title -->
-    <string name="title">Title</string>
+    <string name="title">Conversation Title</string>
 
     <!-- conversation meta -->
     <string name="meta">Meta</string>
