@@ -257,20 +257,18 @@ open class ConversationFragment() :
             if (userIDs.isEmpty()) {
                 return
             }
-            this.skygearChat?.getChatUsers(userIDs.toList(), object: GetChatUsersCallback{
+            this.skygearChat?.getChatUsers(userIDs.toList(), object : GetChatUsersCallback {
                 override fun onGetCachedResult(participantsMap: MutableMap<String, ChatUser>?) {
                     conversationView()?.updateAuthors(participantsMap?.values?.toList())
                 }
 
                 override fun onFail(error: Error) {
-
                 }
 
                 override fun onSuccess(participantsMap: MutableMap<String, ChatUser>?) {
                     conversationView()?.updateAuthors(participantsMap?.values?.toList())
                 }
-
-            });
+            })
         }
     }
 

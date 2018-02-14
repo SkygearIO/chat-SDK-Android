@@ -29,7 +29,6 @@ import io.skygear.chatkit.messages.MessagesList
 import io.skygear.chatkit.messages.MessagesListAdapter
 import io.skygear.plugins.chat.ChatUser
 import io.skygear.skygear.Error
-import io.skygear.skygear.Record
 
 abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
     override fun onBeforeCollapse() {}
