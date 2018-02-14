@@ -14,6 +14,7 @@ import android.widget.TextView
 import io.skygear.plugins.chat.ChatContainer
 import io.skygear.plugins.chat.ChatUser
 import io.skygear.plugins.chat.GetCallback
+import io.skygear.plugins.chat.GetChatUsersCallback
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import java.util.* // ktlint-disable no-wildcard-imports
@@ -81,12 +82,17 @@ class UserIdsFragment : DialogFragment() {
 
         super.onResume()
 
-        mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
-            override fun onSuccess(list: List<ChatUser>?) {
-                mAdapter?.setUserIds(list, arguments.getStringArrayList(SELECT_IDS_KEY))
+        mChatContainer.getChatUsers(object : GetChatUsersCallback {
+            override fun onGetCachedResult(participantsMap: MutableMap<String, ChatUser>?) {
+                mAdapter?.setUserIds(participantsMap?.values?.toList(), arguments.getStringArrayList(SELECT_IDS_KEY))
             }
 
             override fun onFail(error: Error) {
+
+            }
+
+            override fun onSuccess(participantsMap: MutableMap<String, ChatUser>?) {
+                mAdapter?.setUserIds(participantsMap?.values?.toList(), arguments.getStringArrayList(SELECT_IDS_KEY))
             }
         })
     }

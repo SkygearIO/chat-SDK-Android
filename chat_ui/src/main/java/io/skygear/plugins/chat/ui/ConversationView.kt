@@ -27,6 +27,7 @@ import io.skygear.chatkit.messages.VoiceMessageOnClickListener
 import io.skygear.chatkit.messages.MessageHolders
 import io.skygear.chatkit.messages.MessagesList
 import io.skygear.chatkit.messages.MessagesListAdapter
+import io.skygear.plugins.chat.ChatUser
 import io.skygear.skygear.Error
 import io.skygear.skygear.Record
 
@@ -442,9 +443,9 @@ open class ConversationView : RelativeLayout {
         }
     }
 
-    fun updateAuthors(authors: List<Record>) {
-        authors.forEach {
-            userMap[it.ownerId] = userBuilder.createUser(it)
+    fun updateAuthors(authors: List<ChatUser>?) {
+        authors?.forEach {
+            userMap[it.id] = userBuilder.createUser(it)
         }
         this.messageListAdapter?.updateMessagesAuthor(userMap)
     }

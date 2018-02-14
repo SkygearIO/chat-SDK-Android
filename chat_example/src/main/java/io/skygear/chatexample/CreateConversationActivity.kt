@@ -47,10 +47,15 @@ class CreateConversationActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
-            override fun onSuccess(list: List<ChatUser>?) {
-                mAdapter.setChatUsers(list)
+        mChatContainer.getChatUsers(object : GetChatUsersCallback {
+            override fun onGetCachedResult(participantsMap: MutableMap<String, ChatUser>?) {
+                mAdapter.setChatUsers(participantsMap)
             }
+
+            override fun onSuccess(participantsMap: MutableMap<String, ChatUser>?) {
+                mAdapter.setChatUsers(participantsMap)
+            }
+
 
             override fun onFail(error: Error) {
             }

@@ -37,8 +37,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -78,6 +80,12 @@ public class CacheControllerTest {
         }
 
         store.setMessages(messages);
+
+        ArrayList<ChatUser> users = new ArrayList<>();
+        users.add(new ChatUser(new Record("user", "user1")));
+        users.add(new ChatUser(new Record("user", "user2")));
+        users.add(new ChatUser(new Record("user", "user3")));
+        store.setChatUsers(users);
     }
 
     void tearDownFixture() {
@@ -524,4 +532,48 @@ public class CacheControllerTest {
     }
 
     //endregion
+
+    //region Chat User
+    @Test
+    public void testGetChatUsers() {
+        this.cacheController.getChatUsers(new ArrayList<String>() {{
+            add("user2");
+        }}, new GetChatUsersCallback() {
+            @Override
+            public void onGetCachedResult(@Nullable Map<String, ChatUser> participantsMap) {
+                Assert.assertEquals(1, participantsMap.size());
+                Assert.assertNotNull(participantsMap.get("user2"));
+            }
+
+            @Override
+            public void onSuccess(@Nullable Map<String, ChatUser> object) {
+
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+
+            }
+        });
+
+        this.cacheController.getChatUsers(null, new GetChatUsersCallback() {
+            @Override
+            public void onGetCachedResult(@Nullable Map<String, ChatUser> participantsMap) {
+                Assert.assertEquals(3, participantsMap.size());
+                Assert.assertNotNull(participantsMap.get("user1"));
+                Assert.assertNotNull(participantsMap.get("user2"));
+                Assert.assertNotNull(participantsMap.get("user3"));
+            }
+
+            @Override
+            public void onSuccess(@Nullable Map<String, ChatUser> object) {
+
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+
+            }
+        });
+    }
 }
