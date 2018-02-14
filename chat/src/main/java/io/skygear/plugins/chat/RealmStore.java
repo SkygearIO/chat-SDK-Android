@@ -17,8 +17,13 @@
 
 package io.skygear.plugins.chat;
 
+import android.util.Log;
+
+import org.json.JSONException;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -39,6 +44,7 @@ import static io.skygear.plugins.chat.MessageOperationCacheObject.KEY_OPERATION_
 import io.skygear.skygear.Error;
 
 class RealmStore {
+    static String TAG = "RealmStore";
 
     interface QueryBuilder<T> {
         RealmQuery<T> buildQueryFrom(RealmQuery<T> baseQuery);
@@ -70,7 +76,9 @@ class RealmStore {
                 .schemaVersion(1)
                 .modules(new SkygearChatModule())
                 .schemaVersion(2)
-                .migration(new SequenceMigration());
+                .migration(new SequenceMigration())
+                .schemaVersion(3)
+                .migration(new ParticipantMigration());
 
         if (this.inMemory) {
             configBuilder = configBuilder.inMemory();
@@ -410,7 +418,72 @@ class RealmStore {
         }
     }
 
-    @RealmModule(library = true, classes = {MessageCacheObject.class, MessageOperationCacheObject.class})
+    void setParticipants(final Collection<Participant> participants) {
+        Realm.Transaction transaction = new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                RealmStore.this.setParticipants(realm, participants);
+            }
+        };
+
+        if (this.async) {
+            getRealm().executeTransactionAsync(transaction);
+        } else {
+            getRealm().executeTransaction(transaction);
+        }
+    }
+
+    private void setParticipants(final Realm realm, final Collection<Participant> participants) {
+        List<ParticipantCacheObject> cacheObjects = new ArrayList<>(participants.size());
+        for (Participant participant : participants) {
+            ParticipantCacheObject cacheObject = new ParticipantCacheObject(participant);
+            cacheObjects.add(cacheObject);
+        }
+        realm.insertOrUpdate(cacheObjects);
+    }
+
+    void getParticipantsWithIds(@Nonnull final Collection<String> participantIds,
+                                @Nonnull final GetParticipantsCallback callback) {
+        if (callback != null) {
+            RealmQuery<ParticipantCacheObject> query = null;
+            if (participantIds == null || participantIds.isEmpty()) {
+                query = getRealm().where(ParticipantCacheObject.class);
+            } else {
+                query = getRealm().where(ParticipantCacheObject.class).in(ParticipantCacheObject.KEY_RECORD_ID,
+                        participantIds.toArray(new String[participantIds.size()]));
+            }
+
+            if (this.async) {
+                final RealmResults<ParticipantCacheObject> results = query.findAllAsync();
+                results.addChangeListener(
+                        new OrderedRealmCollectionChangeListener<RealmResults<ParticipantCacheObject>>() {
+                            @Override
+                            public void onChange(RealmResults<ParticipantCacheObject> participantCacheObjects, @Nullable OrderedCollectionChangeSet changeSet) {
+                                results.removeAllChangeListeners();
+                                RealmStore.this.getParticipants(participantCacheObjects, callback);
+                            }
+                        }
+                );
+            } else {
+                final RealmResults<ParticipantCacheObject> results = query.findAll();
+                RealmStore.this.getParticipants(results, callback);
+            }
+        }
+    }
+
+    void getParticipants(RealmResults<ParticipantCacheObject> results, GetParticipantsCallback callback) {
+        HashMap<String, Participant> participantsMap = new HashMap<>();
+        for (ParticipantCacheObject object: results) {
+            try {
+                participantsMap.put(object.recordID, object.toParticipant());
+            } catch (JSONException e) {
+                Log.e(TAG, "Failed to serialize Chat User, reason: " + e.getMessage());
+            }
+        }
+        callback.onGetCachedResult(participantsMap);
+    }
+
+    @RealmModule(library = true, classes = {MessageCacheObject.class, MessageOperationCacheObject.class, ParticipantCacheObject.class})
     private static class SkygearChatModule {
 
     }

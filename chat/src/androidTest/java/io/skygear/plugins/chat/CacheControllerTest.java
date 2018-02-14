@@ -37,8 +37,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -78,6 +80,12 @@ public class CacheControllerTest {
         }
 
         store.setMessages(messages);
+
+        ArrayList<Participant> users = new ArrayList<>();
+        users.add(new Participant(new Record("user", "user1")));
+        users.add(new Participant(new Record("user", "user2")));
+        users.add(new Participant(new Record("user", "user3")));
+        store.setParticipants(users);
     }
 
     void tearDownFixture() {
@@ -524,4 +532,48 @@ public class CacheControllerTest {
     }
 
     //endregion
+
+    //region Participant
+    @Test
+    public void testGetParticipants() {
+        this.cacheController.getParticipants(new ArrayList<String>() {{
+            add("user2");
+        }}, new GetParticipantsCallback() {
+            @Override
+            public void onGetCachedResult(@Nullable Map<String, Participant> participantsMap) {
+                Assert.assertEquals(1, participantsMap.size());
+                Assert.assertNotNull(participantsMap.get("user2"));
+            }
+
+            @Override
+            public void onSuccess(@Nullable Map<String, Participant> object) {
+
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+
+            }
+        });
+
+        this.cacheController.getParticipants(null, new GetParticipantsCallback() {
+            @Override
+            public void onGetCachedResult(@Nullable Map<String, Participant> participantsMap) {
+                Assert.assertEquals(3, participantsMap.size());
+                Assert.assertNotNull(participantsMap.get("user1"));
+                Assert.assertNotNull(participantsMap.get("user2"));
+                Assert.assertNotNull(participantsMap.get("user3"));
+            }
+
+            @Override
+            public void onSuccess(@Nullable Map<String, Participant> object) {
+
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+
+            }
+        });
+    }
 }

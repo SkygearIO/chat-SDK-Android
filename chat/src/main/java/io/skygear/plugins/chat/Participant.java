@@ -11,7 +11,7 @@ import io.skygear.skygear.Record;
 /**
  * The User model for the Chat Plugin.
  */
-public class ChatUser {
+public class Participant {
     // TODO: Implement RecordWrapper when it is available
 
     private final Record record;
@@ -21,7 +21,7 @@ public class ChatUser {
      *
      * @param record the record
      */
-    ChatUser(final Record record) {
+    Participant(final Record record) {
         this.record = record;
     }
 
@@ -61,7 +61,7 @@ public class ChatUser {
      * @return a chat user
      * @throws JSONException the JSON exception
      */
-    public static ChatUser fromJson(JSONObject jsonObject) throws JSONException {
-        return new ChatUser(Record.fromJson(jsonObject));
+    public static Participant fromJson(JSONObject jsonObject) throws JSONException {
+        return new Participant(Record.fromJson(jsonObject));
     }
 }

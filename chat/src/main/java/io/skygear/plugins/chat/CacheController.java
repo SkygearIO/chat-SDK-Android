@@ -22,6 +22,7 @@ import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -285,5 +286,15 @@ class CacheController {
         this.store.markMessageOperationsAsFailed(queryBuilder, null);
     }
 
+    //endregion
+
+    //region Chat Users
+    void didParticipants(Collection<Participant> participants) {
+        this.store.setParticipants(participants);
+    }
+
+    void getParticipants(Collection<String> participantIds, GetParticipantsCallback callback) {
+        this.store.getParticipantsWithIds(participantIds, callback);
+    }
     //endregion
 }

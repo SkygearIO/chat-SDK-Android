@@ -6,18 +6,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import io.skygear.plugins.chat.ChatUser
+import io.skygear.plugins.chat.Participant
 
 class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAdapter.ViewHolder>() {
     private val LOG_TAG: String? = "ChatUsesAdapter"
 
-    private var mChatUsers: List<ChatUser> = listOf()
-    private var mSelectedChatUsers: MutableList<ChatUser> = mutableListOf()
+    private var mParticipants: List<Participant> = listOf()
+    private var mSelectedParticipants: MutableList<Participant> = mutableListOf()
     private val mCurrentUserId = currentUserId
 
-    fun setChatUsers(chatUsers: List<ChatUser>?) {
-        if (chatUsers != null) {
-            mChatUsers = chatUsers.filter {
+    fun setParticipants(participants: Map<String, Participant>?) {
+        if (participants != null) {
+            mParticipants = participants.values.filter {
                 it.id != mCurrentUserId
             }
 
@@ -25,8 +25,8 @@ class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAda
         }
     }
 
-    fun getSelected(): List<ChatUser> {
-        return mSelectedChatUsers
+    fun getSelected(): List<Participant> {
+        return mSelectedParticipants
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -35,27 +35,27 @@ class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAda
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val chatUser: ChatUser = mChatUsers[position]
+        val participant: Participant = mParticipants[position]
 
-        holder.idTv.text = chatUser.id
-        if (!chatUser.record.get("username")?.toString().isNullOrEmpty()) {
-                holder.idTv.text = chatUser.record.get("username").toString()
+        holder.idTv.text = participant.id
+        if (!participant.record.get("username")?.toString().isNullOrEmpty()) {
+                holder.idTv.text = participant.record.get("username").toString()
         }
-        holder.idCb.isChecked = chatUser in mSelectedChatUsers
+        holder.idCb.isChecked = participant in mSelectedParticipants
 
         holder.idCb.setOnClickListener { it: View? ->
             val cb = (it as AppCompatCheckBox)
 
             if(cb.isChecked) {
-                mSelectedChatUsers.add(chatUser)
+                mSelectedParticipants.add(participant)
             } else {
-                mSelectedChatUsers.remove(chatUser)
+                mSelectedParticipants.remove(participant)
             }
         }
     }
 
     override fun getItemCount(): Int {
-        return mChatUsers.size
+        return mParticipants.size
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {

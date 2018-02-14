@@ -263,19 +263,16 @@ open class ConversationFragment() :
             if (userIDs.isEmpty()) {
                 return
             }
-
-            val q = Query("user").contains("_id", userIDs.toList())
-            this.skygear?.publicDatabase?.query(q, object : RecordQueryResponseHandler() {
-                override fun onQueryError(error: Error?) {
+            this.skygearChat?.getParticipants(userIDs.toList(), object : GetParticipantsCallback {
+                override fun onGetCachedResult(participantsMap: MutableMap<String, Participant>?) {
+                    conversationView()?.updateAuthors(participantsMap?.values?.toList())
                 }
 
-                override fun onQuerySuccess(records: Array<out Record>?) {
-                    records?.let {
-                        conversationView()?.updateAuthors(records.toList())
-                        if (titleOption == ConversationTitleOption.OTHER_PARTICIPANTS) {
-                            this@ConversationFragment.activity.title = conversationView()?.getOtherParticipantsTitle()
-                        }
-                    }
+                override fun onFail(error: Error) {
+                }
+
+                override fun onSuccess(participantsMap: MutableMap<String, Participant>?) {
+                    conversationView()?.updateAuthors(participantsMap?.values?.toList())
                 }
             })
         }

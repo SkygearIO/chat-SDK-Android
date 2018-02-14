@@ -12,9 +12,9 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
 import io.skygear.plugins.chat.ChatContainer
-import io.skygear.plugins.chat.ChatUser
+import io.skygear.plugins.chat.Participant
 import io.skygear.plugins.chat.Conversation
-import io.skygear.plugins.chat.GetCallback
+import io.skygear.plugins.chat.GetParticipantsCallback
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import java.util.* // ktlint-disable no-wildcard-imports
@@ -82,23 +82,27 @@ class UserIdsFragment : DialogFragment() {
 
         super.onResume()
 
+        mChatContainer.getParticipants(object : GetParticipantsCallback {
+            override fun onGetCachedResult(participantsMap: MutableMap<String, Participant>?) {
+                mAdapter?.setUserIds(participantsMap?.values?.toList(), arguments.getStringArrayList(SELECT_IDS_KEY))
+            }
 
-        mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
-            override fun onSuccess(list: List<ChatUser>?) {
+            override fun onFail(error: Error) {
+
+            }
+
+            override fun onSuccess(participantsMap: MutableMap<String, Participant>?) {
                 if (mConversation != null) {
-                    var allUserList = list?.toMutableList()
-
-                    // Only display Participants here if a conversation is specified
+                    var allUserList = participantsMap?.values?.toMutableList()
+                    // Only display Participant here if a conversation is specified
                     // Remove those not contained in participant IDs
                     allUserList?.removeAll {
                         !mConversation?.participantIds?.contains(it.id)!!
                     }
                     mAdapter?.setUserIds(allUserList, arguments.getStringArrayList(SELECT_IDS_KEY))
                 } else {
-                    mAdapter?.setUserIds(list, arguments.getStringArrayList(SELECT_IDS_KEY))
+                    mAdapter?.setUserIds(participantsMap?.values?.toList(), arguments.getStringArrayList(SELECT_IDS_KEY))
                 }
-            }
-            override fun onFail(error: Error) {
             }
         })
     }

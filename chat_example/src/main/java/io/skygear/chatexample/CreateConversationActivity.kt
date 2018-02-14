@@ -10,7 +10,6 @@ import android.widget.Toast
 import io.skygear.plugins.chat.* // ktlint-disable no-wildcard-imports
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
-import java.util.* // ktlint-disable no-wildcard-imports
 
 class CreateConversationActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "CreateConversation"
@@ -53,10 +52,15 @@ class CreateConversationActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
-            override fun onSuccess(list: List<ChatUser>?) {
-                mAdapter.setChatUsers(list)
+        mChatContainer.getParticipants(object : GetParticipantsCallback {
+            override fun onGetCachedResult(participantsMap: MutableMap<String, Participant>?) {
+                mAdapter.setParticipants(participantsMap)
             }
+
+            override fun onSuccess(participantsMap: MutableMap<String, Participant>?) {
+                mAdapter.setParticipants(participantsMap)
+            }
+
 
             override fun onFail(error: Error) {
             }
@@ -72,7 +76,7 @@ class CreateConversationActivity : AppCompatActivity() {
         f.show(supportFragmentManager, "create_conversation")
     }
 
-    fun createConversation(users: List<ChatUser>?, title: String?) {
+    fun createConversation(users: List<Participant>?, title: String?) {
         if (users != null && users.isNotEmpty()) {
             val participantIds = users.map { it.id }.toMutableSet()
             val currentUser = mSkygear.auth.currentUser
