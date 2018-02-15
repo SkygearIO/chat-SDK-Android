@@ -13,6 +13,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import io.skygear.plugins.chat.* // ktlint-disable no-wildcard-imports
 import io.skygear.plugins.chat.ui.* // ktlint-disable no-wildcard-imports
+import io.skygear.plugins.chat.ui.model.User
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import io.skygear.skygear.LambdaResponseHandler
@@ -109,7 +110,6 @@ class ConversationsActivity : AppCompatActivity() {
         mSkygear.auth.logout(object : LogoutResponseHandler() {
             override fun onLogoutSuccess() {
                 loading.dismiss()
-
                 logoutSuccess()
             }
 
@@ -274,6 +274,7 @@ class ConversationsActivity : AppCompatActivity() {
 
     fun updateAdmins(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
+        f.setConversation(c)
         f.setOnOkBtnClickedListener { ids ->
             mChatContainer.addConversationAdmins(c, ids, object : SaveCallback<Conversation> {
                 override fun onSuccess(new: Conversation?) {
