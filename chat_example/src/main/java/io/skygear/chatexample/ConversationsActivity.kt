@@ -208,6 +208,8 @@ class ConversationsActivity : AppCompatActivity() {
         mChatContainer.setConversationTitle(c, t, object : SaveCallback<Conversation> {
             override fun onSuccess(new: Conversation?) {
                 mAdapter.updateConversation(c, new)
+                Toast.makeText(applicationContext, "Title updated.", Toast.LENGTH_SHORT).show()
+
             }
 
             override fun onFail(error: Error) {
@@ -267,6 +269,7 @@ class ConversationsActivity : AppCompatActivity() {
 
             override fun onSuccess(result: Boolean?) {
                 Log.i(LOG_TAG, "Successfully delete the conversation")
+                Toast.makeText(applicationContext, "Conversation deleted.", Toast.LENGTH_SHORT).show()
                 getAllConversations()
             }
         })
