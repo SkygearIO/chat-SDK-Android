@@ -276,9 +276,32 @@ class ConversationsActivity : AppCompatActivity() {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
         f.setConversation(c)
         f.setOnOkBtnClickedListener { ids ->
-            mChatContainer.addConversationAdmins(c, ids, object : SaveCallback<Conversation> {
+
+            Toast.makeText(applicationContext, "Updating admins...", Toast.LENGTH_SHORT).show()
+
+            val idsToRemove = c.adminIds?.toMutableList()
+            idsToRemove?.removeAll(ids.toList())
+
+            mChatContainer.removeConversationAdmins(c, idsToRemove!!, object : SaveCallback<Conversation> {
                 override fun onSuccess(new: Conversation?) {
-                    mAdapter.updateConversation(c, new)
+
+                    mChatContainer.addConversationAdmins(c, ids, object : SaveCallback<Conversation> {
+                        override fun onSuccess(new: Conversation?) {
+                            mChatContainer.getConversation(new?.id!! , object: GetCallback<Conversation> {
+                                override fun onSuccess(`newWithParticipantIds`: Conversation?) {
+                                    mAdapter.updateConversation(c, newWithParticipantIds)
+                                    Toast.makeText(applicationContext, "Admins updated.", Toast.LENGTH_SHORT).show()
+                                }
+
+                                override fun onFail(error: Error) {
+                                }
+                            })
+
+                        }
+
+                        override fun onFail(error: Error) {
+                        }
+                    })
                 }
 
                 override fun onFail(error: Error) {
