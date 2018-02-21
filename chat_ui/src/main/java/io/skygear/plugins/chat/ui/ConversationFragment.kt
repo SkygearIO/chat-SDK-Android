@@ -215,6 +215,11 @@ open class ConversationFragment() :
         return view
     }
 
+    override fun onStop() {
+        super.onStop()
+        this.voicePlayer?.stop()
+    }
+
     override fun onResume() {
         super.onResume()
         if (conversationView()?.itemCount() == 0) {
@@ -521,17 +526,19 @@ open class ConversationFragment() :
     }
 
     override fun onVoiceMessageClick(voiceMessage: VoiceMessage) {
-        if (voiceMessage.state == VoiceMessage.State.PLAYING) {
-            this.voicePlayer?.pause()
-            return
+        if (this.voicePlayer?.message == voiceMessage) {
+            when (voiceMessage.state) {
+                VoiceMessage.State.INITIAL, VoiceMessage.State.PAUSED -> this.voicePlayer?.play()
+                VoiceMessage.State.PLAYING -> this.voicePlayer?.pause()
+            }
         }
-
-        if (this.voicePlayer?.message != voiceMessage) {
+        else
+        {
             this.voicePlayer?.stop()
             this.voicePlayer?.message = voiceMessage
+            this.voicePlayer?.play()
         }
 
-        this.voicePlayer?.play()
     }
 
     override fun onVoiceMessageStateChanged(voiceMessage: VoiceMessage) {
