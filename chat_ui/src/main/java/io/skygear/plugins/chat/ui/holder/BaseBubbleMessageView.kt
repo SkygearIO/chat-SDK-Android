@@ -1,6 +1,8 @@
 package io.skygear.plugins.chat.ui.holder
 
+import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.view.View
@@ -27,9 +29,20 @@ open class BaseBubbleMessageView {
     }
 
     fun onBind(message: Message) {
-        background.mutate()
-        DrawableCompat.setTint(background, backgroundColor(message.style.bubbleStyle))
+        val color = backgroundColor(message.style.bubbleStyle)
+
+        /*
+          Workaround found on stackoverflow
+          https://stackoverflow.com/questions/36731919/drawablecompat-settint-not-working-on-api-19
+        */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            DrawableCompat.setTint(background, color);
+
+        } else {
+            background.mutate().setColorFilter(color, PorterDuff.Mode.SRC_IN)
+        }
         bubble?.background = background
+
         val textColor = if (isIncoming) message.style.bubbleStyle.textColorForIncomingMessages
                         else message.style.bubbleStyle.textColorForOutgoingMessages
         messageText?.setTextColor(textColor)
