@@ -36,8 +36,7 @@ open class BaseBubbleMessageView {
           https://stackoverflow.com/questions/36731919/drawablecompat-settint-not-working-on-api-19
         */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            DrawableCompat.setTint(background, color);
-
+            DrawableCompat.setTint(background, color)
         } else {
             background.mutate().setColorFilter(color, PorterDuff.Mode.SRC_IN)
         }
