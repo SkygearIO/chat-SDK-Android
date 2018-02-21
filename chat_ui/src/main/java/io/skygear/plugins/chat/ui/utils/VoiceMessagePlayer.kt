@@ -33,6 +33,7 @@ class VoiceMessagePlayer(val context: Context) {
             }
 
             this.mediaPlayer?.setOnErrorListener { _, what, _ ->
+                msg.state = VoiceMessage.State.INITIAL
                 this@VoiceMessagePlayer.playerErrorListener?.let { listener ->
                     when (what) {
                         MEDIA_ERROR_SERVER_DIED -> Error(MEDIA_ERROR_SERVER_DIED, "Server Error")
@@ -48,6 +49,7 @@ class VoiceMessagePlayer(val context: Context) {
                 msg.state = VoiceMessage.State.PLAYING
                 this@VoiceMessagePlayer.messageStateChangeListener?.onVoiceMessageStateChanged(msg)
             }
+            msg.state = VoiceMessage.State.PREPARING
             this.mediaPlayer?.prepareAsync()
         }
     }
