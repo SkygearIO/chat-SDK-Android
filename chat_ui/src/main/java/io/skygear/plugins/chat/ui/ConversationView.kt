@@ -15,6 +15,7 @@ import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
 import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
 import android.net.Uri
+import android.os.Handler
 import android.widget.* // ktlint-disable no-wildcard-imports
 import io.skygear.plugins.chat.ui.holder.* // ktlint-disable no-wildcard-imports
 import io.skygear.plugins.chat.ui.model.* // ktlint-disable no-wildcard-imports
@@ -88,6 +89,7 @@ open class ConversationView : RelativeLayout {
     private var messageSendButton: ImageButton? = null
     private var messageEditText: EditText? = null
     private var voiceButtonHolderHint: View? = null
+    private var voiceRecordingSeconds: TextView? = null
     private var voiceButtonHolder: HoldingButtonLayout? = null
     private var progressBar: ProgressBar? = null
     private var messagesListViewReachBottomListener: MessagesListViewReachBottomListener? = null
@@ -138,6 +140,9 @@ open class ConversationView : RelativeLayout {
     private var voiceMessageButtonShouldShow: Boolean
     private var cameraButtonShouldShow: Boolean
     private var messageStatusShouldShow: Boolean
+
+    private val mHandlerTime = Handler()
+    private var voiceDuration = 0
 
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
         val a = context.theme.obtainStyledAttributes(
@@ -192,6 +197,7 @@ open class ConversationView : RelativeLayout {
         this.messageEditText = findViewById<EditText>(R.id.msg_edit_text)
         this.backgroundImageView = findViewById<ImageView>(R.id.background)
         this.voiceButtonHolderHint = findViewById(R.id.voice_recording_btn_holder_hint)
+        this.voiceRecordingSeconds = findViewById<TextView>(R.id.voice_recording_seconds)
         this.voiceButtonHolder = findViewById<HoldingButtonLayout>(R.id.voice_recording_btn_holder)
 
         this.progressBar = findViewById<ProgressBar>(R.id.progressBar)
@@ -336,7 +342,9 @@ open class ConversationView : RelativeLayout {
     }
 
     open fun toggleVoiceButtonHint(flag: Boolean) {
-        this.voiceButtonHolderHint?.visibility = if (flag) View.VISIBLE else View.INVISIBLE
+        val visibility = if (flag) View.VISIBLE else View.INVISIBLE
+        this.voiceButtonHolderHint?.visibility = visibility
+        this.voiceRecordingSeconds?.visibility = visibility
         listOf(this.addAttachmentButton, this.messageEditText).map {
             it?.visibility = if (! flag) View.VISIBLE else View.INVISIBLE
         }
@@ -344,6 +352,29 @@ open class ConversationView : RelativeLayout {
 
     open fun cancelVoiceButton() {
         this.voiceButtonHolder?.cancel()
+    }
+
+    open fun startVoiceRecordingTimer() {
+        voiceDuration = 0
+        updateVoiceSeconds()
+        this.mHandlerTime.postDelayed(voiceTimerRun, 1000)
+    }
+
+    open fun stopVoiceRecordingTimer() {
+        this.mHandlerTime.removeCallbacks(voiceTimerRun)
+    }
+
+    private val voiceTimerRun = object : Runnable {
+        override fun run() {
+            voiceDuration++
+            updateVoiceSeconds()
+            mHandlerTime.postDelayed(this, 1000)
+        }
+    }
+
+    fun updateVoiceSeconds() {
+        val text = "%02d:%02d".format(voiceDuration / 60, voiceDuration % 60)
+        this.voiceRecordingSeconds?.text = text
     }
 
     open fun updateMessages(chatMessages: List<ChatMessage>) {

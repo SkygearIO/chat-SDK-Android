@@ -56,6 +56,7 @@ open class ConversationFragment() :
         private val REQUEST_IMAGE_CAPTURE = 5002
         private val REQUEST_CAMERA_PERMISSION = 5003
         private val REQUEST_VOICE_RECORDING_PERMISSION = 5004
+        private val MIN_VOICE_DURATION_MS = 1000
     }
 
     var conversation: ChatConversation? = null
@@ -581,10 +582,13 @@ open class ConversationFragment() :
             this.voiceRecorder?.prepare()
             this.voiceRecorder?.start()
         }
+
+        conversationView()?.startVoiceRecordingTimer()
     }
 
     fun onVoiceRecordingButtonPressedUp(isCancel: Boolean) {
         conversationView()?.toggleVoiceButtonHint(false)
+        conversationView()?.stopVoiceRecordingTimer()
         if (this.voiceRecordingPermissionManager?.permissionsGranted() != true) {
             return
         }
@@ -609,6 +613,14 @@ open class ConversationFragment() :
 
         val duration = Integer.parseInt(
                 mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))
+
+        if (duration < MIN_VOICE_DURATION_MS) {
+            Toast.makeText(
+                    activity,
+                    getString(R.string.voice_too_short),
+                    Toast.LENGTH_SHORT).show()
+            return
+        }
 
         val voiceRecordingFile = File(this.voiceRecordingFileName!!)
         val bytes = ByteArray(voiceRecordingFile.length().toInt())
@@ -873,7 +885,7 @@ open class ConversationFragment() :
 
     private fun voiceRecordingPermissionDenied() {
         conversationView()?.cancelVoiceButton()
-
+        conversationView()?.stopVoiceRecordingTimer()
         Toast.makeText(
                 activity,
                 R.string.please_turn_on_audio_recording_permission,
