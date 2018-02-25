@@ -7,6 +7,7 @@ import android.content.Intent
 import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.app.Fragment
@@ -17,6 +18,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import com.google.android.gms.security.ProviderInstaller
 import io.skygear.chatkit.messages.VoiceMessageOnClickListener
 import io.skygear.chatkit.messages.MessagesListAdapter
 import io.skygear.plugins.chat.* // ktlint-disable no-wildcard-imports
@@ -30,6 +32,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.* // ktlint-disable no-wildcard-imports
+import javax.net.ssl.HttpsURLConnection
 import io.skygear.plugins.chat.Conversation as ChatConversation
 import io.skygear.plugins.chat.Message as ChatMessage
 
@@ -56,6 +59,13 @@ open class ConversationFragment() :
         private val REQUEST_IMAGE_CAPTURE = 5002
         private val REQUEST_CAMERA_PERMISSION = 5003
         private val REQUEST_VOICE_RECORDING_PERMISSION = 5004
+        fun updateTLSForKitKat(context: Context) {
+            //workaround from https://stackoverflow.com/a/41466557
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+                ProviderInstaller.installIfNeeded(context)
+                HttpsURLConnection.setDefaultSSLSocketFactory(TLSSocketFactory())
+            }
+        }
     }
 
     var conversation: ChatConversation? = null
@@ -90,6 +100,8 @@ open class ConversationFragment() :
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        updateTLSForKitKat(context)
+
         layoutResID = arguments.getInt(LayoutResIdBundleKey, R.layout.conversation_fragment)
         arguments.getString(ConversationBundleKey)?.let { json ->
             conversation = ChatConversation.fromJson(JSONObject(json))
