@@ -671,7 +671,7 @@ open class ConversationFragment() :
 
         this.conversation?.let { conv ->
             val message = ChatMessage()
-            message.body = input.trim()
+            message.body = input
             this.fragmentMessageSentListener?.onBeforeMessageSent(this, message)
             this.addMessageToBottom(message)
             this.skygearChat?.addMessage(message, conv, object : SaveCallback<ChatMessage> {

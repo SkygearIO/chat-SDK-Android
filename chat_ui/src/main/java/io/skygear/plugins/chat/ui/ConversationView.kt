@@ -220,8 +220,8 @@ open class ConversationView : RelativeLayout {
         this.messageSendButton?.setOnClickListener {
             _ ->
                 messageEditText?.text?.let { text ->
-                    if (!text.isEmpty()) {
-                        val result = this.sendTextMessageListener.invoke(text.toString())
+                    if (!text.isBlank()) {
+                        val result = this.sendTextMessageListener.invoke(text.trim().toString())
                         result?.let { success ->
                             if (success) {
                                 this.messageEditText?.setText("")
