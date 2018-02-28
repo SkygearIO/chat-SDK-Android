@@ -15,9 +15,9 @@ class ChatUsesAdapter(currentUserId: String?) : RecyclerView.Adapter<ChatUsesAda
     private var mSelectedChatUsers: MutableList<ChatUser> = mutableListOf()
     private val mCurrentUserId = currentUserId
 
-    fun setChatUsers(chatUsers: List<ChatUser>?) {
+    fun setChatUsers(chatUsers: Map<String, ChatUser>?) {
         if (chatUsers != null) {
-            mChatUsers = chatUsers.filter {
+            mChatUsers = chatUsers.values.filter {
                 it.id != mCurrentUserId
             }
 

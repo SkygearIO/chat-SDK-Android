@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1240,25 +1241,56 @@ public final class ChatContainer {
     }
 
     /* --- Chat User --- */
-
     /**
-     * Gets users for the chat plugins.
+     * Gets all users for the chat plugins.
      *
      * @param callback the callback
      */
-    public void getChatUsers(@Nullable final GetCallback<List<ChatUser>> callback) {
+    public void getChatUsers(@Nullable final GetChatUsersCallback callback) {
+        getChatUsers(null, callback);
+    }
+
+
+    /**
+     * Gets users for the chat plugins. If chatUserIds, returns all users.
+     * @param chatUserIds user ID to be fetched
+     * @param callback the callback
+     */
+    public void getChatUsers(@Nullable Collection<String> chatUserIds, @Nullable final GetChatUsersCallback callback) {
         Query query = new Query("user");
+        if (chatUserIds != null) {
+           query.contains("_id", new ArrayList(chatUserIds));
+        }
         Database publicDB = this.skygear.getPublicDatabase();
-        publicDB.query(query, new QueryResponseAdapter<List<ChatUser>>(callback) {
+        cacheController.getChatUsers(chatUserIds, callback);
+
+        GetCallback<List<ChatUser>> publicDBCallback = new GetCallback<List<ChatUser>>() {
+            @Override
+            public void onSuccess(@Nullable List<ChatUser> chatUsers) {
+                Map<String, ChatUser> map = new HashMap<>();
+
+                for (ChatUser user : chatUsers) {
+                    map.put(user.getId(), user);
+                }
+                cacheController.didGetChatUsers(chatUsers);
+                callback.onSuccess(map);
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                callback.onFail(error);
+            }
+        };
+
+
+        publicDB.query(query, new QueryResponseAdapter<List<ChatUser>>(publicDBCallback) {
             @Override
             public List<ChatUser> convert(Record[] records) {
-                List<ChatUser> users = new ArrayList<>(records.length);
-
+                ArrayList<ChatUser> chatUsers = new ArrayList<>();
                 for (Record record : records) {
-                    users.add(new ChatUser(record));
+                    chatUsers.add(new ChatUser(record));
                 }
-
-                return users;
+                return chatUsers;
             }
         });
     }

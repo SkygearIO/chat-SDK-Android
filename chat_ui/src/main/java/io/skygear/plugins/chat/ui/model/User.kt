@@ -23,6 +23,21 @@ class User : IUser {
     var avatarBackgroundColor: Int
     var avatarTextColor: Int
 
+    constructor(chatUser: ChatUser,
+                displayNameField: String?,
+                avatarField: String? ,
+                avatarType: AvatarType,
+                avatarBackgroundColor: Int,
+                avatarInitialTextColor: Int) {
+        this.avatarField = avatarField
+        this.displayNameField = displayNameField
+        this.chatUser = chatUser
+        this.chatUserId = chatUser.id
+        this.avatarType = avatarType
+        this.avatarBackgroundColor = avatarBackgroundColor
+        this.avatarTextColor = avatarInitialTextColor
+    }
+
     constructor(record: Record,
                 displayNameField: String?,
                 avatarField: String? ,
