@@ -13,6 +13,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import io.skygear.plugins.chat.* // ktlint-disable no-wildcard-imports
 import io.skygear.plugins.chat.ui.* // ktlint-disable no-wildcard-imports
+import io.skygear.plugins.chat.ui.model.User
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import io.skygear.skygear.LambdaResponseHandler
@@ -40,7 +41,7 @@ class ConversationsActivity : AppCompatActivity() {
         mConversationsRv?.adapter = mAdapter
         mConversationsRv?.layoutManager = LinearLayoutManager(this)
         mAdapter.setOnClickListener {
-            c -> showOptions(c)
+            pos -> showOptions(pos)
         }
     }
 
@@ -109,7 +110,6 @@ class ConversationsActivity : AppCompatActivity() {
         mSkygear.auth.logout(object : LogoutResponseHandler() {
             override fun onLogoutSuccess() {
                 loading.dismiss()
-
                 logoutSuccess()
             }
 
@@ -130,10 +130,14 @@ class ConversationsActivity : AppCompatActivity() {
         AlertDialog.Builder(this).setTitle(R.string.logout_failed).show()
     }
 
-    fun showOptions(c: Conversation) {
+    fun showOptions(pos: Int) {
         val builder = AlertDialog.Builder(this)
+
         val items = resources.getStringArray(R.array.conversation_options)
-        builder.setItems(items, { d, i -> when (i) {
+
+        val c : Conversation = mAdapter.getConversation(pos)
+        builder.setItems(items, { d, i -> when(i) {
+
             0 -> enter(c)
             1 -> viewMeta(c)
             2 -> edit(c)
@@ -204,6 +208,8 @@ class ConversationsActivity : AppCompatActivity() {
         mChatContainer.setConversationTitle(c, t, object : SaveCallback<Conversation> {
             override fun onSuccess(new: Conversation?) {
                 mAdapter.updateConversation(c, new)
+                Toast.makeText(applicationContext, "Title updated.", Toast.LENGTH_SHORT).show()
+
             }
 
             override fun onFail(error: Error) {
@@ -234,6 +240,7 @@ class ConversationsActivity : AppCompatActivity() {
 
             override fun onLambdaSuccess(result: JSONObject?) {
                 Log.i(LOG_TAG, "Successfully leave the conversation")
+                Toast.makeText(applicationContext, "Successfully leave the conversation", Toast.LENGTH_SHORT).show()
                 getAllConversations()
             }
         })
@@ -262,6 +269,7 @@ class ConversationsActivity : AppCompatActivity() {
 
             override fun onSuccess(result: Boolean?) {
                 Log.i(LOG_TAG, "Successfully delete the conversation")
+                Toast.makeText(applicationContext, "Conversation deleted.", Toast.LENGTH_SHORT).show()
                 getAllConversations()
             }
         })
@@ -269,10 +277,34 @@ class ConversationsActivity : AppCompatActivity() {
 
     fun updateAdmins(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
+        f.setConversation(c)
         f.setOnOkBtnClickedListener { ids ->
-            mChatContainer.addConversationAdmins(c, ids, object : SaveCallback<Conversation> {
+
+            Toast.makeText(applicationContext, "Updating admins...", Toast.LENGTH_SHORT).show()
+
+            val idsToRemove = c.adminIds?.toMutableList()
+            idsToRemove?.removeAll(ids.toList())
+
+            mChatContainer.removeConversationAdmins(c, idsToRemove!!, object : SaveCallback<Conversation> {
                 override fun onSuccess(new: Conversation?) {
-                    mAdapter.updateConversation(c, new)
+
+                    mChatContainer.addConversationAdmins(c, ids, object : SaveCallback<Conversation> {
+                        override fun onSuccess(new: Conversation?) {
+                            mChatContainer.getConversation(new?.id!! , object: GetCallback<Conversation> {
+                                override fun onSuccess(`newWithParticipantIds`: Conversation?) {
+                                    mAdapter.updateConversation(c, newWithParticipantIds)
+                                    Toast.makeText(applicationContext, "Admins updated.", Toast.LENGTH_SHORT).show()
+                                }
+
+                                override fun onFail(error: Error) {
+                                }
+                            })
+
+                        }
+
+                        override fun onFail(error: Error) {
+                        }
+                    })
                 }
 
                 override fun onFail(error: Error) {
@@ -284,13 +316,39 @@ class ConversationsActivity : AppCompatActivity() {
 
     fun updateParticipants(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_participants), c.participantIds)
+
         f.setOnOkBtnClickedListener { ids ->
-            mChatContainer.addConversationParticipants(c, ids, object : SaveCallback<Conversation> {
+            // distinguish old and new
+            Toast.makeText(applicationContext, "Updating participants...", Toast.LENGTH_SHORT).show()
+            val idsToRemove = c.participantIds?.toMutableList()
+            idsToRemove?.removeAll(ids.toList())
+
+            mChatContainer.removeConversationParticipants(c, idsToRemove!!, object : SaveCallback<Conversation> {
                 override fun onSuccess(new: Conversation?) {
-                    mAdapter.updateConversation(c, new)
+                    mChatContainer.addConversationParticipants(c, ids, object : SaveCallback<Conversation> {
+                        override fun onSuccess(new: Conversation?) {
+                            // the new doesn't have participant ids
+
+                            mChatContainer.getConversation(new?.id!! , object: GetCallback<Conversation> {
+                                override fun onSuccess(`newWithParticipantIds`: Conversation?) {
+                                    mAdapter.updateConversation(c, newWithParticipantIds)
+                                    Toast.makeText(applicationContext, "Participants updated.", Toast.LENGTH_SHORT).show()
+                                }
+
+                                override fun onFail(error: Error) {
+                                }
+                            })
+                        }
+
+                        override fun onFail(error: Error) {
+                            Toast.makeText(applicationContext, error.detailMessage, Toast.LENGTH_SHORT).show()
+                        }
+                    })
+
                 }
 
                 override fun onFail(error: Error) {
+                    Toast.makeText(applicationContext, error.detailMessage, Toast.LENGTH_SHORT).show()
                 }
             })
         }

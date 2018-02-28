@@ -11,9 +11,9 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
     private val LOG_TAG = "Adapter"
 
     private var mConversations: List<Conversation> = listOf()
-    private var mListener: (Conversation) -> Unit = {}
+    private var mListener: (Int) -> Unit = {}
 
-    fun setOnClickListener(listener: (Conversation) -> Unit) {
+    fun setOnClickListener(listener: (Int) -> Unit) {
         mListener = listener
     }
 
@@ -22,13 +22,17 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
         notifyDataSetChanged()
     }
 
+    fun getConversation(pos: Int) : Conversation {
+        return mConversations[pos]
+    }
+
     fun updateConversation(old: Conversation, new: Conversation?) {
         if (new != null) {
             val conversations: MutableList<Conversation> = mConversations.toMutableList()
             val idx = conversations.indexOf(old)
-
             if (idx != -1) {
                 conversations[idx] = new
+                mConversations = conversations.toList();
                 notifyDataSetChanged()
             }
         }
@@ -57,10 +61,8 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
         holder.lastMsgTv.text = conversation?.lastReadMessage?.body
 
         with(holder.container) {
-            tag = conversation
             setOnClickListener { v ->
-                val uc = v.tag as Conversation
-                mListener(uc)
+                mListener(position)
             }
         }
     }

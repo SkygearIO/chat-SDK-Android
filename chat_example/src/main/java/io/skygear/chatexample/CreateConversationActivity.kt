@@ -86,7 +86,7 @@ class CreateConversationActivity : AppCompatActivity() {
             loading.show()
 
             mChatContainer.createConversation(participantIds, title, null, null, object : SaveCallback<Conversation> {
-                override fun onSuccess(`object`: Conversation?) {
+                override fun onSuccess(con: Conversation?) {
                     loading.dismiss()
                     toast("Conversation created!")
                     finish()
