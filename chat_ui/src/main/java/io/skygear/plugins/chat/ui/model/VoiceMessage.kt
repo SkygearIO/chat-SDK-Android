@@ -57,6 +57,6 @@ open class VoiceMessage : Message, MessageContentType {
     }
 
     enum class State {
-        INITIAL, PLAYING, PAUSED
+        INITIAL, PLAYING, PAUSED, PREPARING
     }
 }

@@ -11,7 +11,7 @@
     <string name="please_turn_on_write_external_storage_permissions">Please turn on storage permission at [Settings] page</string>
     <string name="please_turn_on_audio_recording_permission">Please turn on audio recording permission at [Settings] page</string>
     <string name="camera_is_not_available">Camera is not available</string>
-
+    <string name="voice_too_short">Hold to record and release to send.</string>
     <string name="close">Close</string>
     <string name="slide_to_cancel">Slide to cancel</string>
     <string name="type_a_message">Type a message...</string>
