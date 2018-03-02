@@ -1239,27 +1239,16 @@ public final class ChatContainer {
         }
     }
 
-    /* --- Chat User --- */
-    /**
-     * Gets all users for the chat plugins.
-     *
-     * @param callback the callback
-     */
-    public void getParticipants(@Nullable final GetParticipantsCallback callback) {
-        getParticipants(null, callback);
-    }
-
-
+    /* --- Participants --- */
     /**
      * Gets users for the chat plugins. If participantIds, returns all users.
      * @param participantIds participant ID to be fetched
      * @param callback the callback
      */
-    public void getParticipants(@Nullable Collection<String> participantIds, @Nullable final GetParticipantsCallback callback) {
+    public void getParticipants(@NonNull Collection<String> participantIds, @Nullable final GetParticipantsCallback callback) {
         Query query = new Query("user");
-        if (participantIds != null) {
-           query.contains("_id", new ArrayList(participantIds));
-        }
+        query.contains("_id", new ArrayList(participantIds));
+        query.setLimit(participantIds.size());
         Database publicDB = this.skygear.getPublicDatabase();
         cacheController.getParticipants(participantIds, callback);
 

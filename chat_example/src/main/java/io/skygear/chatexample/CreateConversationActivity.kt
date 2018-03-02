@@ -19,11 +19,13 @@ class CreateConversationActivity : AppCompatActivity() {
     private val mAdapter: ChatUsesAdapter
     private var mCreateBtn: Button? = null
     private var mUserIdsRv: RecyclerView? = null
+    private var mParticipantsFetcher: ParticipantsFetcher? = null
 
     init {
         mSkygear = Container.defaultContainer(this)
         mChatContainer = ChatContainer.getInstance(mSkygear)
         mAdapter = ChatUsesAdapter(mSkygear.auth.currentUser.id)
+        mParticipantsFetcher = ParticipantsFetcher(mSkygear)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,7 +54,7 @@ class CreateConversationActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        mChatContainer.getParticipants(object : GetParticipantsCallback {
+        mParticipantsFetcher?.fetch(object : GetParticipantsCallback {
             override fun onGetCachedResult(participantsMap: MutableMap<String, Participant>?) {
                 mAdapter.setParticipants(participantsMap)
             }

@@ -27,6 +27,7 @@ class UserIdsFragment : DialogFragment() {
     private var mConversation: Conversation? = null
     private var mAdapter: UserIdsAdapter? = null
     private var mUserIdsRv: RecyclerView? = null
+    private var mParticipantsFetcher: ParticipantsFetcher? = null
 
     companion object {
         private val TITLE_KEY = "title_key"
@@ -46,6 +47,7 @@ class UserIdsFragment : DialogFragment() {
     init {
         mSkygear = Container.defaultContainer(activity)
         mChatContainer = ChatContainer.getInstance(mSkygear)
+        mParticipantsFetcher = ParticipantsFetcher(mSkygear)
     }
 
     override fun onCreateView(inflater: LayoutInflater?,
@@ -82,7 +84,7 @@ class UserIdsFragment : DialogFragment() {
 
         super.onResume()
 
-        mChatContainer.getParticipants(object : GetParticipantsCallback {
+        mParticipantsFetcher?.fetch(object : GetParticipantsCallback {
             override fun onGetCachedResult(participantsMap: MutableMap<String, Participant>?) {
                 mAdapter?.setUserIds(participantsMap?.values?.toList(), arguments.getStringArrayList(SELECT_IDS_KEY))
             }

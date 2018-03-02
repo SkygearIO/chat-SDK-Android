@@ -21,7 +21,7 @@ public class Participant {
      *
      * @param record the record
      */
-    Participant(final Record record) {
+    public Participant(final Record record) {
         this.record = record;
     }
 
