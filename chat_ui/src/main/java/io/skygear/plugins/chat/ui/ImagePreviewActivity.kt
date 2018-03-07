@@ -2,12 +2,20 @@ package io.skygear.plugins.chat.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.media.ExifInterface
+import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ImageView
 import com.squareup.picasso.Picasso
+import com.squareup.picasso.Transformation
+import io.skygear.plugins.chat.ui.utils.AvatarBuilder
+import io.skygear.plugins.chat.ui.utils.ImageLoader
+import io.skygear.plugins.chat.ui.utils.getImageOrientation
+import io.skygear.plugins.chat.ui.utils.matrixFromRotation
 
 class ImagePreviewActivity : AppCompatActivity() {
 
@@ -25,15 +33,39 @@ class ImagePreviewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_image_preview)
 
-        setTitle("")
-
-        val photoView = findViewById<ImageView>(R.id.iv_photo)
+        title = ""
 
         var url = intent.getStringExtra(ImageURLIntentKey)
-
-        Picasso.with(this)
+        val fromContentResolver = url.startsWith("content")
+        if (fromContentResolver) {
+            url = url.substring(0, url.indexOf("?"))
+        }
+        val creator = Picasso.with(this)
                 .load(url)
-                .into(photoView)
+
+        if (fromContentResolver) {
+            val orientation = getImageOrientation(this, Uri.parse(url))
+            var matrix = matrixFromRotation(orientation)
+
+            matrix?.let {
+                creator.transform(object : Transformation {
+                    override fun key(): String {
+                        return "orientation"
+                    }
+
+                    override fun transform(source: Bitmap?): Bitmap {
+                        val bmRotated = Bitmap.createBitmap(source, 0, 0, source!!.width, source!!.height, matrix, true)
+                        source?.recycle()
+                        return bmRotated
+                    }
+
+                })
+            }
+        }
+
+
+        creator.into(findViewById<ImageView>(R.id.iv_photo))
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
