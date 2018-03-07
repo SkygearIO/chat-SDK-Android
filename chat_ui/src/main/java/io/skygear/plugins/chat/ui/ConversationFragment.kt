@@ -391,12 +391,12 @@ open class ConversationFragment() :
     /**
      * This function is for receiving new message and sending new message.
      */
-    private fun addMessageToBottom(message: ChatMessage, uri: Uri? = null) {
+    private fun addMessageToBottom(message: ChatMessage, uri: Uri? = null, orientation: Int? = null) {
         val view = conversationView()
         if (messageIDs.contains(message.id)) {
             view?.updateMessages(listOf(message))
         } else {
-            view?.addMessageToBottom(message, uri)
+            view?.addMessageToBottom(message, uri, orientation)
             messageIDs.add(message.id)
         }
 
@@ -836,7 +836,8 @@ open class ConversationFragment() :
     }
 
     fun sendImageMessage(imageUri: Uri) {
-        val imageData = getResizedBitmap(context, imageUri)
+        val orientation = getImageOrientation(context, imageUri)
+        val imageData = getResizedBitmap(context, imageUri, orientation)
         if (imageData == null) {
             Log.w(TAG, "Failed to decode image from uri: %s".format(imageUri))
             return
@@ -845,7 +846,7 @@ open class ConversationFragment() :
         this.conversation?.let { conv ->
             val imageMessage = MessageBuilder.createImageMessage(imageData)
             this.fragmentMessageSentListener?.onBeforeMessageSent(this, imageMessage)
-            this.addMessageToBottom(imageMessage, imageUri)
+            this.addMessageToBottom(imageMessage, imageUri, orientation)
             this.skygearChat?.addMessage(imageMessage, conv, object : SaveCallback<io.skygear.plugins.chat.Message> {
                 override fun onSuccess(message: ChatMessage?) {
                     callMessageSentSuccessListener(message)

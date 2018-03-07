@@ -25,21 +25,8 @@ var mCurrentPhotoPath: String = ""
 data class ImageData(val thumbnail: Bitmap,
                      val image: Bitmap)
 
-fun getResizedBitmap(context: Context, uri: Uri): ImageData? {
+fun getImageOrientation(context: Context, uri: Uri): Int {
     var input = context.getContentResolver().openInputStream(uri)
-
-    val onlyBoundsOptions = BitmapFactory.Options()
-    onlyBoundsOptions.inJustDecodeBounds = true
-    onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888//optional
-    BitmapFactory.decodeStream(input, null, onlyBoundsOptions)
-    input.close()
-
-    if (onlyBoundsOptions.outWidth == -1 || onlyBoundsOptions.outHeight == -1) {
-        return null
-    }
-
-    // get orientation exif
-    input = context.getContentResolver().openInputStream(uri)
     val file = File.createTempFile("image_tmp", ".jpg", context.getCacheDir())
     val fos = FileOutputStream(file)
 
@@ -56,7 +43,21 @@ fun getResizedBitmap(context: Context, uri: Uri): ImageData? {
     fos.close()
 
     val ef = ExifInterface(file.toString())
-    val orientation = ef.getAttributeInt(ExifInterface.TAG_ORIENTATION, 99)
+    return ef.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+}
+
+fun getResizedBitmap(context: Context, uri: Uri, orientation: Int): ImageData? {
+    var input = context.getContentResolver().openInputStream(uri)
+
+    val onlyBoundsOptions = BitmapFactory.Options()
+    onlyBoundsOptions.inJustDecodeBounds = true
+    onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888//optional
+    BitmapFactory.decodeStream(input, null, onlyBoundsOptions)
+    input.close()
+
+    if (onlyBoundsOptions.outWidth == -1 || onlyBoundsOptions.outHeight == -1) {
+        return null
+    }
 
     val originalSize = if (onlyBoundsOptions.outHeight > onlyBoundsOptions.outWidth)
         onlyBoundsOptions.outHeight else onlyBoundsOptions.outWidth
@@ -91,11 +92,11 @@ fun bitmapToByteArray(bmp: Bitmap): ByteArray? {
     return stream.toByteArray()
 }
 
-fun rotateBitmap(bitmap: Bitmap, orientation: Int): Bitmap? {
+fun matrixFromRotation(orientation: Int): Matrix? {
     val matrix = Matrix()
     when (orientation) {
-        ExifInterface.ORIENTATION_NORMAL -> return bitmap
-        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.setScale(-1f, 1f)
+        ExifInterface.ORIENTATION_NORMAL -> return null
+        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix?.setScale(-1f, 1f)
         ExifInterface.ORIENTATION_ROTATE_180 -> matrix.setRotate(180f)
         ExifInterface.ORIENTATION_FLIP_VERTICAL -> {
             matrix.setRotate(180f)
@@ -111,11 +112,15 @@ fun rotateBitmap(bitmap: Bitmap, orientation: Int): Bitmap? {
             matrix.postScale(-1f, 1f)
         }
         ExifInterface.ORIENTATION_ROTATE_270 -> matrix.setRotate(-90f)
-        else -> return bitmap
+        else -> return null
     }
+    return matrix
+}
+
+fun rotateBitmap(bitmap: Bitmap, orientation: Int): Bitmap? {
+    val matrix = matrixFromRotation(orientation)
     try {
         val bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-        bitmap.recycle()
         return bmRotated
     } catch (e: OutOfMemoryError) {
         e.printStackTrace()

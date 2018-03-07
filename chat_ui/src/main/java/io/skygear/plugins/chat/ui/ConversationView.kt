@@ -407,8 +407,8 @@ open class ConversationView : RelativeLayout {
         this.messageListAdapter?.merge(messages)
     }
 
-    open fun addMessageToBottom(message: ChatMessage, imageUri: Uri? = null) {
-        this.messageListAdapter?.addToStart(MessageFromChatMessage(message, imageUri), needToScrollToBottom())
+    open fun addMessageToBottom(message: ChatMessage, imageUri: Uri? = null, orientation: Int? = null) {
+        this.messageListAdapter?.addToStart(MessageFromChatMessage(message, imageUri, orientation), needToScrollToBottom())
     }
 
     open fun startListeningScroll() {
@@ -454,8 +454,8 @@ open class ConversationView : RelativeLayout {
         return multitypeMessages
     }
 
-    fun MessageFromChatMessage(chatMessage: ChatMessage, uri: Uri?): Message {
-        val multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), uri)
+    fun MessageFromChatMessage(chatMessage: ChatMessage, uri: Uri?, orientation: Int?): Message {
+        val multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), uri, orientation)
         updateMessageAuthor(multitypeMessage)
         return multitypeMessage
     }
