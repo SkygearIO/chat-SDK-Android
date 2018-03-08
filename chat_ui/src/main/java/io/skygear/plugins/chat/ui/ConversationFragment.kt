@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
 import android.net.Uri
@@ -874,6 +875,7 @@ open class ConversationFragment() :
                             activity.packageName + ".fileprovider",
                             photoFile)
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraPhotoUri)
+                    grantUriPermissionInKitKat(intent, mCameraPhotoUri)
                     startActivityForResult(intent, REQUEST_IMAGE_CAPTURE)
                 }
             } else {
@@ -882,6 +884,16 @@ open class ConversationFragment() :
                         getString(R.string.camera_is_not_available),
                         Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun grantUriPermissionInKitKat(intent: Intent, uri: Uri?) {
+        // grant permission manually in kitkat https://stackoverflow.com/a/33754937
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+            val resInfoList = context.packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
+            resInfoList
+                    .map { it.activityInfo.packageName }
+                    .forEach { context.grantUriPermission(it, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION) }
         }
     }
 
