@@ -14,15 +14,15 @@ class ImageMessage : Message,
 
     val chatMessageImageUrl: String?
 
-    constructor(m: ChatMessage, imageUri: Uri?, style: MessageStyle) : super(m, style) {
+    constructor(m: ChatMessage, imageUri: Uri?, orientation: Int?, style: MessageStyle) : super(m, style) {
         this.chatMessageImageUrl = this.imageUrlFromChatMessage(
                 this.chatMessage.asset?.url ?: imageUri?.toString(),
-                this.chatMessage.metadata)
+                this.chatMessage.metadata, orientation)
     }
 
     override fun getImageUrl(): String? = this.chatMessageImageUrl
 
-    fun imageUrlFromChatMessage(imageUrl: String?, meta: JSONObject?): String? {
+    fun imageUrlFromChatMessage(imageUrl: String?, meta: JSONObject?, orientation: Int?): String? {
         var url = imageUrl
         if (url == null) {
             return null
@@ -41,6 +41,10 @@ class ImageMessage : Message,
 
             if (it.has("height")) {
                 builder.appendQueryParameter("height", it.getInt("height").toString())
+            }
+
+            orientation?.let {
+                builder.appendQueryParameter("orientation", orientation.toString())
             }
 
             url = builder.build().toString()
