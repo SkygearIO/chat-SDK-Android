@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import io.realm.RealmQuery;
 import io.skygear.skygear.Error;
@@ -289,11 +290,11 @@ class CacheController {
     //endregion
 
     //region Chat Users
-    void didParticipants(Collection<Participant> participants) {
+    void didFetchParticipants(Collection<Participant> participants) {
         this.store.setParticipants(participants);
     }
 
-    void getParticipants(Collection<String> participantIds, GetParticipantsCallback callback) {
+    void fetchParticipants(Collection<String> participantIds, @Nullable GetCallback<Map<String, Participant>> callback) {
         this.store.getParticipantsWithIds(participantIds, callback);
     }
     //endregion

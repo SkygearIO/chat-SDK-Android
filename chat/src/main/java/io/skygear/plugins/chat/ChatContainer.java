@@ -1250,7 +1250,7 @@ public final class ChatContainer {
         query.contains("_id", new ArrayList(participantIds));
         query.setLimit(participantIds.size());
         Database publicDB = this.skygear.getPublicDatabase();
-        cacheController.getParticipants(participantIds, callback);
+        cacheController.fetchParticipants(participantIds, CreateGetParticipantsCallback(callback));
 
         GetCallback<List<Participant>> publicDBCallback = new GetCallback<List<Participant>>() {
             @Override
@@ -1260,7 +1260,7 @@ public final class ChatContainer {
                 for (Participant user : participants) {
                     map.put(user.getId(), user);
                 }
-                cacheController.didParticipants(participants);
+                cacheController.didFetchParticipants(participants);
                 callback.onSuccess(map);
             }
 
@@ -1281,6 +1281,22 @@ public final class ChatContainer {
                 return participants;
             }
         });
+    }
+
+    private GetCallback<Map<String, Participant>> CreateGetParticipantsCallback(@Nullable  final GetParticipantsCallback callback) {
+        return new GetCallback<Map<String, Participant>>() {
+            @Override
+            public void onSuccess(@Nullable Map<String, Participant> object) {
+                if (callback != null) {
+                    callback.onGetCachedResult(object);
+                }
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Log.e(TAG, "Failed to load message from cache: " + error.getMessage());
+            }
+        };
     }
 
     /* --- Subscription--- */

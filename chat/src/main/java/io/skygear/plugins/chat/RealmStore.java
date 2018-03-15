@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -443,7 +444,7 @@ class RealmStore {
     }
 
     void getParticipantsWithIds(@Nonnull final Collection<String> participantIds,
-                                @Nonnull final GetParticipantsCallback callback) {
+                                @Nonnull final GetCallback<Map<String, Participant>> callback) {
         if (callback != null) {
             RealmQuery<ParticipantCacheObject> query = null;
             if (participantIds == null || participantIds.isEmpty()) {
@@ -471,7 +472,7 @@ class RealmStore {
         }
     }
 
-    void getParticipants(RealmResults<ParticipantCacheObject> results, GetParticipantsCallback callback) {
+    void getParticipants(RealmResults<ParticipantCacheObject> results, GetCallback<Map<String, Participant>> callback) {
         HashMap<String, Participant> participantsMap = new HashMap<>();
         for (ParticipantCacheObject object: results) {
             try {
@@ -480,7 +481,7 @@ class RealmStore {
                 Log.e(TAG, "Failed to serialize Chat User, reason: " + e.getMessage());
             }
         }
-        callback.onGetCachedResult(participantsMap);
+        callback.onSuccess(participantsMap);
     }
 
     @RealmModule(library = true, classes = {MessageCacheObject.class, MessageOperationCacheObject.class, ParticipantCacheObject.class})

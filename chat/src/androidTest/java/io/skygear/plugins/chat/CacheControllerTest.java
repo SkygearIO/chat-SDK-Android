@@ -536,18 +536,13 @@ public class CacheControllerTest {
     //region Participant
     @Test
     public void testGetParticipants() {
-        this.cacheController.getParticipants(new ArrayList<String>() {{
+        this.cacheController.fetchParticipants(new ArrayList<String>() {{
             add("user2");
-        }}, new GetParticipantsCallback() {
+        }}, new GetCallback<Map<String, Participant>>() {
             @Override
-            public void onGetCachedResult(@Nullable Map<String, Participant> participantsMap) {
+            public void onSuccess(@Nullable Map<String, Participant> participantsMap) {
                 Assert.assertEquals(1, participantsMap.size());
                 Assert.assertNotNull(participantsMap.get("user2"));
-            }
-
-            @Override
-            public void onSuccess(@Nullable Map<String, Participant> object) {
-
             }
 
             @Override
@@ -556,18 +551,13 @@ public class CacheControllerTest {
             }
         });
 
-        this.cacheController.getParticipants(null, new GetParticipantsCallback() {
+        this.cacheController.fetchParticipants(null, new GetCallback<Map<String, Participant>>() {
             @Override
-            public void onGetCachedResult(@Nullable Map<String, Participant> participantsMap) {
+            public void onSuccess(@Nullable Map<String, Participant> participantsMap) {
                 Assert.assertEquals(3, participantsMap.size());
                 Assert.assertNotNull(participantsMap.get("user1"));
                 Assert.assertNotNull(participantsMap.get("user2"));
                 Assert.assertNotNull(participantsMap.get("user3"));
-            }
-
-            @Override
-            public void onSuccess(@Nullable Map<String, Participant> object) {
-
             }
 
             @Override
