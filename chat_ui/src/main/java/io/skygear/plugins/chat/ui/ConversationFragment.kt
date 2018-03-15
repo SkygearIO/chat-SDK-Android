@@ -391,21 +391,32 @@ open class ConversationFragment() :
     /**
      * This function is for receiving new message and sending new message.
      */
-    private fun addMessageToBottom(message: ChatMessage, uri: Uri? = null, orientation: Int? = null) {
-        val view = conversationView()
-        if (messageIDs.contains(message.id)) {
-            view?.updateMessages(listOf(message))
-        } else {
-            view?.addMessageToBottom(message, uri, orientation)
-            messageIDs.add(message.id)
+    private fun upsertMessage(message: ChatMessage) {
+        conversationView()?.let { conversationView ->
+            val message = messageFromChatMessage(message)
+            if (messageIDs.contains(message.id)) {
+                conversationView.updateMessages(listOf(message.chatMessage))
+            } else {
+                conversationView.addMessageToBottom(message)
+                messageIDs.add(message.id)
+            }
         }
+    }
 
-        // mark last read message
+    private fun addDeliveringMessage(message: Message) {
+        conversationView()?.let { conversationView ->
+            messageIDs.add(message.id)
+            conversationView.addMessageToBottom(message)
+        }
+    }
+
+    private fun markMesseAsReadAndLastRead(message: ChatMessage) {
         this.conversation?.let { conv ->
             this.skygearChat?.markConversationLastReadMessage(conv, message)
         }
         this.skygearChat?.markMessageAsRead(message)
     }
+
 
     private fun addMessages(messages: List<ChatMessage>) {
         addMessages(messages, null)
@@ -526,7 +537,8 @@ open class ConversationFragment() :
     }
 
     private fun onReceiveChatMessage(msg: ChatMessage) {
-        this.addMessageToBottom(msg)
+        this.upsertMessage(msg)
+        this.markMesseAsReadAndLastRead(msg)
     }
 
     private fun onUpdateChatMessage(message: ChatMessage) {
@@ -644,7 +656,7 @@ open class ConversationFragment() :
         stream.read(bytes, 0, bytes.size)
         stream.close()
 
-        this.conversation?.let { conv ->
+        this.conversation?.let { conversation ->
             val fileName = voiceRecordingFileName!!.split("/").last()
             val asset = Asset(fileName, VoiceMessage.MIME_TYPE, bytes)
 
@@ -655,23 +667,31 @@ open class ConversationFragment() :
             message.asset = asset
             message.metadata = meta
 
-            this.fragmentMessageSentListener?.onBeforeMessageSent(this, message)
-            addMessageToBottom(message, Uri.parse("file://" + voiceRecordingFileName))
-            this.skygearChat?.addMessage(message, conv, object : SaveCallback<ChatMessage> {
-                override fun onSuccess(chatMsg: ChatMessage?) {
+            conversationView()?.let { conversationView ->
+                addDeliveringMessage(voiceMessageFromChatMessage(message, Uri.parse("file://" + voiceRecordingFileName)))
+                sendChatMessage(message, conversation, {
                     voiceRecordingFile.delete()
                     callMessageSentSuccessListener(message)
-                }
-
-                override fun onFail(error: Error) {
-                    Log.e(
-                            ConversationFragment.TAG,
-                            "Failed to send voice message: ${error.message}"
-                    )
-                    this@ConversationFragment.fragmentMessageSentListener?.onMessageSentFailed(this@ConversationFragment, message, error)
-                }
-            })
+                })
+            }
         }
+    }
+
+    private fun sendChatMessage(message: ChatMessage, conversation: ChatConversation, successCallBack: (ChatMessage?) -> (Any)) {
+        this.skygearChat?.addMessage(message, conversation, object : SaveCallback<ChatMessage> {
+            override fun onFail(error: Error) {
+                Log.e(
+                        ConversationFragment.TAG,
+                        "Failed to send voice message: ${error.message}"
+                )
+                this@ConversationFragment.fragmentMessageSentListener?.onMessageSentFailed(this@ConversationFragment, message, error)
+            }
+
+            override fun onSuccess(chatMsg: ChatMessage?) {
+                successCallBack(chatMsg)
+            }
+
+        })
     }
 
     fun callMessageSentSuccessListener(chatMsg: ChatMessage?) {
@@ -695,27 +715,19 @@ open class ConversationFragment() :
         }
     }
 
-    fun onSendMessage(input: String): Boolean {
-
-        this.conversation?.let { conv ->
-            val message = ChatMessage()
-            message.body = input
-            this.fragmentMessageSentListener?.onBeforeMessageSent(this, message)
-            this.addMessageToBottom(message)
-            this.skygearChat?.addMessage(message, conv, object : SaveCallback<ChatMessage> {
-                override fun onSuccess(msg: io.skygear.plugins.chat.Message?) {
+    private fun onSendMessage(input: String): Boolean {
+        this.conversation?.let { conversation ->
+            conversationView()?.let { conversationView ->
+                val message = ChatMessage()
+                message.body = input
+                this.fragmentMessageSentListener?.onBeforeMessageSent(this, message)
+                this.addDeliveringMessage(messageFromChatMessage(message, conversationView))
+                sendChatMessage(message, conversation, {
                     callMessageSentSuccessListener(message)
-                    msg?.let { this@ConversationFragment.updateMessage(msg) }
-                }
-
-                override fun onFail(error: Error) {
-                    this@ConversationFragment.fragmentMessageSentListener
-                            ?.onMessageSentFailed(this@ConversationFragment, message, error)
-                    message?.let { this@ConversationFragment.updateMessage(message, error) }
-                }
-            })
+                    this.updateMessage(message)
+                })
+            }
         }
-
         return true
     }
 
@@ -785,7 +797,7 @@ open class ConversationFragment() :
         })
 
         this.deleteMessages(listOf(message))
-        this.addMessageToBottom(messageToResend)
+        this.upsertMessage(messageToResend)
     }
 
     fun cancelMessage(message: ChatMessage) {
@@ -835,7 +847,7 @@ open class ConversationFragment() :
         })?.notifyRequestResult(permissions.toList(), grantResults.toList())
     }
 
-    fun sendImageMessage(imageUri: Uri) {
+    private fun sendImageMessage(imageUri: Uri) {
         val orientation = getImageOrientation(context, imageUri)
         val imageData = getResizedBitmap(context, imageUri, orientation)
         if (imageData == null) {
@@ -843,21 +855,34 @@ open class ConversationFragment() :
             return
         }
 
-        this.conversation?.let { conv ->
-            val imageMessage = MessageBuilder.createImageMessage(imageData)
-            this.fragmentMessageSentListener?.onBeforeMessageSent(this, imageMessage)
-            this.addMessageToBottom(imageMessage, imageUri, orientation)
-            this.skygearChat?.addMessage(imageMessage, conv, object : SaveCallback<io.skygear.plugins.chat.Message> {
-                override fun onSuccess(message: ChatMessage?) {
-                    callMessageSentSuccessListener(message)
-                }
-
-                override fun onFail(error: Error) {
-                    this@ConversationFragment.fragmentMessageSentListener
-                            ?.onMessageSentFailed(this@ConversationFragment, imageMessage, error)
-                }
-            })
+        this.conversation?.let { conversation ->
+            conversationView()?.let { conversationView ->
+                val imageMessage = MessageBuilder.createImageMessage(imageData)
+                this.fragmentMessageSentListener?.onBeforeMessageSent(this, imageMessage)
+                addDeliveringMessage(imageMessageFromChatMessage(imageMessage, imageUri, orientation, conversationView))
+                sendChatMessage(imageMessage, conversation, {
+                    callMessageSentSuccessListener(imageMessage)
+                })
+            }
         }
+    }
+
+    private fun imageMessageFromChatMessage(chatMessage: ChatMessage, uri: Uri, orientation: Int, conversationView: ConversationView): Message {
+        val message = MessageFactory.getMessage(chatMessage,conversationView.getMessageStyle(), uri, orientation)
+        conversationView.updateMessageAuthor(message)
+        return message
+    }
+
+    private fun voiceMessageFromChatMessage(chatMessage: ChatMessage, uri: Uri, conversationView: ConversationView): Message {
+        val message = MessageFactory.getMessage(chatMessage, conversationView.getMessageStyle(), uri)
+        conversationView.updateMessageAuthor(message)
+        return message
+    }
+
+    private fun messageFromChatMessage(chatMessage: ChatMessage, conversationView: ConversationView): Message {
+        val message = MessageFactory.getMessage(chatMessage, conversationView.getMessageStyle())
+        conversationView.updateMessageAuthor(message)
+        return message
     }
 
     private fun takePhotoFromCameraIntent() {
