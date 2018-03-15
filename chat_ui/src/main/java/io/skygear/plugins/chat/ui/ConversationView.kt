@@ -14,7 +14,6 @@ import com.dewarder.holdinglibrary.HoldingButtonLayout
 import com.dewarder.holdinglibrary.HoldingButtonLayoutListener
 import io.skygear.plugins.chat.ui.utils.ImageLoader
 import android.app.Activity
-import android.net.Uri
 import android.os.Handler
 import android.widget.* // ktlint-disable no-wildcard-imports
 import io.skygear.plugins.chat.ui.holder.* // ktlint-disable no-wildcard-imports
@@ -378,13 +377,13 @@ open class ConversationView : RelativeLayout {
     }
 
     open fun updateMessages(chatMessages: List<ChatMessage>) {
-        for (message: Message in MessagesFromChatMessages(chatMessages)) {
+        for (message: Message in messagesFromChatMessages(chatMessages)) {
             this.messageListAdapter?.update(message)
         }
     }
 
     open fun updateMessages(chatMessages: List<ChatMessage>, error: Error) {
-        for (message: Message in MessagesFromChatMessages(chatMessages)) {
+        for (message: Message in messagesFromChatMessages(chatMessages)) {
             message.error = error
             this.messageListAdapter?.update(message)
         }
@@ -396,19 +395,20 @@ open class ConversationView : RelativeLayout {
     }
 
     open fun mergeMessages(chatMessages: List<ChatMessage>) {
-        this.messageListAdapter?.merge(MessagesFromChatMessages(chatMessages))
+        this.messageListAdapter?.merge(messagesFromChatMessages(chatMessages))
     }
 
     open fun mergeMessages(chatMessages: List<ChatMessage>, error: Error) {
-        var messages = MessagesFromChatMessages(chatMessages)
+        var messages = messagesFromChatMessages(chatMessages)
         for (message: Message in messages) {
             message.error = error
         }
         this.messageListAdapter?.merge(messages)
     }
 
-    open fun addMessageToBottom(message: ChatMessage, imageUri: Uri? = null, orientation: Int? = null) {
-        this.messageListAdapter?.addToStart(MessageFromChatMessage(message, imageUri, orientation), needToScrollToBottom())
+    open fun addMessageToBottom(message: Message) {
+        updateMessageAuthor(message)
+        this.messageListAdapter?.addToStart(message, needToScrollToBottom())
     }
 
     open fun startListeningScroll() {
@@ -435,33 +435,12 @@ open class ConversationView : RelativeLayout {
         return MessageStyle(this.avatarHiddenForOutgoingMessages, this.avatarHiddenForIncomingMessages, this.messageSenderTextColor, getMessageStatusText(), dateFormat, timeStyle, bubbleStyle, voiceMessageStyle, statusStyle)
     }
 
-    fun MessagesFromChatMessages(chatMessages: List<ChatMessage>): List<Message> {
-        val multitypeMessages = chatMessages.map {
+    private fun messagesFromChatMessages(chatMessages: List<ChatMessage>): List<Message> {
+        val multiTypeMessages = chatMessages.map {
             MessageFactory.getMessage(it, getMessageStyle())
         }
-        multitypeMessages.forEach { updateMessageAuthor(it) }
-        return multitypeMessages
-    }
-
-    fun MessagesFromChatMessages(chatMessages: List<ChatMessage>, error: Error): List<Message> {
-        val multitypeMessages = chatMessages.map {
-            MessageFactory.getMessage(it, getMessageStyle())
-        }
-        multitypeMessages.forEach {
-            updateMessageAuthor(it)
-            updateMessageError(it, error)
-        }
-        return multitypeMessages
-    }
-
-    fun MessageFromChatMessage(chatMessage: ChatMessage, uri: Uri?, orientation: Int?): Message {
-        val multitypeMessage = MessageFactory.getMessage(chatMessage, getMessageStyle(), uri, orientation)
-        updateMessageAuthor(multitypeMessage)
-        return multitypeMessage
-    }
-
-    fun updateMessageError(message: Message, error: Error) {
-        message.error = error
+        multiTypeMessages.forEach { updateMessageAuthor(it) }
+        return multiTypeMessages
     }
 
     fun updateMessageAuthor(message: Message) {
