@@ -1,13 +1,16 @@
 package io.skygear.plugins.chat.ui.utils
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.widget.ImageView
 import com.squareup.picasso.Picasso
 import io.skygear.chatkit.commons.ImageLoader
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.media.ExifInterface
 import android.util.Base64
+import com.squareup.picasso.Transformation
 
 private val DISPLAY_IMAGE_SIZE = 500.0
 
@@ -48,7 +51,7 @@ class ImageLoader(
             }
             imageView?.layoutParams?.height = height.toInt()
             imageView?.layoutParams?.width = width.toInt()
-            creator.fit().centerCrop()
+            creator.fit().centerInside()
         }
 
         val imageDataBytes = builtUri.getQueryParameter("thumbnail")
@@ -58,6 +61,23 @@ class ImageLoader(
             if (bitmap != null) {
                 creator.placeholder(BitmapDrawable(this.context.resources, bitmap))
             }
+        }
+
+        var orientation = builtUri.getQueryParameter("orientation")?.toInt() ?: ExifInterface.ORIENTATION_NORMAL
+        var matrix = matrixFromRotation(orientation)
+
+        matrix?.let {
+            creator.transform(object : Transformation {
+                override fun key(): String {
+                    return "orientation"
+                }
+
+                override fun transform(source: Bitmap?): Bitmap {
+                    val bmRotated = Bitmap.createBitmap(source, 0, 0, source!!.width, source!!.height, matrix, true)
+                    source?.recycle()
+                    return bmRotated
+                }
+            })
         }
 
         creator.into(imageView)
