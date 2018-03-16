@@ -22,8 +22,10 @@ import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import io.realm.RealmQuery;
 import io.skygear.skygear.Error;
@@ -285,5 +287,15 @@ class CacheController {
         this.store.markMessageOperationsAsFailed(queryBuilder, null);
     }
 
+    //endregion
+
+    //region Chat Users
+    void didFetchParticipants(Collection<Participant> participants) {
+        this.store.setParticipants(participants);
+    }
+
+    void fetchParticipants(Collection<String> participantIds, @Nullable GetCallback<Map<String, Participant>> callback) {
+        this.store.getParticipantsWithIds(participantIds, callback);
+    }
     //endregion
 }

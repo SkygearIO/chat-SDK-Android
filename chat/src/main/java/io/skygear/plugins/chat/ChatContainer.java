@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,7 +34,6 @@ import io.skygear.skygear.Database;
 import io.skygear.skygear.Error;
 import io.skygear.skygear.LambdaResponseHandler;
 import io.skygear.skygear.PubsubContainer;
-import io.skygear.skygear.PubsubHandler;
 import io.skygear.skygear.PubsubListener;
 import io.skygear.skygear.Query;
 import io.skygear.skygear.Record;
@@ -1239,28 +1239,64 @@ public final class ChatContainer {
         }
     }
 
-    /* --- Chat User --- */
-
+    /* --- Participants --- */
     /**
-     * Gets users for the chat plugins.
-     *
+     * Gets users for the chat plugins. If participantIds, returns all users.
+     * @param participantIds participant ID to be fetched
      * @param callback the callback
      */
-    public void getChatUsers(@Nullable final GetCallback<List<ChatUser>> callback) {
+    public void getParticipants(@NonNull Collection<String> participantIds, @Nullable final GetParticipantsCallback callback) {
         Query query = new Query("user");
+        query.contains("_id", new ArrayList(participantIds));
+        query.setLimit(participantIds.size());
         Database publicDB = this.skygear.getPublicDatabase();
-        publicDB.query(query, new QueryResponseAdapter<List<ChatUser>>(callback) {
+        cacheController.fetchParticipants(participantIds, CreateGetParticipantsCallback(callback));
+
+        GetCallback<List<Participant>> publicDBCallback = new GetCallback<List<Participant>>() {
             @Override
-            public List<ChatUser> convert(Record[] records) {
-                List<ChatUser> users = new ArrayList<>(records.length);
+            public void onSuccess(@Nullable List<Participant> participants) {
+                Map<String, Participant> map = new HashMap<>();
 
-                for (Record record : records) {
-                    users.add(new ChatUser(record));
+                for (Participant user : participants) {
+                    map.put(user.getId(), user);
                 }
+                cacheController.didFetchParticipants(participants);
+                callback.onSuccess(map);
+            }
 
-                return users;
+            @Override
+            public void onFail(@NonNull Error error) {
+                callback.onFail(error);
+            }
+        };
+
+
+        publicDB.query(query, new QueryResponseAdapter<List<Participant>>(publicDBCallback) {
+            @Override
+            public List<Participant> convert(Record[] records) {
+                ArrayList<Participant> participants = new ArrayList<>();
+                for (Record record : records) {
+                    participants.add(new Participant(record));
+                }
+                return participants;
             }
         });
+    }
+
+    private GetCallback<Map<String, Participant>> CreateGetParticipantsCallback(@Nullable  final GetParticipantsCallback callback) {
+        return new GetCallback<Map<String, Participant>>() {
+            @Override
+            public void onSuccess(@Nullable Map<String, Participant> object) {
+                if (callback != null) {
+                    callback.onGetCachedResult(object);
+                }
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Log.e(TAG, "Failed to load message from cache: " + error.getMessage());
+            }
+        };
     }
 
     /* --- Subscription--- */

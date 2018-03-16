@@ -1,5 +1,6 @@
 package io.skygear.plugins.chat.ui.model
 
+import io.skygear.plugins.chat.Participant
 import io.skygear.plugins.chat.ui.AvatarType
 import io.skygear.skygear.Record
 
@@ -28,5 +29,9 @@ class UserBuilder {
 
     fun createUser(recordID: String): User {
         return User(recordID, displayNameField, avatarField, avatarType, avatarBackgroundColor, avatarTextColor)
+    }
+
+    fun createUser(participant: Participant): User {
+        return User(participant, displayNameField, avatarField, avatarType, avatarBackgroundColor, avatarTextColor)
     }
 }

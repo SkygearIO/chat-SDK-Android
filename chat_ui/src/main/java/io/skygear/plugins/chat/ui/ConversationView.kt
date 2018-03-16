@@ -28,8 +28,8 @@ import io.skygear.chatkit.messages.VoiceMessageOnClickListener
 import io.skygear.chatkit.messages.MessageHolders
 import io.skygear.chatkit.messages.MessagesList
 import io.skygear.chatkit.messages.MessagesListAdapter
+import io.skygear.plugins.chat.Participant
 import io.skygear.skygear.Error
-import io.skygear.skygear.Record
 
 abstract class HoldingButtonLayoutBaseListener : HoldingButtonLayoutListener {
     override fun onBeforeCollapse() {}
@@ -473,19 +473,19 @@ open class ConversationView : RelativeLayout {
         }
     }
 
-    fun updateAuthors(authors: List<Record>) {
-        authors.forEach {
-            userMap[it.ownerId] = userBuilder.createUser(it)
+    fun updateAuthors(authors: List<Participant>?) {
+        authors?.forEach {
+            userMap[it.id] = userBuilder.createUser(it)
         }
         this.messageListAdapter?.updateMessagesAuthor(userMap)
     }
 
     open fun getOtherParticipantsTitle(): String {
         val names = userMap.values.filter {
-            it.chatUserId != this.skygear?.auth?.currentUser?.id
+            it.participantId != this.skygear?.auth?.currentUser?.id
         }.map {
             val key = it.displayNameField
-            it.chatUser?.record?.get(key) ?: it.chatUser?.record?.get(User.DefaultUsernameField)
+            it.participant?.record?.get(key) ?: it.participant?.record?.get(User.DefaultUsernameField)
         }
         return names?.joinToString(", ")
     }

@@ -6,17 +6,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import io.skygear.plugins.chat.ChatUser
+import io.skygear.plugins.chat.Participant
 
 class UserIdsAdapter(val currentUserId: String?) : RecyclerView.Adapter<UserIdsAdapter.ViewHolder>() {
     private val LOG_TAG: String? = "UserIdsAdapter"
 
-    private var chatUsers: List<ChatUser> = listOf()
+    private var participants: List<Participant> = listOf()
     private var selectedIds: MutableList<String> = mutableListOf()
 
-    fun setUserIds(chatUsers: List<ChatUser>?, selectedIds: List<String>?) {
-        if (chatUsers != null) {
-            this.chatUsers = chatUsers.filter {
+    fun setUserIds(participants: List<Participant>?, selectedIds: List<String>?) {
+        if (participants != null) {
+            this.participants = participants.filter {
                 it.id != currentUserId
             }
         }
@@ -38,24 +38,24 @@ class UserIdsAdapter(val currentUserId: String?) : RecyclerView.Adapter<UserIdsA
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val chatUser: ChatUser = chatUsers[position]
-        holder.idTv.text = chatUser.record.get("username").toString()
+        val participant: Participant = participants[position]
+        holder.idTv.text = participant.record.get("username").toString()
 
-        holder.idCb.isChecked = chatUser.id in selectedIds
+        holder.idCb.isChecked = participant.id in selectedIds
 
         holder.idCb.setOnClickListener { it: View? ->
             val cb = (it as AppCompatCheckBox)
 
             if(cb.isChecked) {
-                selectedIds.add(chatUser.id)
+                selectedIds.add(participant.id)
             } else {
-                selectedIds.remove(chatUser.id)
+                selectedIds.remove(participant.id)
             }
         }
     }
 
     override fun getItemCount(): Int {
-        return chatUsers.size
+        return participants.size
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
