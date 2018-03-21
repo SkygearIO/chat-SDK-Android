@@ -681,6 +681,7 @@ open class ConversationFragment() :
                         ConversationFragment.TAG,
                         "Failed to send voice message: ${error.message}"
                 )
+                message?.let { this@ConversationFragment.updateMessage(message, error) }
                 this@ConversationFragment.fragmentMessageSentListener?.onMessageSentFailed(this@ConversationFragment, message, error)
             }
 
