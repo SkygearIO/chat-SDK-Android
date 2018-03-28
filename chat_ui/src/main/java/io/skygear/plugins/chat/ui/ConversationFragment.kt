@@ -27,6 +27,7 @@ import io.skygear.plugins.chat.ui.model.* // ktlint-disable no-wildcard-imports
 import io.skygear.plugins.chat.ui.model.Message
 import io.skygear.plugins.chat.ui.utils.* // ktlint-disable no-wildcard-imports
 import io.skygear.skygear.* // ktlint-disable no-wildcard-imports
+import io.skygear.skygear.Container.defaultContainer
 import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.File
@@ -51,6 +52,7 @@ open class ConversationFragment() :
         val AvatarAdapterBundleKey = "AVATAR_ADAPTER"
         val TitleOptionBundleKey = "TITLE_OPTION"
         val ConversationViewAdapterBundleKey = "VIEW_ADAPTER"
+        val ConversationIdBundleKey = "CONVERSATION_ID"
         val MessageSentListenerKey = "MESSAGE_SENT_LISTENER"
         val MessageFetchListenerKey = "MESSAGE_FETCH_LISTENER"
         val ConnectionListenerKey = "CONNECTION_LISTENER"
@@ -71,6 +73,7 @@ open class ConversationFragment() :
     }
 
     var conversation: ChatConversation? = null
+    var conversationId: String? = null
 
     private var skygear: Container? = null
     private var skygearChat: ChatContainer? = null
@@ -108,6 +111,9 @@ open class ConversationFragment() :
         arguments.getString(ConversationBundleKey)?.let { json ->
             conversation = ChatConversation.fromJson(JSONObject(json))
         }
+        arguments.getString(ConversationIdBundleKey)?.let { id ->
+            conversationId = id
+        }
         arguments.getSerializable(AvatarAdapterBundleKey)?.let { adapter ->
             customAvatarAdapter = adapter as AvatarAdapter
         }
@@ -131,7 +137,7 @@ open class ConversationFragment() :
     override fun onAttach(context: Context?) {
         super.onAttach(context)
 
-        this.skygear = Container.defaultContainer(context)
+        this.skygear = defaultContainer(context)
         this.skygearChat = ChatContainer.getInstance(this.skygear as Container)
         this.voicePlayer = VoiceMessagePlayer(this.activity)
         this.voicePlayer?.playerErrorListener = this
@@ -195,7 +201,24 @@ open class ConversationFragment() :
         view.setOnMessageLongClickListener(this)
         view.setVoiceMessageOnClickListener(this)
         view.setLoadMoreListener(this)
-        view.setConversation(conversation)
+        if (conversation != null) {
+            view.setConversation(conversation)
+        } else {
+            conversationId?.let { conversationId ->
+                val chatContainer = ChatContainer.getInstance(defaultContainer(this.context))
+                chatContainer.getConversation(conversationId, object : GetCallback<ChatConversation> {
+                    override fun onSuccess(conversation: ChatConversation?) {
+                        this@ConversationFragment.conversation = conversation
+                        view.setConversation(conversation)
+                        refresh()
+                    }
+
+                    override fun onFail(error: Error) {
+                    }
+                })
+            }
+        }
+
         customAvatarAdapter?.let {
             adapter -> view.setAvatarAdapter(adapter)
         }
@@ -217,9 +240,6 @@ open class ConversationFragment() :
     ): View? {
 
         val view = createConversationView(inflater, container)
-        if (titleOption == ConversationTitleOption.DEFAULT) {
-            this.activity.title = this.conversation?.title
-        }
         // TODO: setup typing indicator subscription
 
         this.takePhotoPermissionManager = createPhotoPermissionManager(this.activity)
@@ -233,14 +253,24 @@ open class ConversationFragment() :
         this.voicePlayer?.stop()
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun refresh() {
         if (conversationView()?.itemCount() == 0) {
             this.conversation?.let {
+                updateTitle()
                 this.fetchUnsentMessages()
                 this.fetchMessages()
             }
         }
+        this.updateTitle()
+        this.fetchParticipants()
+        this.messageSubscriptionRetryCount = 0
+        this.subscribeMessage()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refresh()
+
         this.connectionListener?.let {
             this.pubsubListener = object : PubsubListener {
                 override fun onClose() {
@@ -257,10 +287,6 @@ open class ConversationFragment() :
             }
             this.skygearChat?.setPubsubListener(pubsubListener)
         }
-        this.fetchParticipants()
-
-        this.messageSubscriptionRetryCount = 0
-        this.subscribeMessage()
     }
 
     override fun onPause() {
@@ -279,6 +305,7 @@ open class ConversationFragment() :
             this.skygearChat?.getParticipants(userIDs.toList(), object : GetParticipantsCallback {
                 override fun onGetCachedResult(participantsMap: MutableMap<String, Participant>?) {
                     conversationView()?.updateAuthors(participantsMap?.values?.toList())
+                    updateTitle()
                 }
 
                 override fun onFail(error: Error) {
@@ -286,8 +313,17 @@ open class ConversationFragment() :
 
                 override fun onSuccess(participantsMap: MutableMap<String, Participant>?) {
                     conversationView()?.updateAuthors(participantsMap?.values?.toList())
+                    updateTitle()
                 }
             })
+        }
+    }
+
+    private fun updateTitle() {
+        if (titleOption == ConversationTitleOption.OTHER_PARTICIPANTS) {
+            this.activity.title = conversationView()?.getOtherParticipantsTitle()
+        } else {
+            this.activity.title = this.conversation?.title
         }
     }
 
