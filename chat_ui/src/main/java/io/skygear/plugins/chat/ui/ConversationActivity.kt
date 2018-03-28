@@ -14,6 +14,7 @@ class ConversationActivity : AppCompatActivity() {
         @JvmField val ConversationViewAdapterIntentKey = "VIEW_ADAPTER"
         @JvmField val MessageSentListenerIntentKey = "MESSAGE_SENT_LISTENER"
         @JvmField val MessageFetchListenerIntentKey = "MESSAGE_FETCH_LISTENER"
+        @JvmField val ConversationFetchListenerIntentKey = "CONVERSATION_FETCH_LISTENER"
         @JvmField val ConnectionListenerIntentKey = "CONNECTION_LISTENER"
     }
 
@@ -50,6 +51,11 @@ class ConversationActivity : AppCompatActivity() {
 
             intent?.getSerializableExtra(MessageFetchListenerIntentKey)?.let { listener ->
                 bundle.putSerializable(ConversationFragment.MessageFetchListenerKey,
+                        listener)
+            }
+
+            intent?.getSerializableExtra(ConversationFetchListenerIntentKey)?.let { listener ->
+                bundle.putSerializable(ConversationFragment.ConversationFetchListenerKey,
                         listener)
             }
 

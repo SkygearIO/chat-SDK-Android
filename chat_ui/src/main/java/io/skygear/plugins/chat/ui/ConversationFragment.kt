@@ -55,6 +55,7 @@ open class ConversationFragment() :
         val ConversationIdBundleKey = "CONVERSATION_ID"
         val MessageSentListenerKey = "MESSAGE_SENT_LISTENER"
         val MessageFetchListenerKey = "MESSAGE_FETCH_LISTENER"
+        val ConversationFetchListenerKey = "CONVERSATION_FETCH_LISTENER"
         val ConnectionListenerKey = "CONNECTION_LISTENER"
         private val TAG = "ConversationFragment"
         private val MESSAGE_SUBSCRIPTION_MAX_RETRY = 10
@@ -98,6 +99,7 @@ open class ConversationFragment() :
     protected var customViewAdapter: ConversationViewAdapter? = null
     protected var fragmentMessageSentListener: MessageSentListener? = null
     protected var fragmentMessageFetchListener: MessageFetchListener? = null
+    protected var fragmentConversationFetchListener: ConversationFetchListener? = null
     protected var titleOption: ConversationTitleOption? = ConversationTitleOption.DEFAULT
     protected var connectionListener: ConnectionListener? = null
     protected var pubsubListener: PubsubListener? = null
@@ -128,6 +130,9 @@ open class ConversationFragment() :
         }
         arguments.getSerializable(MessageFetchListenerKey)?.let { listener ->
             fragmentMessageFetchListener = listener as MessageFetchListener
+        }
+        arguments.getSerializable(ConversationFetchListenerKey)?.let { listener ->
+            fragmentConversationFetchListener = listener as ConversationFetchListener
         }
         arguments.getSerializable(ConnectionListenerKey)?.let { listener ->
             connectionListener = listener as ConnectionListener
@@ -206,14 +211,17 @@ open class ConversationFragment() :
         } else {
             conversationId?.let { conversationId ->
                 val chatContainer = ChatContainer.getInstance(defaultContainer(this.context))
+                fragmentConversationFetchListener?.onBeforeConversationFetch(this)
                 chatContainer.getConversation(conversationId, object : GetCallback<ChatConversation> {
                     override fun onSuccess(conversation: ChatConversation?) {
                         this@ConversationFragment.conversation = conversation
                         view.setConversation(conversation)
                         refresh()
+                        fragmentConversationFetchListener?.onConversationFetchSuccess(this@ConversationFragment, conversation)
                     }
 
                     override fun onFail(error: Error) {
+                        fragmentConversationFetchListener?.onConversationFetchFailed(this@ConversationFragment, error)
                     }
                 })
             }
