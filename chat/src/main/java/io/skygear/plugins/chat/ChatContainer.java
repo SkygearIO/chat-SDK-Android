@@ -48,6 +48,8 @@ import io.skygear.plugins.chat.error.MessageOperationError;
 import io.skygear.plugins.chat.error.InvalidMessageError;
 import io.skygear.plugins.chat.error.AuthenticationError;
 
+import static io.skygear.plugins.chat.MessageAssetCacheHelper.getAsset;
+
 /**
  * The Container for Chat Plugin
  */
@@ -975,6 +977,7 @@ public final class ChatContainer {
             @Override
             public void onSuccess(@Nullable Message savedMessage) {
                 if (savedMessage != null) {
+                    MessageAssetCacheHelper.deleteMessageAsset(skygear.getContext(), savedMessage.getId());
                     ChatContainer.this.cacheController.didSaveMessage(savedMessage);
                     ChatContainer.this.cacheController.didCompleteMessageOperation(operation);
                 }
@@ -993,7 +996,6 @@ public final class ChatContainer {
                 }
             }
         };
-
         this.skygear.getPublicDatabase().save(
                 message.getRecord(),
                 new SaveResponseAdapter<Message>(wrappedCallback) {
@@ -1006,19 +1008,27 @@ public final class ChatContainer {
     }
 
     private void saveMessage(final Message message,
-                             final Asset asset,
+                             Asset asset,
                              final Boolean isNewMessage,
                              @Nullable final SaveCallback<Message> callback) {
+
+        Asset assetFromDisk = getAsset(skygear.getContext(), message.getId());
+        if (assetFromDisk != null) {
+            asset = assetFromDisk;
+        }
+
         this.skygear.getPublicDatabase().uploadAsset(asset, new AssetPostRequest.ResponseHandler() {
             @Override
             public void onPostSuccess(Asset asset, String response) {
                 message.setAsset(asset);
+                MessageAssetCacheHelper.deleteMessageAsset(skygear.getContext(), message.getId());
                 ChatContainer.this.saveMessage(message, isNewMessage, callback);
             }
 
             @Override
             public void onPostFail(Asset asset, Error error) {
                 Log.w(TAG, "Fail to upload asset: " + error.getMessage());
+                MessageAssetCacheHelper.saveMessageAsset(skygear.getContext(), message);
                 ChatContainer.this.saveMessage(message, isNewMessage, callback);
             }
         });
@@ -1030,8 +1040,32 @@ public final class ChatContainer {
 
     public void fetchOutstandingMessageOperations(@NonNull Conversation conversation,
                                                   @NonNull MessageOperation.Type operationType,
-                                                  @Nullable GetCallback<List<MessageOperation>> callback) {
-        this.cacheController.fetchMessageOperations(conversation, operationType, callback);
+                                                  @Nullable final GetCallback<List<MessageOperation>> callback) {
+        this.cacheController.fetchMessageOperations(conversation, operationType, new GetCallback<List<MessageOperation>>()  {
+
+            @Override
+            public void onSuccess(@Nullable List<MessageOperation> operations) {
+                if (callback != null) {
+                    for (MessageOperation operation: operations) {
+                        Asset asset = operation.getMessage().getAsset();
+                        if (asset != null) {
+                            Asset assetFromDisk = getAsset(skygear.getContext(), operation.message.getId());
+                            if (assetFromDisk != null) {
+                                operation.getMessage().setAsset(assetFromDisk);
+                            }
+                        }
+                    }
+                    callback.onSuccess(operations);
+                }
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                if (callback != null) {
+                    callback.onFail(error);
+                }
+            }
+        });
     }
 
     public void fetchOutstandingMessageOperations(@NonNull Message message,
@@ -1051,23 +1085,33 @@ public final class ChatContainer {
         switch(operation.type) {
             case ADD:
             case EDIT:
-                this.saveMessage(operation.getMessage(),
-                        operation.type == MessageOperation.Type.ADD,
-                        new SaveCallback<Message>() {
-                            @Override
-                            public void onSuccess(@Nullable Message object) {
-                                if (callback != null) {
-                                    callback.onSuccess(operation, object);
-                                }
-                            }
+                SaveCallback<Message> saveCallback = new SaveCallback<Message>() {
+                    @Override
+                    public void onSuccess(@Nullable Message object) {
+                        if (callback != null) {
+                            callback.onSuccess(operation, object);
+                        }
+                    }
 
-                            @Override
-                            public void onFail(@NonNull Error error) {
-                                if (callback != null) {
-                                    callback.onFail(error);
-                                }
-                            }
-                        });
+                    @Override
+                    public void onFail(@NonNull Error error) {
+                        if (callback != null) {
+                            callback.onFail(error);
+                        }
+                    }
+                };
+                if (operation.getMessage().getAsset() != null) {
+                    this.saveMessage(operation.getMessage(),
+                            operation.getMessage().getAsset(),
+                            operation.type == MessageOperation.Type.ADD,
+                            saveCallback
+                            );
+                } else {
+                    this.saveMessage(operation.getMessage(),
+                            operation.type == MessageOperation.Type.ADD,
+                            saveCallback
+                            );
+                }
                 break;
             case DELETE:
                 this.deleteMessage(operation.getMessage(),
@@ -1091,6 +1135,7 @@ public final class ChatContainer {
     }
 
     public void cancelMessageOperation(@NonNull MessageOperation operation) {
+        MessageAssetCacheHelper.deleteMessageAsset(skygear.getContext(), operation.getMessage().getId());
         if (operation.status == MessageOperation.Status.PENDING) {
             Log.w(TAG, String.format("Message operation %s is still pending. Pending operations cannot be cancelled.", operation.operationId));
             return;

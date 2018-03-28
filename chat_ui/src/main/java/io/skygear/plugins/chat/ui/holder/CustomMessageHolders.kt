@@ -12,16 +12,30 @@ import io.skygear.plugins.chat.Conversation
 import io.skygear.plugins.chat.ui.AvatarAdapter
 import io.skygear.plugins.chat.ui.R
 import io.skygear.plugins.chat.ui.DefaultAvatarAdapter
+import io.skygear.plugins.chat.ui.model.ImageMessage
 import io.skygear.plugins.chat.ui.model.Message
 import io.skygear.plugins.chat.ui.model.VoiceMessage
 
 class CustomMessageHolders(avatarAdapterFunc: () -> AvatarAdapter, conversationFunc: () -> Conversation?) : MessageHolders() {
+    // Copied from chatkit project
+    val VIEW_TYPE_IMAGE_MESSAGE = 132
     var avatarAdapterFunc: () -> AvatarAdapter = { DefaultAvatarAdapter() }
     var voiceMessageOnClickListener: VoiceMessageOnClickListener? = null
     var conversationFunc: () -> Conversation? = { null }
     init {
         this.avatarAdapterFunc = avatarAdapterFunc
         this.conversationFunc = conversationFunc
+    }
+
+    override fun getViewType(item: Any, senderId: String): Int {
+        // getContentViewType from MessageHolders.java can only recognize ImageMessage with URL, however, failed ImageMessage does not have URL,
+        // since failed Image does not have a valid URL.
+        if (item is ImageMessage) {
+            val isOutcoming = item.user?.id?.contentEquals(senderId) ?: false
+            return (if (isOutcoming) -1 else 1) * VIEW_TYPE_IMAGE_MESSAGE
+        } else {
+            return super.getViewType(item, senderId)
+        }
     }
 
     /*
