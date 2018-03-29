@@ -212,8 +212,10 @@ open class ConversationFragment() :
             conversationId?.let { conversationId ->
                 val chatContainer = ChatContainer.getInstance(defaultContainer(this.context))
                 fragmentConversationFetchListener?.onBeforeConversationFetch(this)
+                conversationView()?.showProgress()
                 chatContainer.getConversation(conversationId, object : GetCallback<ChatConversation> {
                     override fun onSuccess(conversation: ChatConversation?) {
+                        conversationView()?.hideProgress()
                         this@ConversationFragment.conversation = conversation
                         view.setConversation(conversation)
                         refresh()
@@ -221,6 +223,7 @@ open class ConversationFragment() :
                     }
 
                     override fun onFail(error: Error) {
+                        conversationView()?.hideProgress()
                         fragmentConversationFetchListener?.onConversationFetchFailed(this@ConversationFragment, error)
                     }
                 })
