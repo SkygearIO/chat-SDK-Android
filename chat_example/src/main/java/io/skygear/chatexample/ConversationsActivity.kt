@@ -159,7 +159,7 @@ class ConversationsActivity : AppCompatActivity() {
             }
 
             override fun onFail(error: Error) {
-
+                showFailureAlert("Fail to delete the conversation: ", error)
             }
         })
     }
@@ -201,16 +201,9 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     fun delete(c: Conversation) {
-        val failAlert = AlertDialog.Builder(this)
-                .setTitle("Oops")
-                .setNeutralButton(R.string.dismiss, null)
-                .create()
         mChatContainer.deleteConversation(c, object : DeleteCallback<Boolean> {
             override fun onFail(error: Error) {
-                val alertMessage = "Fail to delete the conversation: " + error.message
-                Log.w(LOG_TAG, alertMessage)
-                failAlert.setMessage(alertMessage)
-                failAlert.show()
+                showFailureAlert("Fail to delete the conversation: ", error)
             }
 
             override fun onSucc(result: Boolean?) {
@@ -220,6 +213,16 @@ class ConversationsActivity : AppCompatActivity() {
         } )
     }
 
+    fun showFailureAlert(msg: String, error: Error) {
+        val failAlert = AlertDialog.Builder(this)
+                .setTitle("Oops")
+                .setNeutralButton(R.string.dismiss, null)
+                .create()
+        val alertMessage = msg + error.detailMessage
+        Log.w(LOG_TAG, alertMessage)
+        failAlert.setMessage(alertMessage)
+        failAlert.show()
+    }
 
     fun updateAdmins(c: Conversation) {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
