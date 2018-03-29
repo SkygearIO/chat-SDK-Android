@@ -209,10 +209,10 @@ class ConversationsActivity : AppCompatActivity() {
             override fun onSuccess(new: Conversation?) {
                 mAdapter.updateConversation(c, new)
                 Toast.makeText(applicationContext, "Title updated.", Toast.LENGTH_SHORT).show()
-
             }
 
             override fun onFail(error: Error) {
+                showFailureAlert("Fail to delete the conversation: ", error)
             }
         })
     }
@@ -255,16 +255,9 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     fun delete(c: Conversation) {
-        val failAlert = AlertDialog.Builder(this)
-                .setTitle("Oops")
-                .setNeutralButton(R.string.dismiss, null)
-                .create()
         mChatContainer.deleteConversation(c, object : DeleteCallback<Boolean> {
             override fun onFail(error: Error) {
-                val alertMessage = "Fail to delete the conversation: " + error.message
-                Log.w(LOG_TAG, alertMessage)
-                failAlert.setMessage(alertMessage)
-                failAlert.show()
+                showFailureAlert("Fail to delete the conversation: ", error)
             }
 
             override fun onSuccess(result: Boolean?) {
@@ -273,6 +266,17 @@ class ConversationsActivity : AppCompatActivity() {
                 getAllConversations()
             }
         })
+    }
+
+    fun showFailureAlert(msg: String, error: Error) {
+        val failAlert = AlertDialog.Builder(this)
+                .setTitle("Oops")
+                .setNeutralButton(R.string.dismiss, null)
+                .create()
+        val alertMessage = msg + error.detailMessage
+        Log.w(LOG_TAG, alertMessage)
+        failAlert.setMessage(alertMessage)
+        failAlert.show()
     }
 
     fun updateAdmins(c: Conversation) {
