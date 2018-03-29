@@ -7,6 +7,7 @@ import io.skygear.plugins.chat.ui.AvatarType
 import io.skygear.plugins.chat.ui.utils.AvatarBuilder
 import io.skygear.skygear.Asset
 import io.skygear.skygear.Record
+import java.net.URLEncoder
 
 class User : IUser {
     companion object {
@@ -101,7 +102,7 @@ class User : IUser {
             }
         }
 
-        val userName = this.participant.record.get(this.displayNameField) as String? ?: ""
+        val userName = URLEncoder.encode(this.participant.record.get(this.displayNameField) as String? ?: "", "UTF-8")
         return AvatarBuilder.avatarUriForName(userName, this.avatarBackgroundColor, this.avatarTextColor)
     }
 }
