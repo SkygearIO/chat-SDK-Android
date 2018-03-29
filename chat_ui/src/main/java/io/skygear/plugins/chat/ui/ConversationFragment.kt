@@ -99,7 +99,6 @@ open class ConversationFragment() :
     protected var connectionListener: ConnectionListener? = null
     protected var pubsubListener: PubsubListener? = null
 
-    @Override
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         updateTLSForKitKat(context)
@@ -126,6 +125,15 @@ open class ConversationFragment() :
         arguments.getSerializable(ConnectionListenerKey)?.let { listener ->
             connectionListener = listener as ConnectionListener
         }
+    }
+
+    override fun onDestroy() {
+        customAvatarAdapter = null
+        customViewAdapter = null
+        fragmentMessageFetchListener = null
+        fragmentMessageSentListener = null
+        connectionListener = null
+        super.onDestroy()
     }
 
     override fun onAttach(context: Context?) {
