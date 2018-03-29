@@ -471,33 +471,18 @@ public final class ChatContainer {
                                    @Nullable final SaveCallback<Conversation> callback) {
         final Database publicDB = this.skygear.getPublicDatabase();
         final String conversationId = conversation.getId();
-        this.getConversation(conversationId, true, new GetCallback<Conversation>() {
+        Record record = new Record(conversation.record.getType(), conversationId);
+        for (Map.Entry<String, Object> entry : updates.entrySet()) {
+            record.set(entry.getKey(), entry.getValue());
+        }
+        publicDB.save(record, new SaveResponseAdapter<Conversation>(callback) {
             @Override
-            public void onSuccess(@Nullable final Conversation conversation) {
-                if (callback == null) {
-                    // nothing to do
-                    return;
-                }
-
-                if (conversation == null) {
-                    callback.onFail(new ConversationNotFoundError(conversationId));
-                    return;
-                }
-
-                Record conversationRecord = conversation.record;
-                for (Map.Entry<String, Object> entry : updates.entrySet()) {
-                    conversationRecord.set(entry.getKey(), entry.getValue());
-                }
-                publicDB.save(conversationRecord, new SaveResponseAdapter<Conversation>(callback) {
-                    @Override
-                    public Conversation convert(Record record) {
-                        return new Conversation(record);
-                    }
-                });
+            public Conversation convert(Record record) {
+                return new Conversation(record);
             }
 
             @Override
-            public void onFail(Error error) {
+            public void onSaveFail(Error error) {
                 if (callback != null) {
                     callback.onFail(new ConversationOperationError(error));
                 }
