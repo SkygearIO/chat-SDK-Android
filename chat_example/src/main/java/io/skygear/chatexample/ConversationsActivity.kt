@@ -152,8 +152,8 @@ class ConversationsActivity : AppCompatActivity() {
 
     fun enter(c: Conversation) {
         val i = Intent(this, ConversationActivity::class.java)
-        //i.putExtra(ConversationActivity.ConversationIntentKey, c.toJson().toString())
-        i.putExtra(ConversationActivity.ConversationIdIntentKey, c.id)
+        i.putExtra(ConversationActivity.ConversationIntentKey, c.toJson().toString())
+        // i.putExtra(ConversationActivity.ConversationIdIntentKey, c.id)
         i.putExtra(ConversationActivity.ConnectionListenerIntentKey, object : ConnectionListener {
             override fun onClose(fragment: ConversationFragment) {
                 Toast.makeText(fragment.activity, "Connection Closed", Toast.LENGTH_LONG).show()
