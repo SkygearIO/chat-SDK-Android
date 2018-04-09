@@ -153,6 +153,7 @@ class ConversationsActivity : AppCompatActivity() {
     fun enter(c: Conversation) {
         val i = Intent(this, ConversationActivity::class.java)
         i.putExtra(ConversationActivity.ConversationIntentKey, c.toJson().toString())
+        // i.putExtra(ConversationActivity.ConversationIdIntentKey, c.id)
         i.putExtra(ConversationActivity.ConnectionListenerIntentKey, object : ConnectionListener {
             override fun onClose(fragment: ConversationFragment) {
                 Toast.makeText(fragment.activity, "Connection Closed", Toast.LENGTH_LONG).show()
@@ -189,6 +190,19 @@ class ConversationsActivity : AppCompatActivity() {
             override fun onMessageFetchSuccess(fragment: ConversationFragment, messages: List<Message>, isCached: Boolean) {
                 Toast.makeText(fragment.activity, "Message Loaded", Toast.LENGTH_LONG).show()
             }
+        })
+        i.putExtra(ConversationActivity.ConversationFetchListenerIntentKey, object : ConversationFetchListener {
+            override fun onBeforeConversationFetch(fragment: ConversationFragment) {
+            }
+
+            override fun onConversationFetchFailed(fragment: ConversationFragment, error: Error) {
+                Toast.makeText(fragment.activity, "Conversation Loading Failed", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onConversationFetchSuccess(fragment: ConversationFragment, conversation: Conversation?) {
+                Toast.makeText(fragment.activity, "Conversation Loaded", Toast.LENGTH_LONG).show()
+            }
+
         })
         startActivity(i)
     }

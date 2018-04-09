@@ -7,12 +7,14 @@ class ConversationActivity : AppCompatActivity() {
 
     companion object {
         @JvmField val ConversationIntentKey = "CONVERSATION"
+        @JvmField val ConversationIdIntentKey = "CONVERSATION_ID"
         @JvmField val LayoutIntentKey = "LAYOUT"
         @JvmField val AvatarAdapterIntentKey = "AVATAR_ADAPTER"
         @JvmField val TitleOptionIntentKey = "TITLE_OPTION"
         @JvmField val ConversationViewAdapterIntentKey = "VIEW_ADAPTER"
         @JvmField val MessageSentListenerIntentKey = "MESSAGE_SENT_LISTENER"
         @JvmField val MessageFetchListenerIntentKey = "MESSAGE_FETCH_LISTENER"
+        @JvmField val ConversationFetchListenerIntentKey = "CONVERSATION_FETCH_LISTENER"
         @JvmField val ConnectionListenerIntentKey = "CONNECTION_LISTENER"
     }
 
@@ -22,39 +24,57 @@ class ConversationActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) {
             val fragment = ConversationFragment()
-            this.intent?.getStringExtra(ConversationActivity.ConversationIntentKey)?.let { convJson ->
-                val bundle = Bundle()
-                bundle.putString(ConversationFragment.ConversationBundleKey, convJson)
-                if (intent?.hasExtra(LayoutIntentKey) ?: false) {
-                    bundle.putInt(ConversationFragment.LayoutResIdBundleKey,
-                            this.intent?.getIntExtra(LayoutIntentKey, -1) !!)
-                }
-                if (intent?.hasExtra(AvatarAdapterIntentKey) ?: false) {
-                    bundle.putSerializable(ConversationFragment.AvatarAdapterBundleKey,
-                            this.intent?.getSerializableExtra(AvatarAdapterIntentKey))
-                }
-                if (intent?.hasExtra(MessageSentListenerIntentKey) ?: false) {
-                    bundle.putSerializable(ConversationFragment.MessageSentListenerKey,
-                            this.intent?.getSerializableExtra(MessageSentListenerIntentKey))
-                }
-                if (intent?.hasExtra(MessageFetchListenerIntentKey) ?: false) {
-                    bundle.putSerializable(ConversationFragment.MessageFetchListenerKey,
-                            this.intent?.getSerializableExtra(MessageFetchListenerIntentKey))
-                }
-                if (intent?.hasExtra(TitleOptionIntentKey) ?: false) {
-                    bundle.putSerializable(ConversationFragment.TitleOptionBundleKey,
-                            this.intent?.getSerializableExtra(TitleOptionIntentKey))
-                }
-                if (intent?.hasExtra(ConnectionListenerIntentKey) ?: false) {
-                    bundle.putSerializable(ConversationFragment.ConnectionListenerKey,
-                            this.intent?.getSerializableExtra(ConnectionListenerIntentKey))
-                }
-                if (intent?.hasExtra(ConversationViewAdapterIntentKey) ?: false) {
-                    bundle.putSerializable(ConversationFragment.ConversationViewAdapterBundleKey,
-                            this.intent?.getSerializableExtra(ConversationFragment.ConversationViewAdapterBundleKey))
-                }
-                fragment.arguments = bundle
+            val bundle = Bundle()
+            this.intent?.getStringExtra(ConversationActivity.ConversationIdIntentKey)?.let { conversationId ->
+                bundle.putString(ConversationFragment.ConversationIdBundleKey, conversationId)
             }
+
+            this.intent?.getStringExtra(ConversationActivity.ConversationIntentKey)?.let { convJson ->
+                bundle.putString(ConversationFragment.ConversationBundleKey, convJson)
+            }
+
+            intent?.getIntExtra(LayoutIntentKey, -1)?.let { value ->
+                if (value > 0) {
+                    bundle.putInt(ConversationFragment.LayoutResIdBundleKey, value)
+                }
+            }
+
+            intent?.getSerializableExtra(AvatarAdapterIntentKey)?.let { adapter ->
+                bundle.putSerializable(ConversationFragment.AvatarAdapterBundleKey,
+                        adapter)
+            }
+
+            intent?.getSerializableExtra(MessageSentListenerIntentKey)?.let { adapter ->
+                bundle.putSerializable(ConversationFragment.MessageSentListenerKey,
+                        adapter)
+            }
+
+            intent?.getSerializableExtra(MessageFetchListenerIntentKey)?.let { listener ->
+                bundle.putSerializable(ConversationFragment.MessageFetchListenerKey,
+                        listener)
+            }
+
+            intent?.getSerializableExtra(ConversationFetchListenerIntentKey)?.let { listener ->
+                bundle.putSerializable(ConversationFragment.ConversationFetchListenerKey,
+                        listener)
+            }
+
+            intent?.getSerializableExtra(TitleOptionIntentKey)?.let { titleOption ->
+                bundle.putSerializable(ConversationFragment.TitleOptionBundleKey,
+                        titleOption)
+            }
+
+            intent?.getSerializableExtra(ConnectionListenerIntentKey)?.let { listener ->
+                bundle.putSerializable(ConversationFragment.ConnectionListenerKey,
+                        listener)
+            }
+
+            intent?.getSerializableExtra(ConversationViewAdapterIntentKey)?.let { adapter ->
+                bundle.putSerializable(ConversationFragment.ConversationViewAdapterBundleKey,
+                        adapter)
+            }
+
+            fragment.arguments = bundle
 
             this.supportFragmentManager
                     .beginTransaction()

@@ -340,6 +340,10 @@ open class ConversationView : RelativeLayout {
         this.progressBar?.visibility = View.GONE
     }
 
+    open fun showProgress() {
+        this.progressBar?.visibility = View.VISIBLE
+    }
+
     open fun toggleVoiceButtonHint(flag: Boolean) {
         val visibility = if (flag) View.VISIBLE else View.INVISIBLE
         this.voiceButtonHolderHint?.visibility = visibility
