@@ -368,7 +368,7 @@ open class ConversationFragment() :
 
                     // remove cached message if not found in fetched results
                     val cachedResultToRemove = cachedResult.filter { message ->
-                        fetchedMessages.none { it.id.equals(message.id) } && chatMsgs.any { it.id.equals(message.id) }
+                        fetchedMessages.none { it.id.equals(message.id) }
                     }
 
                     this@ConversationFragment.deleteMessages(cachedResultToRemove)
@@ -807,9 +807,32 @@ open class ConversationFragment() :
                     showFailedMessageDialog(msg.chatMessage)
                 }
                 else -> {
-                    // Do nothing
+                    showDeleteMessageDialog(msg.chatMessage)
                 }
             }
+        }
+    }
+
+    fun deleteMessageFromServer(message: ChatMessage?) {
+        message?.let {
+            this.deleteMessages(listOf(message))
+            this.skygearChat?.deleteMessage(message, object : DeleteCallback<ChatMessage> {
+                override fun onSuccess(msg: io.skygear.plugins.chat.Message?) {
+                    AlertDialog
+                            .Builder(context)
+                            .setTitle("Message deleted.")
+                            .setMessage("")
+                            .show()
+                }
+
+                override fun onFail(error: Error) {
+                    AlertDialog
+                            .Builder(context)
+                            .setTitle("Message cannot be deleted.")
+                            .setMessage(error.detailMessage)
+                            .show()
+                }
+            })
         }
     }
 
@@ -821,6 +844,15 @@ open class ConversationFragment() :
                 })
                 .setNegativeButton("Delete", { dialogInterface, i ->
                     this.cancelMessage(message)
+                })
+                .show()
+    }
+
+    fun showDeleteMessageDialog(message: ChatMessage) {
+        AlertDialog.Builder(this.context)
+                .setTitle("Action")
+                .setPositiveButton("Delete", { dialogInterface, i ->
+                    this.deleteMessageFromServer(message)
                 })
                 .show()
     }

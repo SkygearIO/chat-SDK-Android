@@ -711,30 +711,37 @@ public final class ChatContainer {
         };
     }
 
+    private List<Message> messageFromJSONArray(JSONArray results) {
+        List<Message> messages = new ArrayList<>(results.length());
+        if (results != null) {
+            for (int i = 0; i < results.length(); i++) {
+                try {
+                    JSONObject object = results.getJSONObject(i);
+                    Record record = Record.fromJson(object);
+                    Message message = new Message(record);
+                    messages.add(message);
+                } catch (JSONException e) {
+                    Log.e(TAG, "Fail to get message: " + e.getMessage());
+                }
+            }
+        }
+        return messages;
+    }
+
     private void getMessages(@NonNull HashMap<String, Object> args, @Nullable final GetMessagesCallback callback) {
         this.skygear.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {
-                List<Message> messages = null;
-                JSONArray results = result.optJSONArray("results");
-                if (results != null) {
-                    messages = new ArrayList<>(results.length());
-
-                    for (int i = 0; i < results.length(); i++) {
-                        try {
-                            JSONObject object = results.getJSONObject(i);
-                            Record record = Record.fromJson(object);
-                            Message message = new Message(record);
-                            messages.add(message);
-                        } catch (JSONException e) {
-                            Log.e(TAG, "Fail to get message: " + e.getMessage());
-                        }
-                    }
-
+                List<Message> messages = messageFromJSONArray(result.optJSONArray("results"));
+                if (! messages.isEmpty()) {
                     ChatContainer.this.markMessagesAsDelivered(messages);
                 }
+                List<Message> deletedMessages = messageFromJSONArray(result.optJSONArray("deleted"));
                 Message[] messageArray = new Message[messages.size()];
-                cacheController.didGetMessages(messages.toArray(messageArray), new Message[]{});
+                Message[] deletedMessagesArray = new Message[deletedMessages.size()];
+
+                cacheController.didGetMessages(messages.toArray(messageArray),
+                                               deletedMessages.toArray(deletedMessagesArray));
                 if (callback != null) {
                     callback.onSuccess(messages);
                 }
