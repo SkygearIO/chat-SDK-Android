@@ -23,7 +23,7 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
     }
 
     fun updateConversation(old: Conversation, new: Conversation?) {
-        if (new != null) {
+        new?.let {
             val conversations: MutableList<Conversation> = mConversations.toMutableList()
             val idx = conversations.indexOf(old)
 
@@ -31,6 +31,27 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
                 conversations[idx] = new
                 notifyDataSetChanged()
             }
+        }
+    }
+
+    fun updateConversation(new: Conversation?) {
+        new?.let {
+            val conversations: MutableList<Conversation> = mConversations.toMutableList()
+            val idx = conversations.indexOfFirst { it -> it.id == new.id }
+            if (idx != -1) {
+                conversations[idx] = new
+                mConversations = conversations.toList()
+                notifyDataSetChanged()
+            }
+        }
+    }
+
+    fun addConversation(new: Conversation?) {
+        new?.let {
+            val conversations: MutableList<Conversation> = mConversations.toMutableList()
+            conversations.add(0, new)
+            mConversations = conversations.toList()
+            notifyDataSetChanged()
         }
     }
 

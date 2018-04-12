@@ -57,6 +57,7 @@ public final class ChatContainer {
 
     private final Container skygear;
     private final Map<String, Subscription> messageSubscription = new HashMap<>();
+    private Subscription conversationSubscription = null;
     private final Map<String, Subscription> typingSubscription = new HashMap<>();
 
     /* --- Constructor --- */
@@ -1005,6 +1006,48 @@ public final class ChatContainer {
         }
     }
 
+    /* --- Conversation --- */
+    /**
+     * Subscribe to conversation pubsub
+     *
+     */
+    public void subscribeToConversation(@Nullable final ConversationSubscriptionCallback callback) {
+        unsubscribeFromConversation();
+        getOrCreateUserChannel(new GetCallback<Record>() {
+            @Override
+            public void onSucc(@Nullable Record userChannelRecord) {
+                if (userChannelRecord != null) {
+                    Subscription subscription = new Subscription(
+                            null,
+                            (String) userChannelRecord.get("name"),
+                            callback
+                    );
+                    subscription.attach(skygear.getPubsub());
+                    conversationSubscription = subscription;
+                }
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Log.w(TAG, "Fail to subscribe user channel: " + error.getMessage());
+                if (callback != null) {
+                    callback.onSubscriptionFail(error);
+                }
+            }
+        });
+    }
+
+    /**
+     * Unsubscribe from conversation pubsub
+     *
+     */
+    public void unsubscribeFromConversation() {
+        if (conversationSubscription != null) {
+            conversationSubscription.detach(skygear.getPubsub());
+            conversationSubscription = null;
+        }
+    }
+    
     /* --- Chat User --- */
 
     /**
