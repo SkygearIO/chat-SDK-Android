@@ -1,4 +1,4 @@
-# Skygear Chat Plugin for Android
+# Skygear Chat Plugin for Android Testing
 
 [![CI Status](https://img.shields.io/travis/SkygearIO/chat-SDK-Android.svg?style=flat)](https://travis-ci.org/SkygearIO/chat-SDK-Android)
 [![License](https://img.shields.io/github/license/skygeario/chat-SDK-Android.svg)](https://bintray.com/skygeario/maven/skygear-chat-android)
