@@ -38,6 +38,10 @@ dependencies {
     compile project(path: ':chat')
     compile project(path: ':chat_ui')
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    def appCenterSdkVersion = '1.4.0'
+    compile "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"
+    compile "com.microsoft.appcenter:appcenter-crashes:${appCenterSdkVersion}"
+
 }
 repositories {
     mavenCentral()

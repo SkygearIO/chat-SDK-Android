@@ -6,6 +6,9 @@ import android.support.v7.app.AppCompatActivity
 import android.widget.Button
 import io.skygear.skygear.Container
 import io.skygear.skygear.Record
+import com.microsoft.appcenter.AppCenter;
+import com.microsoft.appcenter.analytics.Analytics;
+import com.microsoft.appcenter.crashes.Crashes;
 
 class MainActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "MainActivity"
@@ -16,6 +19,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        AppCenter.start(application,
+                "37546527-c1b7-47ba-9eaa-f92ea8ee27f5",
+                Analytics::class.java,
+                Crashes::class.java)
+
         setContentView(R.layout.activity_main)
 
         mSignUpBtn = findViewById<Button>(R.id.sign_up_btn)
