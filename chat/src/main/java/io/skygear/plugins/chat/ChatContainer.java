@@ -58,6 +58,7 @@ public final class ChatContainer {
     private final Container skygear;
     private final Map<String, Subscription> messageSubscription = new HashMap<>();
     private Subscription conversationSubscription = null;
+    private Subscription userChannelSubscription = null;
     private final Map<String, Subscription> typingSubscription = new HashMap<>();
 
     /* --- Constructor --- */
@@ -1006,7 +1007,7 @@ public final class ChatContainer {
         }
     }
 
-    /* --- Conversation --- */
+    /* --- Conversation Subscription --- */
     /**
      * Subscribe to conversation pubsub
      *
@@ -1045,6 +1046,48 @@ public final class ChatContainer {
         if (conversationSubscription != null) {
             conversationSubscription.detach(skygear.getPubsub());
             conversationSubscription = null;
+        }
+    }
+
+    /* --- UserChannel Subscription --- */
+    /**
+     * Subscribe to user channel pubsub
+     *
+     */
+    public void subscribeToUserChannel(@Nullable final SubscriptionCallback callback) {
+        unsubscribeFromUserChannel();
+        getOrCreateUserChannel(new GetCallback<Record>() {
+            @Override
+            public void onSucc(@Nullable Record userChannelRecord) {
+                if (userChannelRecord != null) {
+                    Subscription subscription = new Subscription(
+                            null,
+                            (String) userChannelRecord.get("name"),
+                            callback
+                    );
+                    subscription.attach(skygear.getPubsub());
+                    userChannelSubscription = subscription;
+                }
+            }
+
+            @Override
+            public void onFail(@NonNull Error error) {
+                Log.w(TAG, "Fail to subscribe user channel: " + error.getMessage());
+                if (callback != null) {
+                    callback.onSubscriptionFail(error);
+                }
+            }
+        });
+    }
+
+    /**
+     * Unsubscribe from user channel pubsub
+     *
+     */
+    public void unsubscribeFromUserChannel() {
+        if (userChannelSubscription != null) {
+            userChannelSubscription.detach(skygear.getPubsub());
+            userChannelSubscription = null;
         }
     }
     
