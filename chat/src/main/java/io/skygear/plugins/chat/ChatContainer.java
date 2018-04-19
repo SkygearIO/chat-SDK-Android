@@ -711,7 +711,7 @@ public final class ChatContainer {
         };
     }
 
-    private List<Message> messageFromJSONArray(JSONArray results) {
+    private List<Message> messagesFromJSONArray(JSONArray results) {
         List<Message> messages = new ArrayList<>(results.length());
         if (results != null) {
             for (int i = 0; i < results.length(); i++) {
@@ -732,11 +732,11 @@ public final class ChatContainer {
         this.skygear.callLambdaFunction("chat:get_messages", args, new LambdaResponseHandler() {
             @Override
             public void onLambdaSuccess(JSONObject result) {
-                List<Message> messages = messageFromJSONArray(result.optJSONArray("results"));
+                List<Message> messages = messagesFromJSONArray(result.optJSONArray("results"));
                 if (! messages.isEmpty()) {
                     ChatContainer.this.markMessagesAsDelivered(messages);
                 }
-                List<Message> deletedMessages = messageFromJSONArray(result.optJSONArray("deleted"));
+                List<Message> deletedMessages = messagesFromJSONArray(result.optJSONArray("deleted"));
                 Message[] messageArray = new Message[messages.size()];
                 Message[] deletedMessagesArray = new Message[deletedMessages.size()];
 
