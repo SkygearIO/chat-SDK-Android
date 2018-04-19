@@ -1011,6 +1011,8 @@ public final class ChatContainer {
     /**
      * Subscribe to conversation pubsub
      *
+     * @param callback the callback
+     *
      */
     public void subscribeToConversation(@Nullable final ConversationSubscriptionCallback callback) {
         unsubscribeFromConversation();
@@ -1052,6 +1054,8 @@ public final class ChatContainer {
     /* --- UserChannel Subscription --- */
     /**
      * Subscribe to user channel pubsub
+     * 
+     * @param callback the callback
      *
      */
     public void subscribeToUserChannel(@Nullable final SubscriptionCallback callback) {
