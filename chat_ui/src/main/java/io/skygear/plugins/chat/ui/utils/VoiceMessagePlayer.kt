@@ -17,6 +17,8 @@ class VoiceMessagePlayer(val context: Context) {
 
     fun play() {
         this.message?.let { msg ->
+            val url = msg.attachmentUrl ?: return
+
             if (msg.state == VoiceMessage.State.PAUSED) {
                 this.mediaPlayer?.start()
                 msg.state = VoiceMessage.State.PLAYING
@@ -26,7 +28,9 @@ class VoiceMessagePlayer(val context: Context) {
             }
 
             this.mediaPlayer = MediaPlayer()
-            this.mediaPlayer?.setDataSource(msg.attachmentUrl)
+
+            this.mediaPlayer?.setDataSource(url)
+
             this.mediaPlayer?.setOnCompletionListener {
                 msg.state = VoiceMessage.State.INITIAL
                 this.messageStateChangeListener?.onVoiceMessageStateChanged(msg)

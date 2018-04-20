@@ -112,6 +112,7 @@ class RealmStore {
                 message = cacheObject.toMessage();
                 messages.add(message);
             } catch (Exception e) {
+                Log.e(TAG, "Faulty Message Found: " + cacheObject.recordID, e);
                 faultyCacheObjects.add(cacheObject);
             }
         }
@@ -256,6 +257,7 @@ class RealmStore {
                 operation = cacheObject.toMessageOperation();
                 operations.add(operation);
             } catch (Exception e) {
+                Log.e(TAG, "Faulty Operation Found: " + cacheObject.operationID, e);
                 faultyCacheObjects.add(cacheObject);
             }
         }

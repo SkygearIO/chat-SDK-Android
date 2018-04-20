@@ -240,7 +240,14 @@ public class Message {
      * @throws JSONException the JSON exception
      */
     public static Message fromJson(JSONObject jsonObject) throws JSONException {
-        return new Message(Record.fromJson(jsonObject));
+        Record record = Record.fromJson(jsonObject);
+        Message message = new Message(record);
+
+        if (jsonObject.has("attachment")) {
+            JSONObject assetJson = jsonObject.getJSONObject("attachment");
+            message.setAsset(MessageAssetSerializer.deserialize(assetJson));
+        }
+        return message;
     }
 
     /**

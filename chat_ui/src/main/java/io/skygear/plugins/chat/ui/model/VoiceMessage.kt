@@ -41,7 +41,7 @@ open class VoiceMessage : Message, MessageContentType {
         get() = this.chatMessage.record.get(VoiceMessage.AttachmentFieldName) as Asset
 
     val attachmentUrl
-        get() = this.uri?.toString() ?: this.attachment.url as String
+        get() = this.uri?.toString() ?: this.attachment.url
 
     val duration
         get() = this.chatMessage.metadata!!.getInt(VoiceMessage.DurationMatadataName)
