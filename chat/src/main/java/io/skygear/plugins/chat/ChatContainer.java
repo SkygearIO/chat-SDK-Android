@@ -1058,7 +1058,7 @@ public final class ChatContainer {
      * @param callback the callback
      *
      */
-    public void subscribeToUserChannel(@Nullable final SubscriptionCallback callback) {
+    public void subscribeToUserChannel(@Nullable final UserChannelSubscriptionCallback callback) {
         unsubscribeFromUserChannel();
         getOrCreateUserChannel(new GetCallback<Record>() {
             @Override
