@@ -26,6 +26,19 @@ class ConversationsActivity : AppCompatActivity() {
     private val mChatContainer: ChatContainer
     private val mAdapter: ConversationsAdapter = ConversationsAdapter()
     private var mConversationsRv: RecyclerView? = null
+    private val callback: ConversationSubscriptionCallback = object: ConversationSubscriptionCallback() {
+        override fun notify(eventType: String, conversation: Conversation) {
+            when (eventType) {
+                ConversationSubscriptionCallback.EVENT_TYPE_DELETE -> mAdapter.deleteConversation(conversation.id)
+                ConversationSubscriptionCallback.EVENT_TYPE_UPDATE -> mAdapter.updateConversation(conversation)
+                ConversationSubscriptionCallback.EVENT_TYPE_CREATE -> mAdapter.addConversation(conversation)
+            }
+        }
+
+        override fun onSubscriptionFail(error: Error) {
+            Log.w(LOG_TAG, "Subscription Error: ${error.detailMessage}")
+        }
+    }
 
     init {
         mSkygear = Container.defaultContainer(this)
@@ -46,7 +59,13 @@ class ConversationsActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        mChatContainer.subscribeToConversation(callback)
         getAllConversations()
+    }
+
+    override fun onPause() {
+        mChatContainer.unsubscribeFromConversation()
+        super.onPause()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
