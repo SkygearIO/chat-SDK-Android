@@ -33,11 +33,6 @@ public abstract class ConversationSubscriptionCallback implements SubscriptionCa
     private static final String TAG = "ConversationSubscribe";
     static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime().withZoneUTC();
 
-
-    public ConversationSubscriptionCallback() {
-        super();
-    }
-
     @NonNull
     @Override
     public String[] supportingEventTypes() {
