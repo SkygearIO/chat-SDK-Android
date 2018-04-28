@@ -116,4 +116,7 @@
     <string name="api_test_list">API Test List</string>
     <string name="go_to_conversation">Go to conversation</string>
     <string name="go_to_api_test">Go to API Test</string>
+    <string name="continue_btn">Continue</string>
+    <string name="params_indicator">Please fill in the parameters below</string>
+    <string name="params_incomplete">Please fill in all the parameters</string>
 </resources>
