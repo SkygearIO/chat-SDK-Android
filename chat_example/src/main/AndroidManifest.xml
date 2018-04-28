@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    package="io.skygear.chatexample"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.skygear.chatexample">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -15,10 +14,6 @@
         <activity
             android:name=".MainActivity"
             android:theme="@style/AppTheme.Light.NoActionBar.FullScreen">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity
             android:name=".ConversationsActivity"
@@ -47,8 +42,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ConversationsActivity" />
         </activity>
+        <activity android:name="io.skygear.plugins.chat.ui.ConversationActivity" />
         <activity
-            android:name="io.skygear.plugins.chat.ui.ConversationActivity" />
+            android:name=".ApiListActivity"
+            android:label="@string/api_test_list">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

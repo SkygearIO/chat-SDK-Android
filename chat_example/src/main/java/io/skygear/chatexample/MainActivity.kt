@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.widget.Button
 import io.skygear.skygear.Container
 import io.skygear.skygear.Record
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "MainActivity"
@@ -26,6 +27,10 @@ class MainActivity : AppCompatActivity() {
         }
         mLogInBtn?.setOnClickListener {
             startActivity(Intent(this, LogInActivity::class.java))
+        }
+        go_to_api_test_btn.setOnClickListener {
+            startActivity(Intent(this, ApiListActivity::class.java))
+            finish()
         }
 
         mSkygear = Container.defaultContainer(this)

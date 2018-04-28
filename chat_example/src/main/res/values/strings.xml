@@ -111,4 +111,9 @@
         <item>Edit</item>
         <item>Delete</item>
     </string-array>
+
+    <!-- Go to conversation list button in api list activity -->
+    <string name="api_test_list">API Test List</string>
+    <string name="go_to_conversation">Go to conversation</string>
+    <string name="go_to_api_test">Go to API Test</string>
 </resources>
