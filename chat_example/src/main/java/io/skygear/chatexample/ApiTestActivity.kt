@@ -8,11 +8,19 @@ import io.skygear.chatexample.logger.Log
 import io.skygear.chatexample.logger.LogFragment
 import io.skygear.chatexample.logger.LogWrapper
 import io.skygear.chatexample.logger.MessageOnlyLogFilter
+import io.skygear.plugins.chat.ChatContainer
+import io.skygear.skygear.Container
 import kotlinx.android.synthetic.main.activity_api_test.*
 
 class ApiTestActivity : AppCompatActivity() {
 
     var module: ApiTestModule? = null
+    val mSkygear: Container = Container.defaultContainer(this)
+    val mChatContainer: ChatContainer
+
+    init{
+        mChatContainer = ChatContainer.getInstance(mSkygear)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +81,6 @@ class ApiTestActivity : AppCompatActivity() {
 
     private fun performApiTest(apiTask: ApiTask) {
         val mod = module ?: return
-        mod.onApiTest(this, apiTask, view_container)
+        mod.onApiTest(this, mSkygear, mChatContainer, apiTask, view_container)
     }
 }
