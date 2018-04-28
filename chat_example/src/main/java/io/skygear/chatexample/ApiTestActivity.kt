@@ -3,6 +3,7 @@ package io.skygear.chatexample
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import android.widget.Toast
 import io.skygear.chatexample.apitask.ApiTestModule
 import io.skygear.chatexample.logger.Log
 import io.skygear.chatexample.logger.LogFragment
@@ -55,17 +56,16 @@ class ApiTestActivity : AppCompatActivity() {
     }
 
     private fun loadTestModule(apiTask: ApiTask) {
-        val module: Class<*>
-
         try {
-            module = Class.forName(packageName + ApiListActivity.API_TASK_PACKAGE + apiTask.name.trim())
+            val module = Class.forName(packageName + ApiListActivity.API_TASK_PACKAGE + apiTask.name.replace("\\s".toRegex(), "")).newInstance()
+            if(module is ApiTestModule) {
+                this.module = module
+            }
         } catch (e: ClassNotFoundException) {
             e.printStackTrace()
+            Toast.makeText(this, "Error: Testing module not found", Toast.LENGTH_SHORT).show()
+            finish()
             return
-        }
-
-        if(module is ApiTestModule) {
-            this.module = module
         }
     }
 

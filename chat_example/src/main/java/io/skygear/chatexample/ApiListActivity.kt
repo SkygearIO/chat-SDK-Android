@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
+import android.widget.Toast
 import io.skygear.skygear.Container
 import kotlinx.android.synthetic.main.activity_api_list.*
 import org.json.JSONArray
@@ -54,12 +55,13 @@ class ApiListActivity : AppCompatActivity(), ApiListAdapter.ApiTaskClickListener
     }
 
     override fun onApiTaskClicked(task: ApiTask) {
-//        try {
-//            Class.forName(packageName + API_TASK_PACKAGE + task.name.trim())
-//        } catch (e: ClassNotFoundException) {
-//            e.printStackTrace()
-//            return
-//        }
+        try {
+            Class.forName(packageName + ApiListActivity.API_TASK_PACKAGE + task.name.replace("\\s".toRegex(), ""))
+        } catch (e: ClassNotFoundException) {
+            e.printStackTrace()
+            Toast.makeText(this, "Error: Testing module not found", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         val intent = Intent(this, ApiParamsActivity::class.java)
         intent.putExtra(ApiParamsActivity.EXTRAS_KEY, task)
