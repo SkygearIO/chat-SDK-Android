@@ -1,10 +1,17 @@
 [
   {
     "name": "User Login",
+    "loginRequired": false,
     "params": ["username", "password"]
   },
   {
     "name": "Create Group Conversation",
+    "loginRequired": true,
     "params": ["userIDs"]
+  },
+  {
+    "name": "Fetch User Conversations",
+    "loginRequired": true,
+    "params": []
   }
 ]

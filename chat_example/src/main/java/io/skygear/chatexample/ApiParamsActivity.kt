@@ -31,7 +31,7 @@ class ApiParamsActivity : AppCompatActivity() {
         title = fetchExtras().name
 
         initViews()
-        initRecyclerView(fetchExtras())
+        initParams(fetchExtras())
     }
 
     private fun initViews() {
@@ -42,16 +42,31 @@ class ApiParamsActivity : AppCompatActivity() {
         return intent.getSerializableExtra(EXTRAS_KEY) as ApiTask
     }
 
-    private fun initRecyclerView(apiTask: ApiTask) {
-        recycler_view.layoutManager = LinearLayoutManager(this)
-
-        if(apiTask.params.containsKey(USER_ID_KEY)) {
+    private fun initParams(apiTask: ApiTask) {
+        if(apiTask.loginRequired) {
             // Pick User IDs
             if (!Utils.isLoggedIn(this)) {
                 Toast.makeText(this, "Please login first!", Toast.LENGTH_SHORT).show()
                 finish()
                 return
             }
+        }
+
+        if(apiTask.params.isEmpty()) {
+            val intent = Intent(this, ApiTestActivity::class.java)
+            intent.putExtra(EXTRAS_KEY, apiTask)
+            startActivity(intent)
+            finish()
+            return
+        }
+
+        initRecyclerView(apiTask)
+    }
+
+    private fun initRecyclerView(apiTask: ApiTask) {
+        recycler_view.layoutManager = LinearLayoutManager(this)
+
+        if(apiTask.params.containsKey(USER_ID_KEY)) {
             usersAdapter = ChatUsesAdapter(mSkygear.auth.currentUser.id)
             mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
                 override fun onSucc(list: List<ChatUser>?) {
