@@ -28,5 +28,10 @@
     "name": "Get Participants",
     "loginRequired": true,
     "params": ["conversationID"]
+  },
+  {
+    "name": "Add Participant",
+    "loginRequired": true,
+    "params": ["conversationID", "participantID"]
   }
 ]
