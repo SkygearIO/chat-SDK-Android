@@ -29,7 +29,7 @@ class CreateGroupConversation: ApiTestModule {
     override fun onApiTest(activity: Activity, skygear: Container, chatContainer: ChatContainer, task: ApiTask, view: View) {
         val userIDs = Gson().fromJson<MutableSet<String>>(task.params["userIDs"])
         val timestamp = SimpleDateFormat("yyyy-MM-dd_HH:mm", Locale.getDefault()).format(Calendar.getInstance().time)
-        Log.i(javaClass.simpleName, "Creating conversation...")
+        Log.i(javaClass.simpleName, "Creating conversation...\n")
 
         chatContainer.createConversation(userIDs, "$timestamp Test Conversation", null, null, object: SaveCallback<Conversation> {
             override fun onSucc(obj: Conversation?) {

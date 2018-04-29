@@ -29,7 +29,7 @@ class FetchUserConversations: ApiTestModule {
 
     override fun onApiTest(activity: Activity, skygear: Container, chatContainer: ChatContainer, task: ApiTask, view: View) {
 
-        Log.i(javaClass.simpleName, "Fetching conversations...")
+        Log.i(javaClass.simpleName, "Fetching conversations...\n")
         chatContainer.getConversations(object: GetCallback<List<Conversation>>{
             override fun onSucc(obj: List<Conversation>?) {
                 if(obj == null) {

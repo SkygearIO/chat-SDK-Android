@@ -25,7 +25,7 @@ class UserLogin: ApiTestModule {
     override fun onApiTest(activity: Activity, skygear: Container, chatContainer: ChatContainer, task: ApiTask, view: View) {
         val username = task.params["username"]
         val password = task.params["password"]
-        Log.i(javaClass.simpleName, "Logging in with Username: \"$username\" and Password: \"$password\"...")
+        Log.i(javaClass.simpleName, "Logging in with Username: \"$username\" and Password: \"$password\"...\n")
 
         skygear.auth.loginWithUsername(username, password, object: AuthResponseHandler() {
             override fun onAuthSuccess(user: Record) {
