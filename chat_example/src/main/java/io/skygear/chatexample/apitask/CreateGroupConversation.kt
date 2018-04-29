@@ -22,8 +22,6 @@ import java.util.*
  */
 class CreateGroupConversation: ApiTestModule {
 
-    private val TAG = javaClass.simpleName
-
     override fun onLoadCustomView(context: Context): View? {
         return null
     }
@@ -31,21 +29,21 @@ class CreateGroupConversation: ApiTestModule {
     override fun onApiTest(activity: Activity, skygear: Container, chatContainer: ChatContainer, task: ApiTask, view: View) {
         val userIDs = Gson().fromJson<MutableSet<String>>(task.params["userIDs"])
         val timestamp = SimpleDateFormat("yyyy-MM-dd_HH:mm", Locale.getDefault()).format(Calendar.getInstance().time)
-        Log.i(TAG, "Creating conversation...")
+        Log.i(javaClass.simpleName, "Creating conversation...")
 
         chatContainer.createConversation(userIDs, "$timestamp Test Conversation", null, null, object: SaveCallback<Conversation> {
             override fun onSucc(obj: Conversation?) {
                 if(obj == null) {
-                    Log.i(TAG, "Create conversation failed with reason: Conversation null")
+                    Log.i(javaClass.simpleName, "Create conversation failed with reason: Conversation null")
                     return
                 }
-                Log.i(TAG, "Create conversation successful, conversation ID: ${obj.id}")
-                Log.i(TAG, "Conversation ID copied to clipboard")
-                Utils.copyToClipboard(activity, TAG, obj.id)
+                Log.i(javaClass.simpleName, "Create conversation successful, conversation ID: ${obj.id}")
+                Log.i(javaClass.simpleName, "Conversation ID copied to clipboard")
+                Utils.copyToClipboard(activity, javaClass.simpleName, obj.id)
             }
 
             override fun onFail(error: Error) {
-                Log.i(TAG, "Create conversation failed with reason: ${error.detailMessage}")
+                Log.i(javaClass.simpleName, "Create conversation failed with reason: ${error.detailMessage}")
             }
         })
     }

@@ -18,8 +18,6 @@ import io.skygear.skygear.Record
  */
 class UserLogin: ApiTestModule {
 
-    private val TAG = javaClass.simpleName
-
     override fun onLoadCustomView(context: Context): View? {
         return null
     }
@@ -27,17 +25,17 @@ class UserLogin: ApiTestModule {
     override fun onApiTest(activity: Activity, skygear: Container, chatContainer: ChatContainer, task: ApiTask, view: View) {
         val username = task.params["username"]
         val password = task.params["password"]
-        Log.i(TAG, "Logging in with Username: \"$username\" and Password: \"$password\"...")
+        Log.i(javaClass.simpleName, "Logging in with Username: \"$username\" and Password: \"$password\"...")
 
         skygear.auth.loginWithUsername(username, password, object: AuthResponseHandler() {
             override fun onAuthSuccess(user: Record) {
-                Log.i(TAG, "Login successful, User ID: ${user.id}")
-                Log.i(TAG, "User ID copied to clipboard")
-                Utils.copyToClipboard(activity, TAG, user.id)
+                Log.i(javaClass.simpleName, "Login successful, User ID: ${user.id}")
+                Log.i(javaClass.simpleName, "User ID copied to clipboard")
+                Utils.copyToClipboard(activity, javaClass.simpleName, user.id)
             }
 
             override fun onAuthFail(error: Error) {
-                Log.i(TAG, "Login failed with reason: ${error.detailMessage}")
+                Log.i(javaClass.simpleName, "Login failed with reason: ${error.detailMessage}")
             }
         })
     }
