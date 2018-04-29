@@ -43,8 +43,7 @@
         </activity>
         <activity android:name="io.skygear.plugins.chat.ui.ConversationActivity" />
         <activity
-            android:name=".ApiListActivity"
-            android:label="@string/api_test_list">
+            android:name=".ApiListActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -52,7 +51,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ApiParamsActivity" />
-        <activity android:name=".ApiTestActivity"></activity>
+        <activity android:name=".ApiTestActivity"/>
     </application>
 
 </manifest>

@@ -6,18 +6,17 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.widget.Toast
-import io.skygear.skygear.Container
 import kotlinx.android.synthetic.main.activity_api_list.*
 import org.json.JSONArray
 import java.nio.charset.Charset
 
 class ApiListActivity : AppCompatActivity(), ApiListAdapter.ApiTaskClickListener {
 
-    private val mSkygear: Container = Container.defaultContainer(this)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_api_list)
+        title = getString(R.string.api_test_list)
+
         initViews()
         initRecyclerView(getApiTestList())
     }
