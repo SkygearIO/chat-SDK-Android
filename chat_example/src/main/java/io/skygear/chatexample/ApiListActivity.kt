@@ -1,11 +1,19 @@
 package io.skygear.chatexample
 
+import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
+import io.skygear.chatexample.apitask.Utils
+import io.skygear.skygear.Container
+import io.skygear.skygear.Error
+import io.skygear.skygear.LogoutResponseHandler
 import kotlinx.android.synthetic.main.activity_api_list.*
 import org.json.JSONArray
 import java.nio.charset.Charset
@@ -65,6 +73,58 @@ class ApiListActivity : AppCompatActivity(), ApiListAdapter.ApiTaskClickListener
         val intent = Intent(this, ApiParamsActivity::class.java)
         intent.putExtra(ApiParamsActivity.EXTRAS_KEY, task)
         startActivity(intent)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.api_list, menu)
+        return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        val logoutBtn = menu?.findItem(R.id.log_out_menu)
+        logoutBtn?.isVisible = (Utils.isLoggedIn(this))
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        return when(item?.itemId) {
+            R.id.log_out_menu -> {
+                confirmLogOut()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun confirmLogOut() {
+        AlertDialog.Builder(this)
+                .setTitle(R.string.confirm)
+                .setMessage(R.string.are_your_sure_to_log_out)
+                .setPositiveButton(R.string.yes) { dialog, which -> logOut() }
+                .setNegativeButton(R.string.no, null).show()
+    }
+
+    private fun logOut() {
+        val loading = ProgressDialog(this)
+        loading.setTitle(R.string.loading)
+        loading.setMessage(getString(R.string.logging_out))
+        loading.show()
+
+        Container.defaultContainer(this).auth.logout(object : LogoutResponseHandler() {
+            override fun onLogoutSuccess() {
+                invalidateOptionsMenu()
+                loading.dismiss()
+            }
+
+            override fun onLogoutFail(error: Error) {
+                loading.dismiss()
+                logoutFail()
+            }
+        })
+    }
+
+    private fun logoutFail() {
+        AlertDialog.Builder(this).setTitle(R.string.logout_failed).show()
     }
 
     companion object {
