@@ -105,4 +105,10 @@ class ApiTestActivity : AppCompatActivity() {
             log_fragment.view?.layoutParams = params2
         }
     }
+
+    override fun onStop() {
+        super.onStop()
+        val mod = module ?: return
+        mod.onStop()
+    }
 }
