@@ -2,5 +2,9 @@
   {
     "name": "User Login",
     "params": ["username", "password"]
+  },
+  {
+    "name": "Create Group Conversation",
+    "params": ["userIDs"]
   }
 ]
