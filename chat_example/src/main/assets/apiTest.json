@@ -23,5 +23,10 @@
     "name": "Subscribe Conversation Message",
     "loginRequired": true,
     "params": ["conversationID"]
+  },
+  {
+    "name": "Get Participants",
+    "loginRequired": true,
+    "params": ["conversationID"]
   }
 ]
