@@ -31,7 +31,7 @@ class SendMessage: ApiTestModule {
             return
         }
 
-        Log.i(javaClass.simpleName, "Fetching conversation...")
+        Log.i(javaClass.simpleName, "Fetching conversation with ID: \"$conversationID\"...")
         chatContainer.getConversation(conversationID, object: GetCallback<Conversation> {
             override fun onSucc(obj: Conversation?) {
                 if(obj == null) {
@@ -39,8 +39,8 @@ class SendMessage: ApiTestModule {
                     return
                 }
 
-                Log.i(javaClass.simpleName, "Fetch conversation successful")
-                Log.i(javaClass.simpleName, "Sending message...")
+                Log.i(javaClass.simpleName, "Fetch conversation successful\n")
+                Log.i(javaClass.simpleName, "Sending message: \"$message\"...")
 
                 chatContainer.sendMessage(obj, message, null, null, object: SaveCallback<Message>{
                     override fun onSucc(msg: Message?) {
