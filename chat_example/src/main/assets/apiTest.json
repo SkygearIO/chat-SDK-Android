@@ -13,5 +13,10 @@
     "name": "Fetch User Conversations",
     "loginRequired": true,
     "params": []
+  },
+  {
+    "name": "Send Message",
+    "loginRequired": true,
+    "params": ["conversationID", "message"]
   }
 ]
