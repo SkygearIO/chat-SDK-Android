@@ -11,7 +11,7 @@ import io.skygear.skygear.Error
 
 /**
  * Created by camerash on 4/29/18.
- * Send
+ * Send message API Test Module
  */
 class SendMessage: ApiTestModule {
     
