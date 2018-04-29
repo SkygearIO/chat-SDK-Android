@@ -1,8 +1,12 @@
 package io.skygear.chatexample
 
 import android.os.Bundle
+import android.support.transition.ChangeBounds
+import android.support.transition.TransitionManager
+import android.support.transition.TransitionSet
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.Toast
 import io.skygear.chatexample.apitask.ApiTestModule
 import io.skygear.chatexample.logger.Log
@@ -74,13 +78,31 @@ class ApiTestActivity : AppCompatActivity() {
         val view = mod.onLoadCustomView(this)
         if(view != null) {
             view_container.addView(view)
+            fab.visibility = View.VISIBLE
+            fab.show()
+            setFabOnClickListener()
         } else {
             view_container.visibility = View.GONE
+            fab.hide()
+            fab.visibility = View.GONE
         }
     }
 
     private fun performApiTest(apiTask: ApiTask) {
         val mod = module ?: return
         mod.onApiTest(this, mSkygear, mChatContainer, apiTask, view_container)
+    }
+
+    private fun setFabOnClickListener() {
+        fab.setOnClickListener {
+            TransitionManager.beginDelayedTransition(root_linear_layout, TransitionSet().addTransition(ChangeBounds()))
+            val params1 = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0)
+            val originalLayoutParams = view_container.layoutParams as LinearLayout.LayoutParams
+            params1.weight = if(originalLayoutParams.weight == 0.5f) 1.0f else if(originalLayoutParams.weight == 1.0f) 0.0f else 0.5f
+            view_container.layoutParams = params1
+            val params2 = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0)
+            params2.weight = if(originalLayoutParams.weight == 0.5f) 0.0f else if(originalLayoutParams.weight == 1.0f) 1.0f else 0.5f
+            log_fragment.view?.layoutParams = params2
+        }
     }
 }
