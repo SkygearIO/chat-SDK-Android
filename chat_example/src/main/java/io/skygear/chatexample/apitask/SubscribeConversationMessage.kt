@@ -25,15 +25,24 @@ class SubscribeConversationMessage: ApiTestModule {
     var conversation: Conversation? = null
 
     override fun onLoadCustomView(context: Context): View? {
+        // Root layout
+        val frame = LinearLayout(context)
+        val rootParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT)
+        frame.layoutParams = rootParams
+        frame.gravity = Gravity.CENTER
+
+        // Unsubscribe button
         unsubscribeBtn = Button(context)
         unsubscribeBtn?.setText(R.string.unsubscribe_btn)
         unsubscribeBtn?.isEnabled = false
         val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT)
-        params.gravity = Gravity.CENTER
         unsubscribeBtn?.layoutParams = params
-        return unsubscribeBtn
+        frame.addView(unsubscribeBtn)
+        return frame
     }
 
     override fun onApiTest(activity: Activity, skygear: Container, chatContainer: ChatContainer, task: ApiTask, view: View) {
