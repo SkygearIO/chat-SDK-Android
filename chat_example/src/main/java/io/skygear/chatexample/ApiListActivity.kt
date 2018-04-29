@@ -96,6 +96,11 @@ class ApiListActivity : AppCompatActivity(), ApiListAdapter.ApiTaskClickListener
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        invalidateOptionsMenu()
+    }
+
     private fun confirmLogOut() {
         AlertDialog.Builder(this)
                 .setTitle(R.string.confirm)
