@@ -55,4 +55,6 @@ class FetchUserConversations: ApiTestModule {
             }
         })
     }
+
+    override fun onStop() {}
 }

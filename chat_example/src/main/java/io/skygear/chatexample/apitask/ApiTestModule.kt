@@ -14,4 +14,5 @@ import io.skygear.skygear.Container
 interface ApiTestModule {
     fun onLoadCustomView(context: Context): View?
     fun onApiTest(activity: Activity, skygear: Container, chatContainer: ChatContainer, task: ApiTask, view: View)
+    fun onStop()
 }

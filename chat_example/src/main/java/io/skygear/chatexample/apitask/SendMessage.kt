@@ -65,4 +65,6 @@ class SendMessage: ApiTestModule {
             }
         })
     }
+
+    override fun onStop() {}
 }

@@ -39,4 +39,6 @@ class UserLogin: ApiTestModule {
             }
         })
     }
+
+    override fun onStop() {}
 }

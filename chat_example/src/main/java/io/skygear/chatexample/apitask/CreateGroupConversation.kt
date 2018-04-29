@@ -48,5 +48,7 @@ class CreateGroupConversation: ApiTestModule {
         })
     }
 
+    override fun onStop() {}
+
     private inline fun <reified T> Gson.fromJson(json: String?) = this.fromJson<T>(json, object: TypeToken<T>() {}.type)
 }

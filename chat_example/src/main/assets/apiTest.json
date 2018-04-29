@@ -18,5 +18,10 @@
     "name": "Send Message",
     "loginRequired": true,
     "params": ["conversationID", "message"]
+  },
+  {
+    "name": "Subscribe Conversation Message",
+    "loginRequired": true,
+    "params": ["conversationID"]
   }
 ]
