@@ -54,7 +54,7 @@ class SubscribeConversationMessage: ApiTestModule {
 
         Log.i(javaClass.simpleName, "Fetching conversation with ID: \"$conversationID\"...")
         chatContainer.getConversation(conversationID, object: GetCallback<Conversation> {
-            override fun onSucc(obj: Conversation?) {
+            override fun onSuccess(obj: Conversation?) {
                 if(obj == null) {
                     Log.i(javaClass.simpleName, "Fetch conversation failed with reason: Conversation null")
                     return

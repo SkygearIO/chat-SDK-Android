@@ -8,8 +8,8 @@ import android.widget.Toast
 import com.google.gson.Gson
 import io.skygear.chatexample.apitask.Utils
 import io.skygear.plugins.chat.ChatContainer
-import io.skygear.plugins.chat.ChatUser
-import io.skygear.plugins.chat.GetCallback
+import io.skygear.plugins.chat.GetParticipantsCallback
+import io.skygear.plugins.chat.Participant
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import kotlinx.android.synthetic.main.activity_api_params.*
@@ -68,13 +68,17 @@ class ApiParamsActivity : AppCompatActivity() {
 
         if(apiTask.params.containsKey(USER_ID_KEY)) {
             usersAdapter = ChatUsesAdapter(mSkygear.auth.currentUser.id)
-            mChatContainer.getChatUsers(object : GetCallback<List<ChatUser>> {
-                override fun onSucc(list: List<ChatUser>?) {
-                    usersAdapter?.setChatUsers(list)
+            ParticipantsFetcher(mSkygear).fetch(object : GetParticipantsCallback {
+                override fun onGetCachedResult(participantsMap: MutableMap<String, Participant>?) {
+                    usersAdapter?.setParticipants(participantsMap)
                 }
 
-                override fun onFail(error: Error) {
+                override fun onSuccess(participantsMap: MutableMap<String, Participant>?) {
+                    usersAdapter?.setParticipants(participantsMap)
+                }
 
+
+                override fun onFail(error: Error) {
                 }
             })
         } else {

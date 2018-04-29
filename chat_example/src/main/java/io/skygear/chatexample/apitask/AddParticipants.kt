@@ -36,7 +36,7 @@ class AddParticipant: ApiTestModule {
 
         Log.i(javaClass.simpleName, "Fetching conversation with ID: \"$conversationID\"...")
         chatContainer.getConversation(conversationID, object: GetCallback<Conversation> {
-            override fun onSucc(obj: Conversation?) {
+            override fun onSuccess(obj: Conversation?) {
                 if(obj == null) {
                     Log.i(javaClass.simpleName, "Fetch conversation failed with reason: Conversation null")
                     return
@@ -46,7 +46,7 @@ class AddParticipant: ApiTestModule {
                 Log.i(javaClass.simpleName, "Adding participant: \"$participantID\"...")
 
                 chatContainer.addConversationParticipant(obj, participantID, object: SaveCallback<Conversation> {
-                    override fun onSucc(`object`: Conversation?) {
+                    override fun onSuccess(obj: Conversation?) {
                         Log.i(javaClass.simpleName, "Add participant successful")
                     }
 

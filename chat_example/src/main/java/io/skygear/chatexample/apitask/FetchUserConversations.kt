@@ -31,7 +31,7 @@ class FetchUserConversations: ApiTestModule {
 
         Log.i(javaClass.simpleName, "Fetching conversations...\n")
         chatContainer.getConversations(object: GetCallback<List<Conversation>>{
-            override fun onSucc(obj: List<Conversation>?) {
+            override fun onSuccess(obj: List<Conversation>?) {
                 if(obj == null) {
                     Log.i(javaClass.simpleName, "Fetch conversations failed with reason: Conversation null")
                     return

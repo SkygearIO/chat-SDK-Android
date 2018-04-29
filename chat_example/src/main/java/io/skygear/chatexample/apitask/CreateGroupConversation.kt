@@ -32,7 +32,7 @@ class CreateGroupConversation: ApiTestModule {
         Log.i(javaClass.simpleName, "Creating conversation...\n")
 
         chatContainer.createConversation(userIDs, "$timestamp Test Conversation", null, null, object: SaveCallback<Conversation> {
-            override fun onSucc(obj: Conversation?) {
+            override fun onSuccess(obj: Conversation?) {
                 if(obj == null) {
                     Log.i(javaClass.simpleName, "Create conversation failed with reason: Conversation null")
                     return
