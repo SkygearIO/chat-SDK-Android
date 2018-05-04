@@ -66,7 +66,7 @@ class ApiParamsActivity : AppCompatActivity() {
     private fun initRecyclerView(apiTask: ApiTask) {
         recycler_view.layoutManager = LinearLayoutManager(this)
 
-        if(apiTask.params.containsKey(USER_ID_KEY)) {
+        if(isPickingUserID()) {
             usersAdapter = ChatUsesAdapter(mSkygear.auth.currentUser.id)
             ParticipantsFetcher(mSkygear).fetch(object : GetParticipantsCallback {
                 override fun onGetCachedResult(participantsMap: MutableMap<String, Participant>?) {
@@ -89,7 +89,7 @@ class ApiParamsActivity : AppCompatActivity() {
     }
 
     private fun submitParams() {
-        if(paramsAdapter != null) {
+        if(!isPickingUserID()) {
             val finalAdapter = paramsAdapter
             if (finalAdapter != null) {
                 if (!finalAdapter.isAllParamsFilled()) {
@@ -121,6 +121,10 @@ class ApiParamsActivity : AppCompatActivity() {
                 finish()
             }
         }
+    }
+
+    private fun isPickingUserID(): Boolean {
+        return fetchExtras().params.containsKey(USER_ID_KEY)
     }
 
     companion object {
