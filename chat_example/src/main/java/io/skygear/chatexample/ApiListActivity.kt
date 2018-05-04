@@ -63,10 +63,10 @@ class ApiListActivity : AppCompatActivity(), ApiListAdapter.ApiTaskClickListener
 
     override fun onApiTaskClicked(task: ApiTask) {
         try {
-            Class.forName(packageName + ApiListActivity.API_TASK_PACKAGE + task.name.replace("\\s".toRegex(), ""))
+            Utils.getModuleByTask(task)
         } catch (e: ClassNotFoundException) {
             e.printStackTrace()
-            Toast.makeText(this, "Error: Testing module not found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -130,9 +130,5 @@ class ApiListActivity : AppCompatActivity(), ApiListAdapter.ApiTaskClickListener
 
     private fun logoutFail() {
         AlertDialog.Builder(this).setTitle(R.string.logout_failed).show()
-    }
-
-    companion object {
-        const val API_TASK_PACKAGE = ".apitask."
     }
 }
