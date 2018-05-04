@@ -1,0 +1,37 @@
+[
+  {
+    "name": "User Login",
+    "loginRequired": false,
+    "params": ["username", "password"]
+  },
+  {
+    "name": "Create Group Conversation",
+    "loginRequired": true,
+    "params": ["userIDs"]
+  },
+  {
+    "name": "Fetch User Conversations",
+    "loginRequired": true,
+    "params": []
+  },
+  {
+    "name": "Send Message",
+    "loginRequired": true,
+    "params": ["conversationID", "message"]
+  },
+  {
+    "name": "Subscribe Conversation Message",
+    "loginRequired": true,
+    "params": ["conversationID"]
+  },
+  {
+    "name": "Get Participants",
+    "loginRequired": true,
+    "params": ["conversationID"]
+  },
+  {
+    "name": "Add Participant",
+    "loginRequired": true,
+    "params": ["conversationID", "participantID"]
+  }
+]
