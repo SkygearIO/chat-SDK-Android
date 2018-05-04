@@ -99,7 +99,6 @@ class ApiParamsActivity : AppCompatActivity() {
                 val intent = Intent(this, ApiTestActivity::class.java)
                 intent.putExtra(EXTRAS_KEY, finalAdapter.getParams())
                 startActivity(intent)
-                finish()
             }
         } else {
             val apiTask = fetchExtras()
@@ -118,7 +117,6 @@ class ApiParamsActivity : AppCompatActivity() {
                 val intent = Intent(this, ApiTestActivity::class.java)
                 intent.putExtra(EXTRAS_KEY, apiTask)
                 startActivity(intent)
-                finish()
             }
         }
     }
