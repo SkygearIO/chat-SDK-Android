@@ -14,10 +14,6 @@ import io.skygear.plugins.chat.*
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 
-/**
- * Created by camerash on 4/29/18.
- * Subscribe conversation message API Test Module
- */
 class SubscribeConversationMessage: ApiTestModule {
 
     var unsubscribeBtn: Button? = null

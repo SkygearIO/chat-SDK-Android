@@ -12,10 +12,6 @@ import io.skygear.plugins.chat.SaveCallback
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 
-/**
- * Created by camerash on 4/29/18.
- * Add participant API Test Module
- */
 class AddParticipant: ApiTestModule {
 
     override fun onLoadCustomView(context: Context): View? {

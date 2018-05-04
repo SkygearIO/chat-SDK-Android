@@ -14,10 +14,6 @@ import io.skygear.plugins.chat.GetCallback
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 
-/**
- * Created by camerash on 4/29/18.
- * Get participants API Test Module
- */
 class GetParticipants: ApiTestModule {
 
     var listView: ListView? = null

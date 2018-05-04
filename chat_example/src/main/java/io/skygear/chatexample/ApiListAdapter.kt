@@ -7,10 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 
-/**
- * Created by camerash on 4/28/18.
- * Recycler adapter for Api Test List
- */
 class ApiListAdapter (var context: Context,
                       private val apiList: ArrayList<ApiTask>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 

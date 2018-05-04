@@ -11,11 +11,6 @@ import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import io.skygear.skygear.Record
 
-
-/**
- * Created by camerash on 4/28/18.
- * User login API Test Module
- */
 class UserLogin: ApiTestModule {
 
     override fun onLoadCustomView(context: Context): View? {

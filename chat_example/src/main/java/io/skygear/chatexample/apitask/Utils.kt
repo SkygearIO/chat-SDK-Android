@@ -5,10 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import io.skygear.skygear.Container
 
-/**
- * Created by camerash on 4/29/18.
- * Utils for API testing
- */
 class Utils {
     companion object {
         fun isLoggedIn(context: Context): Boolean {

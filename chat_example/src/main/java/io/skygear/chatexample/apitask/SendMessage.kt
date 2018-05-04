@@ -9,10 +9,6 @@ import io.skygear.plugins.chat.*
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 
-/**
- * Created by camerash on 4/29/18.
- * Send message API Test Module
- */
 class SendMessage: ApiTestModule {
     
     override fun onLoadCustomView(context: Context): View? {

@@ -16,10 +16,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Suppress("UNCHECKED_CAST")
-/**
- * Created by camerash on 4/29/18.
- * Create group conversation API Test Module
- */
 class CreateGroupConversation: ApiTestModule {
 
     override fun onLoadCustomView(context: Context): View? {

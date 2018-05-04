@@ -14,10 +14,6 @@ import io.skygear.plugins.chat.GetCallback
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 
-/**
- * Created by camerash on 4/29/18.
- * Fetch user conversations API Test Module
- */
 class FetchUserConversations: ApiTestModule {
 
     var listView: ListView? = null

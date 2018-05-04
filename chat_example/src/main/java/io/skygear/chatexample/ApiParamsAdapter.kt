@@ -10,10 +10,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 
-/**
- * Created by camerash on 4/28/18.
- * Recycler adapter for Api Test List
- */
 class ApiParamsAdapter(var context: Context,
                        private val apiTask: ApiTask): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 

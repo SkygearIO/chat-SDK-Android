@@ -3,10 +3,6 @@ package io.skygear.chatexample
 import org.json.JSONObject
 import java.io.Serializable
 
-/**
- * Created by camerash on 4/28/18.
- * Api Test Object
- */
 class ApiTask(obj: JSONObject): Serializable {
 
     val name: String
