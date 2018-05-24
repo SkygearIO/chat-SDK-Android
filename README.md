@@ -124,7 +124,9 @@ public class MainActivity extends AppCompatActivity {
 
 ## Support
 
-If you believe you've found an issue with Skygear Android SDK, please feel free
+For implementation related questions or technical support, please find us on the [official forum](https://discuss.skygear.io) or [community chat](https://slack.skygear.io).
+
+If you believe you've found an issue with Skygear chat Android SDK, please feel free
 to [report an issue](https://github.com/SkygearIO/chat-SDK-Android/issues).
 
 ## License & Copyright
