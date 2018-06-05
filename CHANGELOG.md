@@ -1,3 +1,10 @@
+## 1.5.1 (2018-06-05)
+
+### Bug Fixes
+
+- Fix record acl become public read after updating conversation
+
+
 ## 1.5.0 (2018-05-16)
 
 ### Features
