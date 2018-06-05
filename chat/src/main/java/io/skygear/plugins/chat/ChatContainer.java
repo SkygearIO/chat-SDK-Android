@@ -475,18 +475,57 @@ public final class ChatContainer {
                                    @Nullable final SaveCallback<Conversation> callback) {
         final Database publicDB = this.skygear.getPublicDatabase();
         final String conversationId = conversation.getId();
-        Record record = new Record(conversation.record.getType(), conversationId);
-        for (Map.Entry<String, Object> entry : updates.entrySet()) {
-            record.set(entry.getKey(), entry.getValue());
-        }
-        publicDB.save(record, new SaveResponseAdapter<Conversation>(callback) {
+        Query query = new Query(Conversation.TYPE_KEY);
+        query.equalTo("_id", conversationId);
+        publicDB.query(query, new RecordQueryResponseHandler() {
             @Override
-            public Conversation convert(Record record) {
-                return new Conversation(record);
+            public void onQuerySuccess(Record[] records) {
+                if (records.length == 0) {
+                    if (callback != null) {
+                        callback.onFail(new ConversationNotFoundError(conversationId));
+                    }
+                    return;
+                }
+
+                Record conversationRecord = records[0];
+                for (Map.Entry<String, Object> entry : updates.entrySet()) {
+                    conversationRecord.set(entry.getKey(), entry.getValue());
+                }
+                publicDB.save(conversationRecord, new SaveResponseAdapter<Conversation>(callback) {
+                    @Override
+                    public Conversation convert(Record record) {
+                        // FIXME
+                        // admins_ids and participant_ids are appended attributes from lambda
+                        // so these attributes are missing in the record save handler
+                        // hot fix to copy them from the original conversation record if exists
+                        // ultimately we should have update conversation lambda so that we can
+                        // update conversation in one request like create
+                        if (conversation.record.get(Conversation.ADMIN_IDS_KEY) != null) {
+                            record.set(
+                                    Conversation.ADMIN_IDS_KEY,
+                                    conversation.record.get(Conversation.ADMIN_IDS_KEY)
+                            );
+                        }
+                        if (conversation.record.get(Conversation.PARTICIPANT_IDS_KEY) != null) {
+                            record.set(
+                                    Conversation.PARTICIPANT_IDS_KEY,
+                                    conversation.record.get(Conversation.PARTICIPANT_IDS_KEY)
+                            );
+                        }
+                        return new Conversation(record);
+                    }
+
+                    @Override
+                    public void onSaveFail(Error error) {
+                        if (callback != null) {
+                            callback.onFail(new ConversationOperationError(error));
+                        }
+                    }
+                });
             }
 
             @Override
-            public void onSaveFail(Error error) {
+            public void onQueryError(Error error) {
                 if (callback != null) {
                     callback.onFail(new ConversationOperationError(error));
                 }
