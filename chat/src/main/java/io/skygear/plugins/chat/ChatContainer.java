@@ -501,6 +501,13 @@ public final class ChatContainer {
                         }
                         return new Conversation(record);
                     }
+
+                    @Override
+                    public void onSaveFail(Error error) {
+                        if (callback != null) {
+                            callback.onFail(new ConversationOperationError(error));
+                        }
+                    }
                 });
             }
 
