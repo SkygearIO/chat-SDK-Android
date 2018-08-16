@@ -191,38 +191,7 @@ public final class ChatContainer {
      */
 
     public void getConversations(@Nullable final GetCallback<List<Conversation>> callback) {
-        this.getConversations(callback, true);
-    }
-
-
-    /**
-     * Gets conversation.
-     *
-     * @param conversationId the conversation id
-     * @param callback       the callback
-     * @param getLastMessage get last_message and last_read_message if getLastMessage is true
-     */
-    public void getConversation(@NonNull final String conversationId,
-                                @Nullable final GetCallback<Conversation> callback, boolean getLastMessage) {
-        this.getConversation(
-                conversationId,
-                getLastMessage,
-                new GetCallback<Conversation>() {
-                    @Override
-                    public void onSuccess(@Nullable Conversation conversation) {
-                        if (callback != null) {
-
-                            callback.onSuccess(conversation);
-                        }
-                    }
-
-                    @Override
-                    public void onFail(@NonNull Error error) {
-                        if (callback != null) {
-                            callback.onFail(error);
-                        }
-                    }
-                });
+        this.getConversations(true, callback);
     }
 
     /**
@@ -574,8 +543,6 @@ public final class ChatContainer {
         });
     }
 
-    /* --- Conversation (Private) --- */
-
     /**
      * Gets single conversation for current user.
      *
@@ -583,10 +550,11 @@ public final class ChatContainer {
      * @param getLastMessages if true, then last_message and last_read_message are fetched.
      * @param callback        the callback
      */
-
-    private void getConversation(@NonNull final String conversationId,
-                                      @NonNull final boolean getLastMessages,
-                                      @Nullable final GetCallback<Conversation> callback) {
+    public void getConversation(
+            @NonNull final String conversationId,
+            @NonNull final boolean getLastMessages,
+            @Nullable final GetCallback<Conversation> callback
+    ) {
         this.skygear.callLambdaFunction("chat:get_conversation",
                 new Object[]{conversationId, getLastMessages},
                 new LambdaResponseHandler(){
@@ -621,9 +589,9 @@ public final class ChatContainer {
      * @param getLastMessages if true, then last_message and last_read_message are fetched.
      * @param callback        the callback
      */
-
-    public void getConversations(@Nullable final GetCallback<List<Conversation>> callback,
-                                  @NonNull final Boolean getLastMessages
+    public void getConversations(
+            @NonNull final Boolean getLastMessages,
+            @Nullable final GetCallback<List<Conversation>> callback
     ) {
         this.skygear.callLambdaFunction("chat:get_conversations",
                 new Object[]{1, 50, getLastMessages},
