@@ -593,8 +593,45 @@ public final class ChatContainer {
             @NonNull final Boolean getLastMessages,
             @Nullable final GetCallback<List<Conversation>> callback
     ) {
+        this.getConversations(1, getLastMessages, callback);
+    }
+
+    /**
+     * Gets all conversations page by page for current user.
+     *
+     * @param page            the page number
+     * @param getLastMessages if true, then last_message and last_read_message are fetched.
+     * @param callback        the callback
+     */
+    public void getConversations(
+            @NonNull final int page,
+            @NonNull final Boolean getLastMessages,
+            @Nullable final GetCallback<List<Conversation>> callback
+    ) {
+        this.getConversations(page, 50, getLastMessages, callback);
+    }
+
+    /**
+     * Gets all conversations page by page with a specific page size for current user.
+     *
+     * @param page            the page number
+     * @param pageSize        the page size
+     * @param getLastMessages if true, then last_message and last_read_message are fetched.
+     * @param callback        the callback
+     */
+    public void getConversations(
+            @NonNull final int page,
+            @NonNull final int pageSize,
+            @NonNull final Boolean getLastMessages,
+            @Nullable final GetCallback<List<Conversation>> callback
+    ) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("page", page);
+        params.put("page_size", pageSize);
+        params.put("include_last_message", getLastMessages);
+
         this.skygear.callLambdaFunction("chat:get_conversations",
-                new Object[]{1, 50, getLastMessages},
+                params,
                 new LambdaResponseHandler() {
                     @Override
                     public void onLambdaSuccess(JSONObject result) {
