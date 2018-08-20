@@ -13,7 +13,6 @@ import android.view.MenuItem
 import android.widget.Toast
 import io.skygear.plugins.chat.* // ktlint-disable no-wildcard-imports
 import io.skygear.plugins.chat.ui.* // ktlint-disable no-wildcard-imports
-import io.skygear.plugins.chat.ui.model.User
 import io.skygear.skygear.Container
 import io.skygear.skygear.Error
 import io.skygear.skygear.LambdaResponseHandler
@@ -22,46 +21,77 @@ import org.json.JSONObject
 
 class ConversationsActivity : AppCompatActivity() {
     private val LOG_TAG: String? = "ConversationsActivity"
+    private val PAGE_SIZE = 10
+    private val PAGING_THRESHOLD = 3
 
-    private val mSkygear: Container
-    private val mChatContainer: ChatContainer
+    private val mSkygear: Container = Container.defaultContainer(this)
+    private val mChatContainer: ChatContainer = ChatContainer.getInstance(mSkygear)
     private val mAdapter: ConversationsAdapter = ConversationsAdapter()
     private var mConversationsRv: RecyclerView? = null
-    private val callback: ConversationSubscriptionCallback = object: ConversationSubscriptionCallback() {
-        override fun notify(eventType: String, conversation: Conversation) {
-            when (eventType) {
-                ConversationSubscriptionCallback.EVENT_TYPE_DELETE -> mAdapter.deleteConversation(conversation.id)
-                ConversationSubscriptionCallback.EVENT_TYPE_UPDATE -> mAdapter.updateConversation(conversation)
-                ConversationSubscriptionCallback.EVENT_TYPE_CREATE -> mAdapter.addConversation(conversation)
-            }
-        }
-
-        override fun onSubscriptionFail(error: Error) {
-            Log.w(LOG_TAG, "Subscription Error: ${error.detailMessage}")
-        }
-    }
-
-    init {
-        mSkygear = Container.defaultContainer(this)
-        mChatContainer = ChatContainer.getInstance(mSkygear)
-    }
+    private var mCurrentPage: Int = 0
+    private var mGettingConversation = false
+    private var mNoMoreConversations = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_conversations)
 
-        mConversationsRv = findViewById<RecyclerView>(R.id.conversations_rv)
-        mConversationsRv?.adapter = mAdapter
-        mConversationsRv?.layoutManager = LinearLayoutManager(this)
+        findViewById<RecyclerView>(R.id.conversations_rv)?.let { rv ->
+            rv.adapter = mAdapter
+            rv.layoutManager = LinearLayoutManager(this)
+            rv.addOnScrollListener(object: RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+
+                    (recyclerView?.layoutManager as? LinearLayoutManager)?.
+                            let { llm ->
+                                val itemCount = llm.itemCount
+                                val lastItemPos = llm.findLastVisibleItemPosition()
+
+                                this@ConversationsActivity.onRecyclerViewScrolled(
+                                        lastItemPos,
+                                        itemCount
+                                )
+                            }
+
+
+                }
+            })
+
+            mConversationsRv = rv
+        }
+
         mAdapter.setOnClickListener {
             pos -> showOptions(pos)
         }
     }
 
+
+
     override fun onResume() {
         super.onResume()
-        mChatContainer.subscribeToConversation(callback)
-        getAllConversations()
+
+        mChatContainer.subscribeToConversation(object: ConversationSubscriptionCallback() {
+            override fun notify(eventType: String, conversation: Conversation) {
+                when (eventType) {
+                    ConversationSubscriptionCallback.EVENT_TYPE_DELETE ->
+                        mAdapter.deleteConversation(conversation.id)
+
+                    ConversationSubscriptionCallback.EVENT_TYPE_UPDATE ->
+                        mAdapter.updateConversation(conversation)
+
+                    ConversationSubscriptionCallback.EVENT_TYPE_CREATE ->
+                        mAdapter.addConversation(conversation)
+                }
+            }
+
+            override fun onSubscriptionFail(error: Error) {
+                Log.w(LOG_TAG, "Subscription Error: ${error.detailMessage}")
+            }
+        })
+
+        this.showGreeting()
+        this.getConversations()
     }
 
     override fun onPause() {
@@ -75,39 +105,121 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
+        return when (item?.itemId) {
             R.id.log_out_menu -> {
                 confirmLogOut()
-                return true
+                true
             }
             R.id.add_conversation_menu -> {
                 startActivity(Intent(this, CreateConversationActivity::class.java))
-                return true
+                true
             }
-            else -> return super.onOptionsItemSelected(item)
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
-    fun getAllConversations() {
+    private fun onRecyclerViewScrolled(lastVisiableItemPosition: Int, totalItemCount: Int) {
+        if (totalItemCount <= 0) {
+            return
+        }
 
+        if (lastVisiableItemPosition + PAGING_THRESHOLD > totalItemCount) {
+            getConversations(mCurrentPage + 1)
+        }
+    }
+
+    fun showGreeting() {
         val username = mSkygear.auth.currentUser.get("username").toString()
         val greetUserMessage = String.format("Hi, %s!", username)
         Toast.makeText(this@ConversationsActivity, greetUserMessage, Toast.LENGTH_SHORT).show()
+    }
 
-        mChatContainer.getConversations(object : GetCallback<List<Conversation>> {
-            override fun onSuccess(list: List<Conversation>?) {
-                mAdapter.setConversations(list)
+    fun getConversations(page: Int = 1) {
+        if (mGettingConversation) {
+            return
+        }
 
-                if (list?.isEmpty()!!) {
-                    Toast.makeText(this@ConversationsActivity, "No conversations. You may create one with other users.", Toast.LENGTH_SHORT).show()
-                } else {
-                    val listSize: Int = list!!.size
-                    val message = String.format("%d conversations loaded.", listSize)
-                    Toast.makeText(this@ConversationsActivity, message, Toast.LENGTH_SHORT).show()
+        if (page == 1) {
+            mNoMoreConversations = false
+        } else if (mNoMoreConversations) {
+            return
+        }
+
+        mGettingConversation = true
+
+        Log.i(LOG_TAG, "Getting conversations on Page $page")
+
+        mChatContainer.getConversations(
+                page,
+                PAGE_SIZE,
+                true,
+                object : GetCallback<List<Conversation>> {
+                    override fun onSuccess(list: List<Conversation>?) {
+                        mGettingConversation = false
+
+                        if (list?.isEmpty() != false) {
+                            if (page != 1) {
+                                mNoMoreConversations = true
+                            }
+
+                            val msg = if (page == 1) {
+                                "No conversations. You may create one with other users."
+                            } else {
+                                "No more conversations."
+                            }
+
+                            Toast.makeText(
+                                    this@ConversationsActivity,
+                                    msg,
+                                    Toast.LENGTH_SHORT
+                            ).show()
+
+                            return
+                        }
+
+                        val listSize: Int = list.size
+                        val message = String.format("%d conversations loaded.", listSize)
+                        Toast.makeText(
+                                this@ConversationsActivity,
+                                message,
+                                Toast.LENGTH_SHORT
+                        ).show()
+
+
+                        mCurrentPage = page
+
+                        if (page == 1) {
+                            mAdapter.setConversations(list)
+                        } else {
+                            mAdapter.addConversations(list)
+                        }
+                    }
+
+                    override fun onFail(error: Error) {
+                        mGettingConversation = false
+
+                        Toast.makeText(
+                                this@ConversationsActivity,
+                                "Failed to get conversations: ${error.detailMessage}",
+                                Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
+        )
+    }
+
+    fun refreshConversation(id: String) {
+        mChatContainer.getConversation(id, object: GetCallback<Conversation> {
+            override fun onSuccess(freshConv: Conversation?) {
+                mAdapter.updateConversation(freshConv)
             }
 
             override fun onFail(error: Error) {
+                Toast.makeText(
+                        this@ConversationsActivity,
+                        "Failed to refresh conversation: ${error.detailMessage}",
+                        Toast.LENGTH_SHORT
+                ).show()
             }
         })
     }
@@ -129,25 +241,21 @@ class ConversationsActivity : AppCompatActivity() {
         mSkygear.auth.logout(object : LogoutResponseHandler() {
             override fun onLogoutSuccess() {
                 loading.dismiss()
-                logoutSuccess()
+                backToMain()
             }
 
             override fun onLogoutFail(error: Error) {
                 loading.dismiss()
-
-                logoutFail()
+                backToMain()
             }
         })
     }
 
-    fun logoutSuccess() {
+    fun backToMain() {
         startActivity(Intent(this, MainActivity::class.java))
         finish()
     }
 
-    fun logoutFail() {
-        AlertDialog.Builder(this).setTitle(R.string.logout_failed).show()
-    }
 
     fun showOptions(pos: Int) {
         val builder = AlertDialog.Builder(this)
@@ -172,7 +280,6 @@ class ConversationsActivity : AppCompatActivity() {
     fun enter(c: Conversation) {
         val i = Intent(this, ConversationActivity::class.java)
         i.putExtra(ConversationActivity.ConversationIntentKey, c.toJson().toString())
-        // i.putExtra(ConversationActivity.ConversationIdIntentKey, c.id)
         i.putExtra(ConversationActivity.ConnectionListenerIntentKey, object : ConnectionListener {
             override fun onClose(fragment: ConversationFragment) {
                 Toast.makeText(fragment.activity, "Connection Closed", Toast.LENGTH_LONG).show()
@@ -273,8 +380,12 @@ class ConversationsActivity : AppCompatActivity() {
 
             override fun onLambdaSuccess(result: JSONObject?) {
                 Log.i(LOG_TAG, "Successfully leave the conversation")
-                Toast.makeText(applicationContext, "Successfully leave the conversation", Toast.LENGTH_SHORT).show()
-                getAllConversations()
+                Toast.makeText(
+                        applicationContext,
+                        "Successfully leave the conversation",
+                        Toast.LENGTH_SHORT
+                ).show()
+                mAdapter.deleteConversation(c.id)
             }
         })
     }
@@ -296,7 +407,7 @@ class ConversationsActivity : AppCompatActivity() {
             override fun onSuccess(result: Boolean?) {
                 Log.i(LOG_TAG, "Successfully delete the conversation")
                 Toast.makeText(applicationContext, "Conversation deleted.", Toast.LENGTH_SHORT).show()
-                getAllConversations()
+                mAdapter.deleteConversation(c.id)
             }
         })
     }
@@ -316,37 +427,37 @@ class ConversationsActivity : AppCompatActivity() {
         val f = UserIdsFragment.newInstance(getString(R.string.add_remove_admins), c.adminIds)
         f.setConversation(c)
         f.setOnOkBtnClickedListener { ids ->
+            c.adminIds?.let { adminIds ->
+                Toast.makeText(applicationContext, "Updating admins...", Toast.LENGTH_SHORT).show()
 
-            Toast.makeText(applicationContext, "Updating admins...", Toast.LENGTH_SHORT).show()
+                val idsToRemove = adminIds.toMutableList()
+                idsToRemove.removeAll(ids.toList())
 
-            val idsToRemove = c.adminIds?.toMutableList()
-            idsToRemove?.removeAll(ids.toList())
-
-            mChatContainer.removeConversationAdmins(c, idsToRemove!!, object : SaveCallback<Conversation> {
-                override fun onSuccess(new: Conversation?) {
-
-                    mChatContainer.addConversationAdmins(c, ids, object : SaveCallback<Conversation> {
-                        override fun onSuccess(new: Conversation?) {
-                            mChatContainer.getConversation(new?.id!! , object: GetCallback<Conversation> {
-                                override fun onSuccess(`newWithParticipantIds`: Conversation?) {
-                                    mAdapter.updateConversation(c, newWithParticipantIds)
-                                    Toast.makeText(applicationContext, "Admins updated.", Toast.LENGTH_SHORT).show()
+                mChatContainer.removeConversationAdmins(
+                        c,
+                        idsToRemove,
+                        object : SaveCallback<Conversation> {
+                            override fun onSuccess(updatedConv: Conversation?) {
+                                Toast.makeText(
+                                        applicationContext,
+                                        "Admins updated.",
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                                updatedConv?.id?.let { convId ->
+                                    this@ConversationsActivity.refreshConversation(convId)
                                 }
+                            }
 
-                                override fun onFail(error: Error) {
-                                }
-                            })
-
+                            override fun onFail(error: Error) {
+                                Toast.makeText(
+                                        applicationContext,
+                                        "Failed to updated admin: ${error.detailMessage}.",
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
-
-                        override fun onFail(error: Error) {
-                        }
-                    })
-                }
-
-                override fun onFail(error: Error) {
-                }
-            })
+                )
+            }
         }
         f.show(supportFragmentManager, "update_admins")
     }
@@ -367,7 +478,7 @@ class ConversationsActivity : AppCompatActivity() {
                             // the new doesn't have participant ids
 
                             mChatContainer.getConversation(new?.id!! , object: GetCallback<Conversation> {
-                                override fun onSuccess(`newWithParticipantIds`: Conversation?) {
+                                override fun onSuccess(newWithParticipantIds: Conversation?) {
                                     mAdapter.updateConversation(c, newWithParticipantIds)
                                     Toast.makeText(applicationContext, "Participants updated.", Toast.LENGTH_SHORT).show()
                                 }
