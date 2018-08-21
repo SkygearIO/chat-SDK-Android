@@ -27,23 +27,23 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
     }
 
     fun updateConversation(old: Conversation, new: Conversation?) {
-        new?.let {
+        new?.let { newConv ->
             val conversations: MutableList<Conversation> = mConversations.toMutableList()
             val idx = conversations.indexOf(old)
             if (idx != -1) {
-                conversations[idx] = new
-                mConversations = conversations.toList();
+                conversations[idx] = newConv
+                mConversations = conversations.toList()
                 notifyDataSetChanged()
             }
         }
     }
 
     fun updateConversation(new: Conversation?) {
-        new?.let {
+        new?.let { newConv ->
             val conversations: MutableList<Conversation> = mConversations.toMutableList()
-            val idx = conversations.indexOfFirst { it -> it.id == new.id }
+            val idx = conversations.indexOfFirst { it.id == newConv.id }
             if (idx != -1) {
-                conversations[idx] = new
+                conversations[idx] = newConv
                 mConversations = conversations.toList()
                 notifyDataSetChanged()
             }
@@ -51,20 +51,23 @@ class ConversationsAdapter : RecyclerView.Adapter<ConversationsAdapter.ViewHolde
     }
 
     fun addConversation(new: Conversation?) {
-        new?.let {
-            val conversations: MutableList<Conversation> = mConversations.toMutableList()
-            conversations.add(0, new)
-            mConversations = conversations.toList()
+        new?.let { addConversations(listOf(it)) }
+    }
+
+    fun addConversations(new: List<Conversation>?) {
+        val idSet = mConversations.map { it.id }.toSet()
+        new?.filter { !idSet.contains(it.id) }?.let { filteredNewConvs ->
+            val mutableList = mConversations.toMutableList()
+            mutableList.addAll(filteredNewConvs)
+            mConversations = mutableList.toList()
+
             notifyDataSetChanged()
         }
     }
 
     fun deleteConversation(id: String?) {
-        if (id != null) {
-            val conversations: MutableList<Conversation> = mConversations.toMutableList()
-            val conversation = conversations.find { it.id.equals(id) }
-            conversations.remove(conversation)
-            mConversations = conversations.toList()
+        id?.let { idToDelete ->
+            mConversations = mConversations.filter { it.id != idToDelete }
             notifyDataSetChanged()
         }
     }
