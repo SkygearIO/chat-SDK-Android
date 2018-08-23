@@ -1,3 +1,9 @@
+## 1.6.2 (2018-08-23)
+
+### Features
+
+- Add pagination support for get conversation API (#207)
+
 ## 1.5.1 (2018-06-05)
 
 ### Bug Fixes
