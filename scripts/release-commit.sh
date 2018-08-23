@@ -19,7 +19,7 @@ else
 fi
 
 github-release release -u skygeario -r chat-SDK-Android --draft --tag $SKYGEAR_VERSION --name "$SKYGEAR_VERSION" --description "`cat new-release`"
-cat CHANGELOG.md >> new-release && mv new-release CHANGELOG.md
+echo "" >> new-release && cat CHANGELOG.md >> new-release && mv new-release CHANGELOG.md
 git add CHANGELOG.md
 git commit -m "Update CHANGELOG for $SKYGEAR_VERSION"
 git tag -a $SKYGEAR_VERSION -s -u $KEY_ID -m "Release $SKYGEAR_VERSION"
