@@ -15,10 +15,14 @@ if [[ -z "$BINTRAY_API_KEY" ]]; then
   exit 1
 fi
 
-if [ -n "$TRAVIS_TAG" ]; then
+if [[ -n "$TRAVIS_TAG" && "$TRAVIS_TAG" != "latest" ]]; then
    generate_doc $TRAVIS_TAG
   ./gradlew :chat:bintrayUpload
   ./gradlew :chat_ui:bintrayUpload
+fi
+
+if [[ "$TRAVIS_TAG" == "latest" ]]; then
+   generate_doc "$TRAVIS_TAG"
 fi
 
 if [ -n "$TRAVIS_BRANCH" ]; then
