@@ -1,3 +1,9 @@
+## 1.6.3 (2018-09-05)
+
+### Bug Fixes
+
+- Upgrade Skygear SDK to v1.6.2 for websocket issue
+
 ## 1.6.2 (2018-08-23)
 
 ### Features
