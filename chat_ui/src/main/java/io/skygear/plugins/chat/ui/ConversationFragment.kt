@@ -339,6 +339,14 @@ open class ConversationFragment() :
     }
 
     private fun updateTitle() {
+        // updateTitle will be called after fetching participants
+        // This case will be happened if user leave the ConversationActivity quickly, before
+        // fetching participants callback is called
+        // Should ignore this case
+        if (this.activity == null) {
+            return
+        }
+
         if (titleOption == ConversationTitleOption.OTHER_PARTICIPANTS) {
             this.activity.title = conversationView()?.getOtherParticipantsTitle()
         } else {
