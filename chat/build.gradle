@@ -29,7 +29,7 @@ android {
     buildToolsVersion "26.0.2"
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 18
         targetSdkVersion 26
         versionCode 1
         versionName skygearChatFullVersion
@@ -50,7 +50,7 @@ dependencies {
     compile 'com.android.support:design:26.1.0'
     compile 'com.google.code.findbugs:jsr305:3.0.2'
 
-    compile 'io.skygear:skygear:1.6.2'
+    compile 'io.skygear:skygear:1.6.4'
     compile 'io.realm:realm-android-library:4.3.1'
     compile 'joda-time:joda-time:2.9.4'
 
