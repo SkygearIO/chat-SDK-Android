@@ -1,3 +1,11 @@
+## 1.6.4 (2018-09-05)
+
+### Bug Fixes
+
+- Fix app crash when open and close ConversationFragment quickly and frequently #211
+- Upgrade Skygear SDK to v1.6.4 for websocket issue
+
+
 ## 1.6.3 (2018-09-05)
 
 ### Bug Fixes
