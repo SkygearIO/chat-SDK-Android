@@ -2,7 +2,6 @@ package io.skygear.plugins.chat.ui.model
 
 import android.net.Uri
 import io.skygear.chatkit.commons.models.MessageContentType
-import org.json.JSONObject
 import io.skygear.plugins.chat.Message as ChatMessage
 
 /**
@@ -13,42 +12,32 @@ class ImageMessage : Message,
         MessageContentType.Image {
 
     val chatMessageImageUrl: String?
+    var thumbnail: String? = null
+    var width: Int? = null
+    var height: Int? = null
+    var orientation: Int? = null
 
     constructor(m: ChatMessage, imageUri: Uri?, orientation: Int?, style: MessageStyle) : super(m, style) {
-        this.chatMessageImageUrl = this.imageUrlFromChatMessage(
-                this.chatMessage.asset?.url ?: imageUri?.toString(),
-                this.chatMessage.metadata, orientation)
-    }
-
-    override fun getImageUrl(): String? = this.chatMessageImageUrl
-
-    fun imageUrlFromChatMessage(imageUrl: String?, meta: JSONObject?, orientation: Int?): String? {
-        var url = imageUrl
-        if (url == null) {
-            return null
-        }
-        meta?.let {
-            val builder = Uri.parse(url)
-                    .buildUpon()
-
+        this.chatMessageImageUrl = this.chatMessage.asset?.url ?: imageUri?.toString()
+        this.chatMessage.metadata?.let {
             if (it.has("thumbnail")) {
-                builder.appendQueryParameter("thumbnail", it.getString("thumbnail"))
+                this.thumbnail = it.getString("thumbnail")
             }
 
             if (it.has("width")) {
-                builder.appendQueryParameter("width", it.getInt("width").toString())
+                this.width = it.getInt("width")
             }
 
             if (it.has("height")) {
-                builder.appendQueryParameter("height", it.getInt("height").toString())
+                this.height = it.getInt("height")
             }
-
-            orientation?.let {
-                builder.appendQueryParameter("orientation", orientation.toString())
-            }
-
-            url = builder.build().toString()
         }
-        return url
+
+        this.orientation = orientation
     }
+
+    // Return null for image url to skip the default image loading of chatkit
+    // Customized the image loading with base64 thumbnail
+    // see onBind of IncomingImageMessageView.kt
+    override fun getImageUrl(): String? = null
 }

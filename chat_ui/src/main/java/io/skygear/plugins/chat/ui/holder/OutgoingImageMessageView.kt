@@ -6,6 +6,7 @@ import android.widget.ImageView
 import io.skygear.chatkit.messages.MessageHolders
 import io.skygear.plugins.chat.ui.R
 import io.skygear.plugins.chat.ui.model.ImageMessage
+import io.skygear.plugins.chat.ui.utils.ImageLoader
 
 class OutgoingImageMessageView(itemView: View) : MessageHolders.OutcomingImageMessageViewHolder<ImageMessage>(itemView) {
     var receiverAvatarMessageView: ReceiverAvatarMessageView? = null
@@ -22,7 +23,12 @@ class OutgoingImageMessageView(itemView: View) : MessageHolders.OutcomingImageMe
 
     override fun onBind(message: ImageMessage) {
         super.onBind(message)
-        if (message.chatMessage.asset != null && message.imageUrl == null) {
+        val loader = imageLoader
+        if (loader is ImageLoader && image != null && message.chatMessageImageUrl != null) {
+            loader.loadImage(image, message.chatMessageImageUrl, message.thumbnail,
+                    message.width, message.height, message.orientation)
+        }
+        if (message.chatMessage.asset != null && message.chatMessageImageUrl == null) {
             message.chatMessage.asset?.data?.let { data ->
                 val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
                 imageView?.setImageBitmap(bitmap)

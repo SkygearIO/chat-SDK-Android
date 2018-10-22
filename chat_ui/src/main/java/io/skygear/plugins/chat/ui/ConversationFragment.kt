@@ -796,7 +796,7 @@ open class ConversationFragment() :
         message?.let { msg ->
             when (msg) {
                 is ImageMessage -> {
-                    msg.imageUrl
+                    msg.chatMessageImageUrl
                             ?.let { url -> ImagePreviewActivity.newIntent(activity, url) }
                             ?.let { intent -> this@ConversationFragment.startActivity(intent) }
                 }
