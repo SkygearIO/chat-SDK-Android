@@ -2,7 +2,6 @@ package io.skygear.plugins.chat.ui.utils
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.net.Uri
 import android.widget.ImageView
 import com.squareup.picasso.Picasso
 import io.skygear.chatkit.commons.ImageLoader
@@ -31,30 +30,35 @@ class ImageLoader(
             return
         }
 
+        var creator = Picasso.with(this.context)
+                .load(url)
+        creator.into(imageView)
+    }
+
+    fun loadImage(imageView: ImageView?, url: String?, thumbnail: String?, width: Int?, height: Int?, orientation: Int?) {
         // Load chat image message
         var creator = Picasso.with(this.context)
                 .load(url)
 
-        val builtUri = Uri.parse(url)
-        var height = builtUri.getQueryParameter("height")?.toDouble() ?: 0.0
-        var width = builtUri.getQueryParameter("width")?.toDouble() ?: 0.0
-        if (0 < height && 0 < width) {
-            if (height > DISPLAY_IMAGE_SIZE || width > DISPLAY_IMAGE_SIZE) {
-                var ratio = height / width
+        var h = height?.toDouble() ?: 0.0
+        var w = width?.toDouble() ?: 0.0
+        if (0 < h && 0 < w) {
+            if (h > DISPLAY_IMAGE_SIZE || w > DISPLAY_IMAGE_SIZE) {
+                var ratio = h / w
                 if (ratio > 1) {
-                    height = DISPLAY_IMAGE_SIZE
-                    width = DISPLAY_IMAGE_SIZE / ratio
+                    h = DISPLAY_IMAGE_SIZE
+                    w = DISPLAY_IMAGE_SIZE / ratio
                 } else {
-                    height = DISPLAY_IMAGE_SIZE * ratio
-                    width = DISPLAY_IMAGE_SIZE
+                    h = DISPLAY_IMAGE_SIZE * ratio
+                    w = DISPLAY_IMAGE_SIZE
                 }
             }
-            imageView?.layoutParams?.height = height.toInt()
-            imageView?.layoutParams?.width = width.toInt()
+            imageView?.layoutParams?.height = h.toInt()
+            imageView?.layoutParams?.width = w.toInt()
             creator.fit().centerInside()
         }
 
-        val imageDataBytes = builtUri.getQueryParameter("thumbnail")
+        val imageDataBytes = thumbnail
         if (imageDataBytes != null) {
             val bytes = Base64.decode(imageDataBytes.toByteArray(), Base64.DEFAULT)
             val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
@@ -63,8 +67,8 @@ class ImageLoader(
             }
         }
 
-        var orientation = builtUri.getQueryParameter("orientation")?.toInt() ?: ExifInterface.ORIENTATION_NORMAL
-        var matrix = matrixFromRotation(orientation)
+        var o = orientation ?: ExifInterface.ORIENTATION_NORMAL
+        var matrix = matrixFromRotation(o)
 
         matrix?.let {
             creator.transform(object : Transformation {
