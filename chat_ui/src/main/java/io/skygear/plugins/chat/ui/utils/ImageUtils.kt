@@ -14,10 +14,6 @@ import java.util.* // ktlint-disable no-wildcard-imports
 import android.media.ExifInterface
 import java.io.FileOutputStream
 
-/**
- * Created by carmenlau on 10/2/17.
- */
-
 private val THUMBNAIL_SIZE = 80.0
 private val IMAGE_SIZE = 1600.0
 var mCurrentPhotoPath: String = ""

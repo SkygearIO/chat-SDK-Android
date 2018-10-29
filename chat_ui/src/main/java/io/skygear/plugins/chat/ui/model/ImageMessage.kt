@@ -4,10 +4,6 @@ import android.net.Uri
 import io.skygear.chatkit.commons.models.MessageContentType
 import io.skygear.plugins.chat.Message as ChatMessage
 
-/**
- * Created by carmenlau on 10/15/17.
- */
-
 class ImageMessage : Message,
         MessageContentType.Image {
 
