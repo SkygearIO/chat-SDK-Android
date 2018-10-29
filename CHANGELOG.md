@@ -1,3 +1,9 @@
+## 1.6.5 (2018-10-29)
+
+### Bug Fixes
+
+- Fix fail to load image when clicking preview in chat ui kit #215
+
 ## 1.6.4 (2018-09-05)
 
 ### Bug Fixes
