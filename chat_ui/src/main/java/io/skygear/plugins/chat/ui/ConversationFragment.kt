@@ -273,12 +273,11 @@ open class ConversationFragment() :
     }
 
     fun refresh() {
-        if (conversationView()?.itemCount() == 0) {
-            this.conversation?.let {
-                updateTitle()
-                this.fetchUnsentMessages()
-                this.fetchMessages()
-            }
+        this.conversation?.let {
+            this.resetMessages()
+            updateTitle()
+            this.fetchUnsentMessages()
+            this.fetchMessages()
         }
         this.updateTitle()
         this.fetchParticipants()
@@ -560,6 +559,13 @@ open class ConversationFragment() :
             this.messageIDs.remove(it.id)
             this.messageErrorByIDs.remove(it.id)
         }
+    }
+
+    private fun resetMessages() {
+        messageIDs.clear()
+        messageErrorByIDs.clear()
+        messageLoadMoreBefore = null
+        conversationView()?.resetMessages()
     }
 
     private fun subscribeMessage() {
