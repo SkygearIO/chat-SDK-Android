@@ -427,6 +427,10 @@ open class ConversationView : RelativeLayout {
         this.messageListAdapter?.deleteByIds(messages.map { it.id }.toTypedArray())
     }
 
+    fun resetMessages() {
+        this.messageListAdapter?.resetMessageList()
+    }
+
     fun getMessageStatusText(): MessageStatusText {
         return MessageStatusText(delivering, delivered, someRead, allRead, failedText)
     }

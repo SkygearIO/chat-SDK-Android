@@ -75,6 +75,11 @@ public class SortedMessageListAdapter extends MessagesListAdapter<Message> {
         notifyDataSetChanged();
     }
 
+    public void resetMessageList() {
+        this.items.clear();
+        this.notifyDataSetChanged();
+    }
+
     private void removeDateHeaders() {
         final Iterator<Wrapper> each = this.items.iterator();
         while (each.hasNext()) {
