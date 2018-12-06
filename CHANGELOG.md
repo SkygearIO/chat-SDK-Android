@@ -1,3 +1,10 @@
+## 1.6.6 (2018-12-06)
+
+### Bug Fixes
+
+- UIKit fail to receive message when the app is in background #217
+
+
 ## 1.6.5 (2018-10-29)
 
 ### Bug Fixes
