@@ -93,6 +93,7 @@ open class ConversationFragment() :
 
     private var takePhotoPermissionManager: PermissionManager? = null
     private var voiceRecordingPermissionManager: PermissionManager? = null
+    private var needRefresh: Boolean = false
 
     protected var layoutResID: Int = -1
     protected var customAvatarAdapter: AvatarAdapter? = null
@@ -136,6 +137,29 @@ open class ConversationFragment() :
         arguments.getSerializable(ConnectionListenerKey)?.let { listener ->
             connectionListener = listener as ConnectionListener
         }
+
+        this.pubsubListener = object : PubsubListener {
+            override fun onClose() {
+                needRefresh = true
+                if (this@ConversationFragment.isResumed()) {
+                    connectionListener?.onClose(this@ConversationFragment)
+                }
+            }
+
+            override fun onOpen() {
+                if (this@ConversationFragment.isResumed()) {
+                    connectionListener?.onOpen(this@ConversationFragment)
+                }
+            }
+
+            override fun onError(e: Exception?) {
+                needRefresh = true
+                if (this@ConversationFragment.isResumed()) {
+                    connectionListener?.onError(this@ConversationFragment, e)
+                }
+            }
+        }
+        this.skygearChat?.setPubsubListener(pubsubListener)
     }
 
     override fun onDestroy() {
@@ -144,6 +168,8 @@ open class ConversationFragment() :
         fragmentMessageFetchListener = null
         fragmentMessageSentListener = null
         connectionListener = null
+        this.pubsubListener = null
+        this.skygearChat?.setPubsubListener(null)
         super.onDestroy()
     }
 
@@ -216,6 +242,7 @@ open class ConversationFragment() :
         view.setLoadMoreListener(this)
         if (conversation != null) {
             view.setConversation(conversation)
+            needRefresh = true
         } else {
             conversationId?.let { conversationId ->
                 val chatContainer = ChatContainer.getInstance(defaultContainer(this.context))
@@ -287,31 +314,15 @@ open class ConversationFragment() :
 
     override fun onResume() {
         super.onResume()
-        refresh()
-
-        this.connectionListener?.let {
-            this.pubsubListener = object : PubsubListener {
-                override fun onClose() {
-                    connectionListener?.onClose(this@ConversationFragment)
-                }
-
-                override fun onOpen() {
-                    connectionListener?.onOpen(this@ConversationFragment)
-                }
-
-                override fun onError(e: Exception?) {
-                    connectionListener?.onError(this@ConversationFragment, e)
-                }
-            }
-            this.skygearChat?.setPubsubListener(pubsubListener)
+        if (needRefresh) {
+            needRefresh = false
+            this.unsubscribeMessage()
+            refresh()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        this.pubsubListener = null
-        this.skygearChat?.setPubsubListener(null)
-        this.unsubscribeMessage()
     }
 
     private fun fetchParticipants() {
